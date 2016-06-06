@@ -27,7 +27,7 @@ public class ServletInstrumenter implements IServletInstrumenter {
 	// blacklisting / whitelisting mechanism
 
 	/**
-	 * The runtime linekr for creating proxies
+	 * The runtime linekr for creating proxies.
 	 */
 	@Autowired
 	private IRuntimeLinker linker;
@@ -42,21 +42,21 @@ public class ServletInstrumenter implements IServletInstrumenter {
 	 * The url to which the instrumentation script is mapped, should not overwrite any server
 	 * resources.
 	 */
-	private static final String JAVASCRIPT_URL_PREFIX = "/wps/contenthandler/boomerang/";
+	private static final String JAVASCRIPT_URL_PREFIX = "/wps/eumscript/";
 
-	private static final String BEACON_URL = "/wps/contenthandler/boomerang_handler";
+	/**
+	 * The url which gets called by our javascript for sending back the captured data.
+	 */
+	private static final String BEACON_URL = "/wps/contenthandler/eum_handler";
 
 	/**
 	 * the script tag which will be inserted in the head section of every html document.
 	 */
-	private static final String SCRIPT_TAG = "\r\n<script src=\"/wps/contenthandler/boomerang/boomerang.js\"></script>\r\n"
-			+ "<script src=\"/wps/contenthandler/boomerang/plugins/rt.js\"></script>\r\n" + "<script>\r\n" + "   BOOMR.init({\r\n" + "       beacon_url: \"" + BEACON_URL + "\"\r\n" + "   });\r\n"
-			+ "</script>\r\n";
-
+	private static final String SCRIPT_TAG = "\r\n<script type=\"text/javascript\" src=\"/wps/eumscript/EUMScript.js?version=1\"></script>";
 	/**
-	 * will be replaced with an included resource.
+	 * the path to the javascript in the resources.
 	 */
-	private static final String SCRIPT_RESOURCE_PATH = "/info/novatec/inspectit/agent/eum/js/";
+	private static final String SCRIPT_RESOURCE_PATH = "/js/";
 
 	/**
 	 * {@inheritDoc}
@@ -93,8 +93,13 @@ public class ServletInstrumenter implements IServletInstrumenter {
 
 	}
 
+	/**
+	 * Receiving data from the injected javascript.
+	 *
+	 * @param req
+	 *            the request which holds the data as parameters
+	 */
 	private void recieveBeacon(W_HttpServletRequest req) {
-
 		log.info("BEACON RECEIVED:---- " + req.getRequestURI());
 		log.info("------------- PARMETERS -----------------");
 		Map<String, String[]> params = req.getParameterMap();
@@ -115,6 +120,8 @@ public class ServletInstrumenter implements IServletInstrumenter {
 	 *
 	 * @param res
 	 *            the response to write
+	 * @param resourcePath
+	 *            path to the javascript resources
 	 */
 	private void sendScript(W_HttpServletResponse res, String resourcePath) {
 		// we respond with the script code

@@ -2,6 +2,11 @@ package rocks.inspectit.agent.java.eum;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CoderResult;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class W_ServletOutputStream {
@@ -137,6 +142,41 @@ public class W_ServletOutputStream {
 
 	public void setWriteListener(Object listener) {
 		setWriteListener.callSafe(instance, listener);
+	}
+
+	private String decodeWithLeftOver(byte[] data) {
+		CharsetDecoder charDecoder = Charset.forName("UTF-8").newDecoder();
+		byte[] leftOver = null;
+
+		String decodedStr;
+		ByteBuffer input;
+		if (leftOver != null) {
+			input = ByteBuffer.allocate(leftOver.length + data.length);
+			input.put(leftOver);
+			input.put(data);
+			input.position(0);
+		} else {
+			input = ByteBuffer.wrap(data);
+		}
+		int maxCharCount = (int) Math.ceil(input.limit() * charDecoder.maxCharsPerByte());
+		CharBuffer out = CharBuffer.allocate(maxCharCount);
+		CoderResult result = charDecoder.decode(input, out, false);
+		if (result.isError()) {
+			return null;
+		} else {
+			int len = out.position();
+			out.position(0);
+			char[] resultBuffer = new char[len];
+			out.get(resultBuffer);
+			decodedStr = new String(resultBuffer);
+			if (input.remaining() == 0) {
+				leftOver = null; // no leftover, everything complete
+			} else {
+				leftOver = new byte[input.remaining()];
+				input.get(leftOver);
+			}
+		}
+		return decodedStr;
 	}
 
 }

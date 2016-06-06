@@ -10,6 +10,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import rocks.inspectit.agent.java.analyzer.IByteCodeAnalyzer;
 import rocks.inspectit.agent.java.analyzer.IMatchPattern;
 import rocks.inspectit.agent.java.config.IConfigurationStorage;
+import rocks.inspectit.agent.java.eum.IServletInstrumenter;
 import rocks.inspectit.agent.java.hooking.IHookDispatcher;
 import rocks.inspectit.agent.java.logback.LogInitializer;
 import rocks.inspectit.agent.java.spring.SpringConfiguration;
@@ -25,9 +26,9 @@ import rocks.inspectit.shared.all.version.VersionService;
  * <p>
  * This class is named <b>Spring</b>Agent as its using the Spring to handle the different components
  * in the Agent.
- * 
+ *
  * @author Patrice Bouillet
- * 
+ *
  */
 public class SpringAgent implements IAgent {
 
@@ -49,16 +50,18 @@ public class SpringAgent implements IAgent {
 	/**
 	 * Set to <code>true</code> if something happened while trying to initialize the pico container.
 	 */
-	private boolean initializationError = false;
+	private final boolean initializationError = false;
 
 	/**
 	 * Created bean factory.
 	 */
 	private BeanFactory beanFactory;
 
+	private IServletInstrumenter servletInstrumenter;
+
 	/**
 	 * Constructor initializing this agent.
-	 * 
+	 *
 	 * @param inspectitJarLocation
 	 *            location of inspectIT jar needed for proper logging
 	 */
@@ -98,6 +101,8 @@ public class SpringAgent implements IAgent {
 		}
 
 		hookDispatcher = beanFactory.getBean(IHookDispatcher.class);
+
+		servletInstrumenter = beanFactory.getBean(IServletInstrumenter.class);
 
 		// switch back to the original context class loader
 		Thread.currentThread().setContextClassLoader(contextClassLoader);
@@ -154,7 +159,7 @@ public class SpringAgent implements IAgent {
 	 * with {@value #CLASS_NAME_PREFIX}. Otherwise loads the class with the target class loader. If
 	 * the inspectIT class loader throws {@link ClassNotFoundException}, the target class loader
 	 * will be used.
-	 * 
+	 *
 	 * @param className
 	 *            Class name.
 	 * @return Loaded class or <code>null</code> if it can not be found with inspectIT class loader.
@@ -173,7 +178,7 @@ public class SpringAgent implements IAgent {
 
 	/**
 	 * Defines if the class should be loaded with our class loader.
-	 * 
+	 *
 	 * @param className
 	 *            Name of the class to load.
 	 * @return True if class name starts with {@value #CLASS_NAME_PREFIX}.
@@ -187,6 +192,13 @@ public class SpringAgent implements IAgent {
 	 */
 	public IHookDispatcher getHookDispatcher() {
 		return hookDispatcher;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public IServletInstrumenter getServletInstrumenter() {
+		return servletInstrumenter;
 	}
 
 }

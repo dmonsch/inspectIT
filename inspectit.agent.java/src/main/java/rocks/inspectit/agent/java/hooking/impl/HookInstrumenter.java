@@ -1,5 +1,9 @@
 package rocks.inspectit.agent.java.hooking.impl;
 
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -17,17 +21,13 @@ import rocks.inspectit.agent.java.hooking.IHookDispatcherMapper;
 import rocks.inspectit.agent.java.hooking.IHookInstrumenter;
 import rocks.inspectit.shared.all.spring.logger.Log;
 
-import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 /**
  * The byte code instrumenter class. Used to instrument the additional instructions into the target
  * byte code.
- * 
+ *
  * @author Patrice Bouillet
  * @author Eduard Tudenhoefner
- * 
+ *
  */
 @Component
 public class HookInstrumenter implements IHookInstrumenter {
@@ -43,6 +43,8 @@ public class HookInstrumenter implements IHookInstrumenter {
 	 * hook dispatcher instance in the Agent class.
 	 */
 	private static String hookDispatcherTarget = "rocks.inspectit.agent.java.Agent#agent.getHookDispatcher()";
+
+	private static String servletInstrumenterTarget = "rocks.inspectit.agent.java.Agent#agent.getServletInstrumenter()";
 
 	/**
 	 * The agent target as string.
@@ -63,21 +65,21 @@ public class HookInstrumenter implements IHookInstrumenter {
 	/**
 	 * The expression editor to modify a method body.
 	 */
-	private MethodExprEditor methodExprEditor = new MethodExprEditor();
+	private final MethodExprEditor methodExprEditor = new MethodExprEditor();
 
 	/**
 	 * The expression editor to modify a constructor body.
 	 */
-	private ConstructorExprEditor constructorExprEditor = new ConstructorExprEditor();
+	private final ConstructorExprEditor constructorExprEditor = new ConstructorExprEditor();
 
 	/**
 	 * The implementation of the configuration storage where all definitions of the user are stored.
 	 */
-	private IConfigurationStorage configurationStorage;
+	private final IConfigurationStorage configurationStorage;
 
 	/**
 	 * The default and only constructor for this class.
-	 * 
+	 *
 	 * @param hookDispatcher
 	 *            The hook dispatcher which is used in the Agent.
 	 * @param idManager
@@ -215,11 +217,29 @@ public class HookInstrumenter implements IHookInstrumenter {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	public void addServletOrFilterHook(CtMethod ctMethod) throws HookException {
+		if (ctMethod.getDeclaringClass().isFrozen()) {
+			// defrost before we are adding any instructions
+			ctMethod.getDeclaringClass().defrost();
+		}
+		try {
+			ctMethod.insertBefore("if(" + servletInstrumenterTarget + ".interceptRequest($1,$2)){" + "return;" + "}else if ($2 instanceof javax.servlet.http.HttpServletResponse){"
+					+ "$2 = (javax.servlet.http.HttpServletResponse)(" + servletInstrumenterTarget + ".instrumentResponse($1,$2));" + "} ");
+		} catch (CannotCompileException cannotCompileException) {
+			// throw new HookException("Could not insert the bytecode into the method/class for
+			// servlet/filter intrumentation", cannotCompileException);
+			log.error("Could not insert the bytecode into the method/class for servlet/filter intrumentation", cannotCompileException);
+		}
+	}
+
+	/**
 	 * The passed {@link CtMethod} is instrumented with an internal <code>try-catch</code> block to
 	 * get an event when an exception is thrown in a method body.
-	 * 
+	 *
 	 * @see rocks.inspectit.shared.all.javassist.CtMethod#addCatch(String, CtClass)
-	 * 
+	 *
 	 * @param method
 	 *            The {@link CtMethod} where additional instructions are added.
 	 * @param methodId
@@ -255,9 +275,9 @@ public class HookInstrumenter implements IHookInstrumenter {
 	/**
 	 * The passed {@link CtConstructor} is instrumented with an internal <code>try-catch</code>
 	 * block to get an event when an exception is thrown in a constructor body.
-	 * 
+	 *
 	 * @see rocks.inspectit.shared.all.javassist.CtConstructor#addCatch(String, CtClass)
-	 * 
+	 *
 	 * @param constructor
 	 *            The {@link CtConstructor} where additional instructions are added.
 	 * @param constructorId
@@ -286,11 +306,11 @@ public class HookInstrumenter implements IHookInstrumenter {
 	 * found, <code>edit()</code> is called in <code>ExprEditor</code>. <code>edit()</code> can
 	 * inspect and modify the given expression. The modification is reflected on the original method
 	 * body. If <code>edit()</code> does nothing, the original method body is not changed.
-	 * 
+	 *
 	 * @see rocks.inspectit.shared.all.javassist.expr.ExprEditor
-	 * 
+	 *
 	 * @author Eduard Tudenhoefner
-	 * 
+	 *
 	 */
 	public static class MethodExprEditor extends ExprEditor {
 
@@ -301,7 +321,7 @@ public class HookInstrumenter implements IHookInstrumenter {
 
 		/**
 		 * Sets the method id.
-		 * 
+		 *
 		 * @param id
 		 *            The id of the method to instrument.
 		 */
@@ -312,6 +332,7 @@ public class HookInstrumenter implements IHookInstrumenter {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public void edit(Handler handler) throws CannotCompileException {
 			if (!handler.isFinally()) {
 				// $1 is the exception object
@@ -327,11 +348,11 @@ public class HookInstrumenter implements IHookInstrumenter {
 	 * <code>edit()</code> can inspect and modify the given expression. The modification is
 	 * reflected on the original constructor body. If <code>edit()</code> does nothing, the original
 	 * constructor body is not changed.
-	 * 
+	 *
 	 * @see rocks.inspectit.shared.all.javassist.expr.ExprEditor
-	 * 
+	 *
 	 * @author Eduard Tudenhoefner
-	 * 
+	 *
 	 */
 	public static class ConstructorExprEditor extends ExprEditor {
 
@@ -342,7 +363,7 @@ public class HookInstrumenter implements IHookInstrumenter {
 
 		/**
 		 * Sets the constructor id.
-		 * 
+		 *
 		 * @param id
 		 *            The id of the constructor to instrument.
 		 */
@@ -353,6 +374,7 @@ public class HookInstrumenter implements IHookInstrumenter {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public void edit(Handler handler) throws CannotCompileException {
 			if (!handler.isFinally()) {
 				// $1 is the exception object

@@ -7,10 +7,10 @@ import rocks.inspectit.agent.java.hooking.impl.HookException;
 
 /**
  * The hook instrumenter interface defines methods to add method and constructor hooks.
- * 
+ *
  * @author Patrice Bouillet
  * @author Eduard Tudenhoefner
- * 
+ *
  */
 public interface IHookInstrumenter {
 
@@ -18,7 +18,7 @@ public interface IHookInstrumenter {
 	 * Adds the three hooks (one before, two after) to the passed {@link CtMethod}. Afterwards, the
 	 * dispatcher stores the information so that the appropriate sensor types are called whenever
 	 * the method is called.
-	 * 
+	 *
 	 * @param method
 	 *            The method which is instrumented.
 	 * @param rsc
@@ -34,7 +34,7 @@ public interface IHookInstrumenter {
 	 * Adds two hooks to the passed {@link CtConstructor}. Afterwards, the dispatcher stores the
 	 * information so that the appropriate sensor types are called whenever the constructor is
 	 * called.
-	 * 
+	 *
 	 * @param constructor
 	 *            The constructor which is instrumented.
 	 * @param rsc
@@ -48,7 +48,7 @@ public interface IHookInstrumenter {
 
 	/**
 	 * Adds a class loader delegation check on this method and delegates class loading if necessary.
-	 * 
+	 *
 	 * @param ctMethod
 	 *            {@link CtMethod} to instrument. Note that the method will be replaced.
 	 * @throws HookException
@@ -56,4 +56,6 @@ public interface IHookInstrumenter {
 	 *             instrumentation was not completed successfully.
 	 */
 	void addClassLoaderDelegationHook(CtMethod ctMethod) throws HookException;
+
+	void addServletOrFilterHook(CtMethod ctBehavior) throws HookException;
 }

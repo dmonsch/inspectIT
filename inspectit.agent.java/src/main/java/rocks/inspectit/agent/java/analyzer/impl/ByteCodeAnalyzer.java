@@ -7,6 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
 import javassist.ClassPath;
@@ -23,29 +29,23 @@ import rocks.inspectit.agent.java.analyzer.IMatcher;
 import rocks.inspectit.agent.java.config.IConfigurationStorage;
 import rocks.inspectit.agent.java.config.StorageException;
 import rocks.inspectit.agent.java.config.impl.MethodSensorTypeConfig;
+import rocks.inspectit.agent.java.config.impl.PropertyAccessor.PropertyPathStart;
 import rocks.inspectit.agent.java.config.impl.RegisteredSensorConfig;
 import rocks.inspectit.agent.java.config.impl.UnregisteredSensorConfig;
-import rocks.inspectit.agent.java.config.impl.PropertyAccessor.PropertyPathStart;
 import rocks.inspectit.agent.java.hooking.IHookInstrumenter;
 import rocks.inspectit.agent.java.hooking.impl.HookException;
 import rocks.inspectit.shared.all.communication.data.ParameterContentType;
 import rocks.inspectit.shared.all.spring.logger.Log;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 /**
  * The default implementation of the {@link IByteCodeAnalyzer} interface. First it tries to analyze
  * the given byte code and collects all the methods which need to be instrumented in a Map. This is
  * done in the {@link #analyze(byte[], String, ClassLoader)} method. Afterwards, the Map is passed
  * to the {@link #instrument(Map)} method which will do the instrumentation.
- * 
+ *
  * @author Patrice Bouillet
  * @author Eduard Tudenhoefner
- * 
+ *
  */
 @Component
 public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
@@ -80,7 +80,7 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 
 	/**
 	 * The default constructor which accepts two parameters which are needed.
-	 * 
+	 *
 	 * @param configurationStorage
 	 *            The configuration storage reference.
 	 * @param hookInstrumenter
@@ -137,6 +137,8 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 			// class loader delegation behaviors
 			List<? extends CtBehavior> classLoaderDelegationBehaviors = analyzeForClassLoaderDelegation(className, classLoader);
 
+			List<? extends CtBehavior> servletInstrumentationBehaviours = analyzeForServletInstrumentation(className, classLoader);
+
 			CtBehavior ctBehavior = null;
 			if (!behaviorToConfigMap.isEmpty()) {
 				ctBehavior = instrumentSensors(behaviorToConfigMap);
@@ -144,6 +146,10 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 
 			if (!classLoaderDelegationBehaviors.isEmpty()) {
 				ctBehavior = instrumentClassLoader(classLoaderDelegationBehaviors);
+			}
+
+			if (!servletInstrumentationBehaviours.isEmpty()) {
+				ctBehavior = instrumentServletOrFilter(servletInstrumentationBehaviours);
 			}
 
 			if (null != ctBehavior) {
@@ -179,9 +185,32 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 		}
 	}
 
+	private List<? extends CtBehavior> analyzeForServletInstrumentation(String className, ClassLoader classLoader) throws NotFoundException {
+		IMatcher filterMatcher = configurationStorage.getServletFilterMatcher();
+		IMatcher servletMatcher = configurationStorage.getHttpServletMatcher();
+
+		List<CtBehavior> foundBehaviors = new ArrayList<CtBehavior>();
+
+		if (null != filterMatcher && filterMatcher.compareClassName(classLoader, className)) {
+			List<? extends CtBehavior> behaviors = filterMatcher.getMatchingMethods(classLoader, className);
+			if (CollectionUtils.isNotEmpty(behaviors)) {
+				filterMatcher.checkParameters(behaviors);
+				foundBehaviors.addAll(behaviors);
+			}
+		}
+		if (null != servletMatcher && servletMatcher.compareClassName(classLoader, className)) {
+			List<? extends CtBehavior> behaviors = servletMatcher.getMatchingMethods(classLoader, className);
+			if (CollectionUtils.isNotEmpty(behaviors)) {
+				servletMatcher.checkParameters(behaviors);
+				foundBehaviors.addAll(behaviors);
+			}
+		}
+		return foundBehaviors;
+	}
+
 	/**
 	 * Returns the list of {@link CtBehavior} that relate to the class loader delegation.
-	 * 
+	 *
 	 * @param className
 	 *            The name of the class.
 	 * @param classLoader
@@ -214,7 +243,7 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 	/**
 	 * The analyze method will analyze the passed byte code, class name and class loader and returns
 	 * a {@link Map} with all matching methods to be instrumented.
-	 * 
+	 *
 	 * @param className
 	 *            The name of the class.
 	 * @param classLoader
@@ -269,7 +298,7 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 	/**
 	 * Instruments the methods in the {@link Map} and creates the appropriate
 	 * {@link RegisteredSensorConfig} classes.
-	 * 
+	 *
 	 * @param methodToConfigMap
 	 *            The initialized {@link Map} which is filled by the
 	 *            {@link #analyze(byte[], String, ClassLoader)} method.
@@ -291,8 +320,8 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 
 			List<String> parameterTypes = new ArrayList<String>();
 			CtClass[] parameterClasses = ctBehavior.getParameterTypes();
-			for (int pos = 0; pos < parameterClasses.length; pos++) {
-				parameterTypes.add(parameterClasses[pos].getName());
+			for (CtClass parameterClasse : parameterClasses) {
+				parameterTypes.add(parameterClasse.getName());
 			}
 
 			RegisteredSensorConfig rsc = new RegisteredSensorConfig();
@@ -349,11 +378,11 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 
 	/**
 	 * Instruments the methods in the {@link List} with the class loader delegation hook.
-	 * 
+	 *
 	 * @param classLoaderDelegationBehaviors
 	 *            {@link CtBehavior}s that relate to the class loader boot delegation and have to be
 	 *            instrumented in different way that the normal user specified instrumentation.
-	 * 
+	 *
 	 * @return Returns the {@link CtBehavior}.
 	 * @throws NotFoundException
 	 *             Something could not be found.
@@ -375,17 +404,28 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 		return ctBehavior;
 	}
 
+	private CtBehavior instrumentServletOrFilter(List<? extends CtBehavior> servletInstrumentationBehaviours) throws HookException {
+		CtBehavior ctBehavior = null;
+		if (CollectionUtils.isNotEmpty(servletInstrumentationBehaviours)) {
+			for (CtBehavior clDelegationBehavior : servletInstrumentationBehaviours) {
+				ctBehavior = clDelegationBehavior;
+				hookInstrumenter.addServletOrFilterHook((CtMethod) ctBehavior);
+			}
+		}
+		return ctBehavior;
+	}
+
 	/**
 	 * Checks whether the property accessor is meaningful. Please note that during the creation of
 	 * the property accessor certain checks are already in place. For example it is checked that no
 	 * return value capturing is set on a constructor. Please ensure that checks that could be done
-	 * at creation time are already performed at this time ({@link
-	 * rocks.inspectit.agent.java.config.impl.ConfigurationStorage.addSensor()}).
-	 * 
+	 * at creation time are already performed at this time (
+	 * {@link rocks.inspectit.agent.java.config.impl.ConfigurationStorage.addSensor()}).
+	 *
 	 * Certain checks cannot be done on creation time. One example is the return value capturing on
 	 * method defining a void return type. At creation time the information that the method the
 	 * sensor is attached to has in fact no return value is not known.
-	 * 
+	 *
 	 * @param type
 	 *            the type of capturing
 	 * @param rsc

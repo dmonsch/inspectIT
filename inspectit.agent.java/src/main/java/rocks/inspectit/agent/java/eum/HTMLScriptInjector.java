@@ -20,7 +20,7 @@ import com.esotericsoftware.minlog.Log;
  * it is not present the tag will be placed in the body tag - supports encoded character data if the
  * encoding is given - avoid double-injection by checking if the string starting at the injection
  * point matches exactly the tag to inject
- * 
+ *
  * @author Jonas Kunz
  */
 public class HTMLScriptInjector {
@@ -32,7 +32,7 @@ public class HTMLScriptInjector {
 
 	/**
 	 * The parser operates as a status machine. These are the statuses the parser knows.
-	 * 
+	 *
 	 * @author Jonas Kunz
 	 */
 	private enum Status {
@@ -103,7 +103,7 @@ public class HTMLScriptInjector {
 
 	/**
 	 * Creates a new Parser.
-	 * 
+	 *
 	 * @param tagToInject
 	 *            The tag to inject
 	 */
@@ -119,7 +119,7 @@ public class HTMLScriptInjector {
 
 	/**
 	 * Sets the encoding. Should be used before the first encoded data was given to this parser.
-	 * 
+	 *
 	 * @param charsetName
 	 *            the name of the characterset e.g. UTF-8 or whatever
 	 */
@@ -132,13 +132,14 @@ public class HTMLScriptInjector {
 	/**
 	 * Appends the given string to the html document. If this String contains the tag-injection
 	 * position, the tag will be injected and the modified String is returned.
-	 * 
+	 *
 	 * @param str
 	 *            the string containing the next characters of the document
 	 * @return the original string if it did not contain the injection point, or the original stirng
 	 *         with tag inserted at the correct position.
 	 */
 	public String performInjection(String str) {
+		System.out.println(str);
 		// TODO: check that leftover is null
 		if (hasTerminated()) {
 			return str;
@@ -165,7 +166,7 @@ public class HTMLScriptInjector {
 	/**
 	 * Appends the given encoded string to the html document. If this String contains the
 	 * tag-injection position, the tag will be injected and the modified String is returned.
-	 * 
+	 *
 	 * @param encodedChars
 	 *            the encoded string containing the next characters of the document
 	 * @return the original data if it did not contain the injection point, or the original string
@@ -226,7 +227,7 @@ public class HTMLScriptInjector {
 	/**
 	 * Decodes the given encoded string, while taking the leftover of the previous write into
 	 * account.
-	 * 
+	 *
 	 * @param data
 	 *            the encoded character data
 	 * @return the decoded character data
@@ -321,7 +322,7 @@ public class HTMLScriptInjector {
 	/**
 	 * Handles tags at the top level. Supported tags are the !DOCTYPE html blabla tag and the html
 	 * tag itself.
-	 * 
+	 *
 	 * @return true if this tag could be parsed, false if some data is missing at the current point
 	 *         of time (buffer the tag until the next write).
 	 */
@@ -380,7 +381,7 @@ public class HTMLScriptInjector {
 
 	/**
 	 * handles html-level tags, supported ones are the head and body tag.
-	 * 
+	 *
 	 * @return true if this tag could be parsed, false if some data is missing at the current point
 	 *         of time (buffer the tag until the next write).
 	 */

@@ -1,12 +1,13 @@
 package rocks.inspectit.agent.java;
 
+import rocks.inspectit.agent.java.eum.IServletInstrumenter;
 import rocks.inspectit.agent.java.hooking.IHookDispatcher;
 
 /**
  * Interface for accessing the real agent implementation from the SUD and our JavaAgent.
- * 
+ *
  * @author Patrice Bouillet
- * 
+ *
  */
 public interface IAgent {
 
@@ -14,7 +15,7 @@ public interface IAgent {
 	 * This method will inspect the given byte code and class name to check if it needs to be
 	 * instrumented by the Agent. The class loader is needed as different versions of the same class
 	 * can be loaded.
-	 * 
+	 *
 	 * @param byteCode
 	 *            The byte code.
 	 * @param className
@@ -29,17 +30,19 @@ public interface IAgent {
 	/**
 	 * Returns the hook dispatcher. This is needed for the instrumented methods in the target
 	 * application! Otherwise the entry point for them would be missing.
-	 * 
+	 *
 	 * @return The hook dispatcher
 	 */
 	IHookDispatcher getHookDispatcher();
+
+	IServletInstrumenter getServletInstrumenter();
 
 	/**
 	 * Loads class with the given parameters that have been passed to the target class loader.
 	 * <p>
 	 * Loading will be delegated only if parameters are of size 1 and that single parameter is
 	 * String type.
-	 * 
+	 *
 	 * @see rocks.inspectit.agent.java.PicoAgent#loadClass(String)
 	 * @param params
 	 *            Original parameters passed to class loader.

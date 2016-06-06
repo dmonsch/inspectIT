@@ -8,12 +8,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javassist.Modifier;
 import rocks.inspectit.agent.java.analyzer.IClassPoolAnalyzer;
 import rocks.inspectit.agent.java.analyzer.IInheritanceAnalyzer;
 import rocks.inspectit.agent.java.analyzer.IMatchPattern;
 import rocks.inspectit.agent.java.analyzer.IMatcher;
 import rocks.inspectit.agent.java.analyzer.impl.DirectMatcher;
+import rocks.inspectit.agent.java.analyzer.impl.HttpServletMatcher;
 import rocks.inspectit.agent.java.analyzer.impl.ModifierMatcher;
+import rocks.inspectit.agent.java.analyzer.impl.ServletFilterMatcher;
 import rocks.inspectit.agent.java.analyzer.impl.SimpleMatchPattern;
 import rocks.inspectit.agent.java.analyzer.impl.SuperclassMatcher;
 import rocks.inspectit.agent.java.config.IConfigurationStorage;
@@ -22,24 +31,17 @@ import rocks.inspectit.agent.java.config.StorageException;
 import rocks.inspectit.agent.java.jrebel.JRebelUtil;
 import rocks.inspectit.shared.all.communication.data.ParameterContentType;
 import rocks.inspectit.shared.all.spring.logger.Log;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import javassist.Modifier;
 
 /**
  * The default configuration storage implementation which stores everything in the memory.
  * <p>
  * TODO: Event mechanism is needed so that new definitions can be added and other components are
  * notified that something has been added.
- * 
+ *
  * @author Patrice Bouillet
  * @author Eduard Tudenhoefner
  * @author Alfred Krauss
- * 
+ *
  */
 @Component
 public class ConfigurationStorage implements IConfigurationStorage, InitializingBean {
@@ -90,7 +92,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 * The list of sending strategies. Default size is set to 1 as it's unlikely that more than one
 	 * is defined.
 	 */
-	private List<StrategyConfig> sendingStrategies = new ArrayList<StrategyConfig>(1);
+	private final List<StrategyConfig> sendingStrategies = new ArrayList<StrategyConfig>(1);
 
 	/**
 	 * The default size of the method sensor type list.
@@ -100,7 +102,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	/**
 	 * The list of method sensor types. Contains objects of type {@link MethodSensorTypeConfig}.
 	 */
-	private List<MethodSensorTypeConfig> methodSensorTypes = new ArrayList<MethodSensorTypeConfig>(METHOD_LIST_SIZE);
+	private final List<MethodSensorTypeConfig> methodSensorTypes = new ArrayList<MethodSensorTypeConfig>(METHOD_LIST_SIZE);
 
 	/**
 	 * The default size of the platform sensor type list.
@@ -110,7 +112,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	/**
 	 * The list of platform sensor types. Contains objects of type {@link PlatformSensorTypeConfig}.
 	 */
-	private List<PlatformSensorTypeConfig> platformSensorTypes = new ArrayList<PlatformSensorTypeConfig>(PLATFORM_LIST_SIZE);
+	private final List<PlatformSensorTypeConfig> platformSensorTypes = new ArrayList<PlatformSensorTypeConfig>(PLATFORM_LIST_SIZE);
 
 	/**
 	 * The default size of the jmx sensor type list.
@@ -120,17 +122,17 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	/**
 	 * The list of jmx sensor types. Contains objects of type {@link JmxSensorTypeConfig}.
 	 */
-	private List<JmxSensorTypeConfig> jmxSensorTypes = new ArrayList<JmxSensorTypeConfig>(JMX_LIST_SIZE);
+	private final List<JmxSensorTypeConfig> jmxSensorTypes = new ArrayList<JmxSensorTypeConfig>(JMX_LIST_SIZE);
 
 	/**
 	 * A list containing all the sensor definitions from the configuration.
 	 */
-	private List<UnregisteredSensorConfig> unregisteredSensorConfigs = new ArrayList<UnregisteredSensorConfig>();
+	private final List<UnregisteredSensorConfig> unregisteredSensorConfigs = new ArrayList<UnregisteredSensorConfig>();
 
 	/**
 	 * A list containing all unregistered sensor definitions from the configuration.
 	 */
-	private List<UnregisteredJmxConfig> unregisteredJmxConfigs = new ArrayList<UnregisteredJmxConfig>();
+	private final List<UnregisteredJmxConfig> unregisteredJmxConfigs = new ArrayList<UnregisteredJmxConfig>();
 
 	/**
 	 * Indicates whether the exception sensor is activated or not.
@@ -146,7 +148,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 * List of the ignore classes patterns. Classes matching these patterns should be ignored by the
 	 * configuration.
 	 */
-	private List<IMatchPattern> ignoreClassesPatterns = new ArrayList<IMatchPattern>();
+	private final List<IMatchPattern> ignoreClassesPatterns = new ArrayList<IMatchPattern>();
 
 	/**
 	 * The matchers that can be used to test if the ClassLoader class should be instrumented in the
@@ -154,9 +156,13 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 */
 	private Collection<IMatcher> classLoaderDelegationMatchers;
 
+	private IMatcher servletFilterMatcher;
+
+	private IMatcher httpServletMatcher;
+
 	/**
 	 * Default constructor which takes 2 parameter.
-	 * 
+	 *
 	 * @param classPoolAnalyzer
 	 *            The class pool analyzer used by the sensor configuration.
 	 * @param inheritanceAnalyzer
@@ -526,7 +532,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 
 	/**
 	 * Returns the matching {@link MethodSensorTypeConfig} for the passed name.
-	 * 
+	 *
 	 * @param sensorTypeName
 	 *            The name to look for.
 	 * @return The {@link MethodSensorTypeConfig} which name is equal to the passed sensor type name
@@ -547,7 +553,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	/**
 	 * Returns the matching {@link MethodSensorTypeConfig} of the Exception Sensor for the passed
 	 * name.
-	 * 
+	 *
 	 * @param sensorTypeName
 	 *            The name to look for.
 	 * @return The {@link MethodSensorTypeConfig} which name is equal to the passed sensor type name
@@ -615,7 +621,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 
 	/**
 	 * Returns the matching {@link JmxSensorTypeConfig} for the passed name.
-	 * 
+	 *
 	 * @param jmxSensorTypeConfigname
 	 *            The name to look for.
 	 * @return The {@link JmxSensorTypeConfig} which name is equal to the passed sensor type name in
@@ -768,9 +774,26 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	/**
 	 * {@inheritDoc}
 	 */
+	public IMatcher getServletFilterMatcher() {
+		return servletFilterMatcher;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public IMatcher getHttpServletMatcher() {
+		return httpServletMatcher;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public void afterPropertiesSet() throws Exception {
 		loadConfigurationFromJvmParameters();
 		createClassLoaderDelegationMatcher();
+
+		createServletFilterMatcher();
+		createHttpServletMatcher();
 	}
 
 	/**
@@ -830,6 +853,14 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 		IMatcher superclassIMatcher = new SuperclassMatcher(inheritanceAnalyzer, classPoolAnalyzer, superclassSensorConfig);
 		IMatcher directIMatcher = new DirectMatcher(classPoolAnalyzer, superclassSensorConfig);
 		this.classLoaderDelegationMatchers = Arrays.<IMatcher> asList(superclassIMatcher, directIMatcher);
+	}
+
+	private void createHttpServletMatcher() {
+		servletFilterMatcher = new ServletFilterMatcher(inheritanceAnalyzer, classPoolAnalyzer);
+	}
+
+	private void createServletFilterMatcher() {
+		httpServletMatcher = new HttpServletMatcher(inheritanceAnalyzer, classPoolAnalyzer);
 	}
 
 }
