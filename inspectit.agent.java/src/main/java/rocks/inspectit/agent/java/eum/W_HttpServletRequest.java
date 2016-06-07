@@ -1,5 +1,6 @@
 package rocks.inspectit.agent.java.eum;
 
+import java.io.BufferedReader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,6 +11,7 @@ public class W_HttpServletRequest {
 
 	private static final CachedMethod<String> getRequestURI = new CachedMethod<String>(CLAZZ, "getRequestURI");
 	private static final CachedMethod<Map<java.lang.String, java.lang.String[]>> getParameterMap = new CachedMethod<Map<java.lang.String, java.lang.String[]>>(CLAZZ, "getParameterMap");
+	private static final CachedMethod<BufferedReader> getReader = new CachedMethod<BufferedReader>(CLAZZ, "getReader");
 
 	private final Object instance;
 
@@ -39,5 +41,9 @@ public class W_HttpServletRequest {
 
 	public Map<java.lang.String, java.lang.String[]> getParameterMap() {
 		return getParameterMap.callSafe(instance);
+	}
+
+	public BufferedReader getReader() {
+		return getReader.callSafe(instance);
 	}
 }

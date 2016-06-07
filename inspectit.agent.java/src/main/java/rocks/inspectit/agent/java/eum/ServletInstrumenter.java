@@ -1,11 +1,13 @@
 package rocks.inspectit.agent.java.eum;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.CharBuffer;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -100,19 +102,44 @@ public class ServletInstrumenter implements IServletInstrumenter {
 	 *            the request which holds the data as parameters
 	 */
 	private void recieveBeacon(W_HttpServletRequest req) {
-		log.info("BEACON RECEIVED:---- " + req.getRequestURI());
-		log.info("------------- PARMETERS -----------------");
-		Map<String, String[]> params = req.getParameterMap();
-		for (String key : params.keySet()) {
-			String[] values = params.get(key);
-			String msg = key + " = {";
-			for (String val : values) {
-				msg += val + ",";
+		BufferedReader reader = req.getReader();
+		StringBuffer callbackData = new StringBuffer();
+		String line;
+		try {
+			while ((line = reader.readLine()) != null) {
+				callbackData.append(line);
 			}
-			msg += "}";
-			log.info(msg);
+		} catch (IOException e) {
+			return;
 		}
-		log.info("------------- PARMETERS END -----------------");
+
+		String contentData = callbackData.toString();
+		log.info(contentData);
+		// at this point we need to handle the data
+		// do we have a json parser?
+
+		// simple test json parser
+		Map<String, String> keyValueMap = new HashMap<String, String>();
+		String innerData = contentData.trim().substring(1, contentData.length() - 1);
+		String[] pairSplit = innerData.split(",");
+		for (String pair : pairSplit) {
+			String[] keyValSplit = pair.split("\\:");
+			if (keyValSplit.length == 2) {
+				if (keyValSplit[1].startsWith("\"")) {
+					keyValueMap.put(keyValSplit[0].substring(1, keyValSplit[0].length() - 1), keyValSplit[1].substring(1, keyValSplit[1].length() - 1));
+				} else {
+					keyValueMap.put(keyValSplit[0].substring(1, keyValSplit[0].length() - 1), keyValSplit[1]);
+				}
+			}
+		}
+
+		// test data
+		if (keyValueMap.containsKey("type") && keyValueMap.get("type").equals("ajax")) {
+			long begin = Long.parseLong(keyValueMap.get("beginTime"));
+			long end = Long.parseLong(keyValueMap.get("endTime"));
+
+			log.info("Ajax call to '" + keyValueMap.get("url") + "' needed " + (end - begin) + "ms!");
+		}
 	}
 
 	/**
