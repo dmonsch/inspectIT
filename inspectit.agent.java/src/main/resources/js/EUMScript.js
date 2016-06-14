@@ -1,5 +1,5 @@
-// TODO writing tests
 //configuration
+// TODO: outsource modules into single files
 window.diagnoseIT_eum_settings = {
 	eumManagementServer : "/wps/contenthandler/eum_handler"
 };
@@ -62,13 +62,13 @@ inspectIT_eum.ajax = (function () {
 					return XMLHttpRequest.prototype.uninstrumentedSend.apply(this, arguments);
 				};
 				
-				// this will give us the time between sending the request
+				// this gives us the time between sending the request
 				// and getting back the response (better than below)
 				// -> works in all modern browsers
 				this.addEventListener("progress", function(oEvent) {
 					 if (!ajaxRecord.sent && oEvent.lengthComputable) {
 						 var percentComplete = oEvent.loaded / oEvent.total;
-						 if (percentComplete >= 1) {
+						 if (percentComplete >= 1) { // -> we're finished
 							 ajaxRecord.status = this.status;
 							 ajaxRecord.endTime = inspectIT_eum.util.timestamp();
 							 inspectIT_eum.util.callback(ajaxRecord);
@@ -77,9 +77,9 @@ inspectIT_eum.ajax = (function () {
 					 }
 				});
 				
-				// this will give us the time between send and finish
-				// of all javascript tasks executed after the request
-				// -> fallback solution (do we even want this?)
+				// this gives us the time between send and finish of all
+				// javascript tasks executed after the request
+				// -> fallback solution
 				this.addEventListener("loadend", function() {
 					if (!ajaxRecord.sent) {
 						ajaxRecord.status = this.status;
@@ -134,10 +134,15 @@ inspectIT_eum.timings = (function () {
 		if (("performance" in window) && ("timing" in window.performance)) {
 			//add event listener, which is called after the site has fully finished loading
 			window.addEventListener("load", function() {
-				inspectIT_eum.util.callback({
-					type : "navigationTimings",
-					data : window.performance.timing // TODO fix problems with safari
-				});
+				var objCallback = {
+					type : "navigationTimings"
+				}
+				for (var key in window.performance.timing) {
+					// this is really sad but otherwise toJSON doesn't work in all browsers
+					objCallback["W" + String(key)] = window.performance.timing[key];
+				}
+				
+				inspectIT_eum.util.callback(objCallback);
 			});
 		}
 	}
