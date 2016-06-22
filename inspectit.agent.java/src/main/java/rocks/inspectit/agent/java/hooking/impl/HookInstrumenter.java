@@ -44,8 +44,6 @@ public class HookInstrumenter implements IHookInstrumenter {
 	 */
 	private static String hookDispatcherTarget = "rocks.inspectit.agent.java.Agent#agent.getHookDispatcher()";
 
-	private static String servletInstrumenterTarget = "rocks.inspectit.agent.java.Agent#agent.getServletInstrumenter()";
-
 	/**
 	 * The agent target as string.
 	 */
@@ -213,24 +211,6 @@ public class HookInstrumenter implements IHookInstrumenter {
 			ctMethod.insertBefore("Class c = " + agentTarget + ".loadClass($args); if (null != c) { return c; }");
 		} catch (CannotCompileException cannotCompileException) {
 			throw new HookException("Could not insert the bytecode into the method/class for class loader delegation", cannotCompileException);
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public void addServletOrFilterHook(CtMethod ctMethod) throws HookException {
-		if (ctMethod.getDeclaringClass().isFrozen()) {
-			// defrost before we are adding any instructions
-			ctMethod.getDeclaringClass().defrost();
-		}
-		try {
-			ctMethod.insertBefore("if(" + servletInstrumenterTarget + ".interceptRequest($1,$2)){" + "return;" + "}else if ($2 instanceof javax.servlet.http.HttpServletResponse){"
-					+ "$2 = (javax.servlet.http.HttpServletResponse)(" + servletInstrumenterTarget + ".instrumentResponse($1,$2));" + "} ");
-		} catch (CannotCompileException cannotCompileException) {
-			// throw new HookException("Could not insert the bytecode into the method/class for
-			// servlet/filter intrumentation", cannotCompileException);
-			log.error("Could not insert the bytecode into the method/class for servlet/filter intrumentation", cannotCompileException);
 		}
 	}
 

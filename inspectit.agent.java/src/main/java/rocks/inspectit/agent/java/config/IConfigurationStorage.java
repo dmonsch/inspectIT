@@ -6,6 +6,7 @@ import java.util.Map;
 
 import rocks.inspectit.agent.java.analyzer.IMatchPattern;
 import rocks.inspectit.agent.java.analyzer.IMatcher;
+import rocks.inspectit.agent.java.config.impl.AgentEndUserMonitoringConfig;
 import rocks.inspectit.agent.java.config.impl.JmxSensorTypeConfig;
 import rocks.inspectit.agent.java.config.impl.MethodSensorTypeConfig;
 import rocks.inspectit.agent.java.config.impl.PlatformSensorTypeConfig;
@@ -324,8 +325,6 @@ public interface IConfigurationStorage {
 	 */
 	Collection<IMatcher> getClassLoaderDelegationMatchers();
 
-	IMatcher getServletFilterMatcher();
-
-	IMatcher getHttpServletMatcher();
+	public AgentEndUserMonitoringConfig getEndUserMonitoringConfig();
 
 }

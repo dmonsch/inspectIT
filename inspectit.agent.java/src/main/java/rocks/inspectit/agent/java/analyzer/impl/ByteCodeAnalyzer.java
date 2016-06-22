@@ -121,7 +121,7 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 				// where we don't have the bytecode directly. Thus we try to load it.
 				byteCode = classPool.get(className).toBytecode();
 			}
-			if (null != Thread.currentThread().getContextClassLoader() && classLoader != Thread.currentThread().getContextClassLoader()) {
+			if ((null != Thread.currentThread().getContextClassLoader()) && (classLoader != Thread.currentThread().getContextClassLoader())) {
 				// only use the context class loader if it is even set and not the same as the
 				// classloader being passed to the instrumentation
 				loaderClassPath = new LoaderClassPath(Thread.currentThread().getContextClassLoader());
@@ -137,8 +137,6 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 			// class loader delegation behaviors
 			List<? extends CtBehavior> classLoaderDelegationBehaviors = analyzeForClassLoaderDelegation(className, classLoader);
 
-			List<? extends CtBehavior> servletInstrumentationBehaviours = analyzeForServletInstrumentation(className, classLoader);
-
 			CtBehavior ctBehavior = null;
 			if (!behaviorToConfigMap.isEmpty()) {
 				ctBehavior = instrumentSensors(behaviorToConfigMap);
@@ -146,10 +144,6 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 
 			if (!classLoaderDelegationBehaviors.isEmpty()) {
 				ctBehavior = instrumentClassLoader(classLoaderDelegationBehaviors);
-			}
-
-			if (!servletInstrumentationBehaviours.isEmpty()) {
-				ctBehavior = instrumentServletOrFilter(servletInstrumentationBehaviours);
 			}
 
 			if (null != ctBehavior) {
@@ -185,29 +179,6 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 		}
 	}
 
-	private List<? extends CtBehavior> analyzeForServletInstrumentation(String className, ClassLoader classLoader) throws NotFoundException {
-		IMatcher filterMatcher = configurationStorage.getServletFilterMatcher();
-		IMatcher servletMatcher = configurationStorage.getHttpServletMatcher();
-
-		List<CtBehavior> foundBehaviors = new ArrayList<CtBehavior>();
-
-		if (null != filterMatcher && filterMatcher.compareClassName(classLoader, className)) {
-			List<? extends CtBehavior> behaviors = filterMatcher.getMatchingMethods(classLoader, className);
-			if (CollectionUtils.isNotEmpty(behaviors)) {
-				filterMatcher.checkParameters(behaviors);
-				foundBehaviors.addAll(behaviors);
-			}
-		}
-		if (null != servletMatcher && servletMatcher.compareClassName(classLoader, className)) {
-			List<? extends CtBehavior> behaviors = servletMatcher.getMatchingMethods(classLoader, className);
-			if (CollectionUtils.isNotEmpty(behaviors)) {
-				servletMatcher.checkParameters(behaviors);
-				foundBehaviors.addAll(behaviors);
-			}
-		}
-		return foundBehaviors;
-	}
-
 	/**
 	 * Returns the list of {@link CtBehavior} that relate to the class loader delegation.
 	 *
@@ -229,7 +200,7 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 		}
 
 		for (IMatcher matcher : configurationStorage.getClassLoaderDelegationMatchers()) {
-			if (null != matcher && matcher.compareClassName(classLoader, className)) {
+			if ((null != matcher) && matcher.compareClassName(classLoader, className)) {
 				List<? extends CtBehavior> behaviors = matcher.getMatchingMethods(classLoader, className);
 				if (CollectionUtils.isNotEmpty(behaviors)) {
 					matcher.checkParameters(behaviors);
@@ -399,17 +370,6 @@ public class ByteCodeAnalyzer implements IByteCodeAnalyzer {
 			for (CtBehavior clDelegationBehavior : classLoaderDelegationBehaviors) {
 				ctBehavior = clDelegationBehavior;
 				hookInstrumenter.addClassLoaderDelegationHook((CtMethod) ctBehavior);
-			}
-		}
-		return ctBehavior;
-	}
-
-	private CtBehavior instrumentServletOrFilter(List<? extends CtBehavior> servletInstrumentationBehaviours) throws HookException {
-		CtBehavior ctBehavior = null;
-		if (CollectionUtils.isNotEmpty(servletInstrumentationBehaviours)) {
-			for (CtBehavior clDelegationBehavior : servletInstrumentationBehaviours) {
-				ctBehavior = clDelegationBehavior;
-				hookInstrumenter.addServletOrFilterHook((CtMethod) ctBehavior);
 			}
 		}
 		return ctBehavior;

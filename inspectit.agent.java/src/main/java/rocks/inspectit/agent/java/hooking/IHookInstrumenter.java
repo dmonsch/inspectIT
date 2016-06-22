@@ -56,6 +56,4 @@ public interface IHookInstrumenter {
 	 *             instrumentation was not completed successfully.
 	 */
 	void addClassLoaderDelegationHook(CtMethod ctMethod) throws HookException;
-
-	void addServletOrFilterHook(CtMethod ctBehavior) throws HookException;
 }

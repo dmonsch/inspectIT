@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpSession;
+
 public class W_HttpServletRequest {
 
 	private static final String CLAZZ = "javax.servlet.http.HttpServletRequest";
@@ -12,6 +15,8 @@ public class W_HttpServletRequest {
 	private static final CachedMethod<String> getRequestURI = new CachedMethod<String>(CLAZZ, "getRequestURI");
 	private static final CachedMethod<Map<java.lang.String, java.lang.String[]>> getParameterMap = new CachedMethod<Map<java.lang.String, java.lang.String[]>>(CLAZZ, "getParameterMap");
 	private static final CachedMethod<BufferedReader> getReader = new CachedMethod<BufferedReader>(CLAZZ, "getReader");
+	private static final CachedMethod<Cookie[]> getCookies = new CachedMethod<Cookie[]>(CLAZZ, "getCookies");
+	private static final CachedMethod<HttpSession> getSession = new CachedMethod<HttpSession>(CLAZZ, "getSession");
 
 	private final Object instance;
 
@@ -45,5 +50,13 @@ public class W_HttpServletRequest {
 
 	public BufferedReader getReader() {
 		return getReader.callSafe(instance);
+	}
+
+	public Cookie[] getCookies() {
+		return getCookies.callSafe(instance);
+	}
+
+	public HttpSession getSession() {
+		return getSession.callSafe(instance);
 	}
 }

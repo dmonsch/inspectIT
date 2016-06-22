@@ -20,9 +20,7 @@ import rocks.inspectit.agent.java.analyzer.IInheritanceAnalyzer;
 import rocks.inspectit.agent.java.analyzer.IMatchPattern;
 import rocks.inspectit.agent.java.analyzer.IMatcher;
 import rocks.inspectit.agent.java.analyzer.impl.DirectMatcher;
-import rocks.inspectit.agent.java.analyzer.impl.HttpServletMatcher;
 import rocks.inspectit.agent.java.analyzer.impl.ModifierMatcher;
-import rocks.inspectit.agent.java.analyzer.impl.ServletFilterMatcher;
 import rocks.inspectit.agent.java.analyzer.impl.SimpleMatchPattern;
 import rocks.inspectit.agent.java.analyzer.impl.SuperclassMatcher;
 import rocks.inspectit.agent.java.config.IConfigurationStorage;
@@ -156,10 +154,6 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 */
 	private Collection<IMatcher> classLoaderDelegationMatchers;
 
-	private IMatcher servletFilterMatcher;
-
-	private IMatcher httpServletMatcher;
-
 	/**
 	 * Default constructor which takes 2 parameter.
 	 *
@@ -178,7 +172,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 * {@inheritDoc}
 	 */
 	public final void setRepository(String host, int port) throws StorageException {
-		if (null == host || "".equals(host)) {
+		if ((null == host) || "".equals(host)) {
 			throw new StorageException("Repository host name cannot be null or empty!");
 		}
 
@@ -207,7 +201,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 * {@inheritDoc}
 	 */
 	public final void setAgentName(String name) throws StorageException {
-		if (null == name || "".equals(name)) {
+		if ((null == name) || "".equals(name)) {
 			throw new StorageException("Agent name cannot be null or empty!");
 		}
 
@@ -232,7 +226,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 * {@inheritDoc}
 	 */
 	public void setBufferStrategy(String clazzName, Map<String, String> settings) throws StorageException {
-		if (null == clazzName || "".equals(clazzName)) {
+		if ((null == clazzName) || "".equals(clazzName)) {
 			throw new StorageException("Buffer strategy class name cannot be null or empty!");
 		}
 
@@ -258,7 +252,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 * {@inheritDoc}
 	 */
 	public void addSendingStrategy(String clazzName, Map<String, String> settings) throws StorageException {
-		if (null == clazzName || "".equals(clazzName)) {
+		if ((null == clazzName) || "".equals(clazzName)) {
 			throw new StorageException("Sending strategy class name cannot be null or empty!");
 		}
 
@@ -290,11 +284,11 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 * {@inheritDoc}
 	 */
 	public void addMethodSensorType(String sensorTypeName, String sensorTypeClass, PriorityEnum priority, Map<String, Object> settings) throws StorageException {
-		if (null == sensorTypeName || "".equals(sensorTypeName)) {
+		if ((null == sensorTypeName) || "".equals(sensorTypeName)) {
 			throw new StorageException("Method sensor type name cannot be null or empty!");
 		}
 
-		if (null == sensorTypeClass || "".equals(sensorTypeClass)) {
+		if ((null == sensorTypeClass) || "".equals(sensorTypeClass)) {
 			throw new StorageException("Method sensor type class name cannot be null or empty!");
 		}
 
@@ -330,7 +324,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 * {@inheritDoc}
 	 */
 	public void addPlatformSensorType(String sensorTypeClass, Map<String, Object> settings) throws StorageException {
-		if (null == sensorTypeClass || "".equals(sensorTypeClass)) {
+		if ((null == sensorTypeClass) || "".equals(sensorTypeClass)) {
 			throw new StorageException("Platform sensor type class name cannot be null or empty!");
 		}
 
@@ -361,15 +355,15 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 */
 	public void addSensor(String sensorTypeName, String targetClassName, String targetMethodName, List<String> parameterList, boolean ignoreSignature, Map<String, Object> settings)
 			throws StorageException {
-		if (null == sensorTypeName || "".equals(sensorTypeName)) {
+		if ((null == sensorTypeName) || "".equals(sensorTypeName)) {
 			throw new StorageException("Sensor type name for the sensor cannot be null or empty!");
 		}
 
-		if (null == targetClassName || "".equals(targetClassName)) {
+		if ((null == targetClassName) || "".equals(targetClassName)) {
 			throw new StorageException("Target class name cannot be null or empty!");
 		}
 
-		if (null == targetMethodName || "".equals(targetMethodName)) {
+		if ((null == targetMethodName) || "".equals(targetMethodName)) {
 			throw new StorageException("Target method name cannot be null or empty!");
 		}
 
@@ -418,13 +412,13 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 			int modifiers = 0;
 			while (tokenizer.hasMoreTokens()) {
 				String modifier = tokenizer.nextToken().trim();
-				if (modifier != null && modifier.startsWith("pub")) {
+				if ((modifier != null) && modifier.startsWith("pub")) {
 					modifiers |= Modifier.PUBLIC;
-				} else if (modifier != null && modifier.startsWith("priv")) {
+				} else if ((modifier != null) && modifier.startsWith("priv")) {
 					modifiers |= Modifier.PRIVATE;
-				} else if (modifier != null && modifier.startsWith("prot")) {
+				} else if ((modifier != null) && modifier.startsWith("prot")) {
 					modifiers |= Modifier.PROTECTED;
-				} else if (modifier != null && modifier.startsWith("def")) {
+				} else if ((modifier != null) && modifier.startsWith("def")) {
 					modifiers |= ModifierMatcher.DEFAULT;
 				}
 			}
@@ -658,7 +652,7 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 * {@inheritDoc}
 	 */
 	public void addExceptionSensorType(String sensorTypeClass, Map<String, Object> settings) throws StorageException {
-		if (null == sensorTypeClass || "".equals(sensorTypeClass)) {
+		if ((null == sensorTypeClass) || "".equals(sensorTypeClass)) {
 			throw new StorageException("Exception sensor type class name cannot be null or empty!");
 		}
 
@@ -682,11 +676,11 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	 * {@inheritDoc}
 	 */
 	public void addExceptionSensorTypeParameter(String sensorTypeName, String targetClassName, boolean isVirtual, Map<String, Object> settings) throws StorageException {
-		if (null == sensorTypeName || "".equals(sensorTypeName)) {
+		if ((null == sensorTypeName) || "".equals(sensorTypeName)) {
 			throw new StorageException("Sensor type name for the sensor cannot be null or empty!");
 		}
 
-		if (null == targetClassName || "".equals(targetClassName)) {
+		if ((null == targetClassName) || "".equals(targetClassName)) {
 			throw new StorageException("Target class name cannot be null or empty!");
 		}
 
@@ -774,26 +768,9 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 	/**
 	 * {@inheritDoc}
 	 */
-	public IMatcher getServletFilterMatcher() {
-		return servletFilterMatcher;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public IMatcher getHttpServletMatcher() {
-		return httpServletMatcher;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public void afterPropertiesSet() throws Exception {
 		loadConfigurationFromJvmParameters();
 		createClassLoaderDelegationMatcher();
-
-		createServletFilterMatcher();
-		createHttpServletMatcher();
 	}
 
 	/**
@@ -855,12 +832,11 @@ public class ConfigurationStorage implements IConfigurationStorage, Initializing
 		this.classLoaderDelegationMatchers = Arrays.<IMatcher> asList(superclassIMatcher, directIMatcher);
 	}
 
-	private void createHttpServletMatcher() {
-		servletFilterMatcher = new ServletFilterMatcher(inheritanceAnalyzer, classPoolAnalyzer);
-	}
-
-	private void createServletFilterMatcher() {
-		httpServletMatcher = new HttpServletMatcher(inheritanceAnalyzer, classPoolAnalyzer);
+	/**
+	 * {@inheritDoc}
+	 */
+	public AgentEndUserMonitoringConfig getEndUserMonitoringConfig() {
+		return null;
 	}
 
 }
