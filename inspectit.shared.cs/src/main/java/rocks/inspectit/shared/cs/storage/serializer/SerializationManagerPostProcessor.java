@@ -24,6 +24,7 @@ import rocks.inspectit.shared.cs.ci.assignment.impl.TimerMethodSensorAssignment;
 import rocks.inspectit.shared.cs.ci.context.impl.FieldContextCapture;
 import rocks.inspectit.shared.cs.ci.context.impl.ParameterContextCapture;
 import rocks.inspectit.shared.cs.ci.context.impl.ReturnContextCapture;
+import rocks.inspectit.shared.cs.ci.eum.EndUserMonitoringConfig;
 import rocks.inspectit.shared.cs.ci.exclude.ExcludeRule;
 import rocks.inspectit.shared.cs.ci.profile.data.ExcludeRulesProfileData;
 import rocks.inspectit.shared.cs.ci.profile.data.JmxDefinitionProfileData;
@@ -276,6 +277,8 @@ public class SerializationManagerPostProcessor implements BeanPostProcessor {
 		kryo.register(PercentageValidator.class, new FieldSerializer<PercentageValidator<?>>(kryo, PercentageValidator.class), nextRegistrationId++);
 		kryo.register(PositiveValidator.class, new FieldSerializer<PositiveValidator<?>>(kryo, PositiveValidator.class), nextRegistrationId++);
 
+		// Added with INSPECTIT-1959
+		kryo.register(EndUserMonitoringConfig.class, new FieldSerializer<EndUserMonitoringConfig>(kryo, EndUserMonitoringConfig.class));
 		// INSPECTIT-658
 		// this classes can be registered with FieldSerializer since they are not saved to disk
 		kryo.register(AgentMapping.class, new FieldSerializer<AgentMapping>(kryo, AgentMapping.class), nextRegistrationId++);
