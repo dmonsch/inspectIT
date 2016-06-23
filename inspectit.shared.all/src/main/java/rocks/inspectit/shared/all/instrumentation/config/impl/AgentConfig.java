@@ -53,6 +53,11 @@ public class AgentConfig {
 	private StrategyConfig sendingStrategyConfig;
 
 	/**
+	 * EUM config.
+	 */
+	private AgentEndUserMonitoringConfig eumConfig;
+
+	/**
 	 * Collection of the exclude classes patterns.
 	 */
 	private Collection<IMatchPattern> excludeClassesPatterns;
@@ -281,6 +286,25 @@ public class AgentConfig {
 	}
 
 	/**
+	 * Gets {@link #eumConfig}.
+	 * 
+	 * @return {@link #eumConfig}
+	 */
+	public AgentEndUserMonitoringConfig getEumConfig() {
+		return this.eumConfig;
+	}
+
+	/**
+	 * Sets {@link #eumConfig}.
+	 * 
+	 * @param eumConfig
+	 *            New value for {@link #eumConfig}
+	 */
+	public void setEumConfig(AgentEndUserMonitoringConfig eumConfig) {
+		this.eumConfig = eumConfig;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -289,6 +313,7 @@ public class AgentConfig {
 		int result = 1;
 		result = (prime * result) + ((bufferStrategyConfig == null) ? 0 : bufferStrategyConfig.hashCode());
 		result = (prime * result) + (classCacheExistsOnCmr ? 1231 : 1237);
+		result = (prime * result) + ((eumConfig == null) ? 0 : eumConfig.hashCode());
 		result = (prime * result) + ((configurationInfo == null) ? 0 : configurationInfo.hashCode());
 		result = (prime * result) + ((exceptionSensorTypeConfig == null) ? 0 : exceptionSensorTypeConfig.hashCode());
 		result = (prime * result) + ((excludeClassesPatterns == null) ? 0 : excludeClassesPatterns.hashCode());
@@ -324,6 +349,15 @@ public class AgentConfig {
 		}
 		if (classCacheExistsOnCmr != other.classCacheExistsOnCmr) {
 			return false;
+		}
+
+		if (eumConfig == null) {
+			if (other.eumConfig != null) {
+				return false;
+			}
+		} else if (!eumConfig.equals(other.eumConfig)) {
+			return false;
+
 		}
 		if (configurationInfo == null) {
 			if (other.configurationInfo != null) {

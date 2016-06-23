@@ -13,6 +13,7 @@ import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import rocks.inspectit.shared.cs.ci.eum.EndUserMonitoringConfig;
 import rocks.inspectit.shared.cs.ci.factory.ConfigurationDefaultsFactory;
 import rocks.inspectit.shared.cs.ci.sensor.exception.IExceptionSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.exception.impl.ExceptionSensorConfig;
@@ -75,6 +76,12 @@ public class Environment {
 	private int revision = 1;
 
 	/**
+	 * End User Monitoring config. We have only one.
+	 */
+	@XmlElementRef(type = EndUserMonitoringConfig.class)
+	private final EndUserMonitoringConfig eumConfig = ConfigurationDefaultsFactory.getDefaultEndUserMonitoringConfig();
+
+	/**
 	 * Configuration for the sending strategy.
 	 * <p>
 	 * Default is {@link TimeSendingStrategyConfig}.
@@ -95,8 +102,8 @@ public class Environment {
 	 */
 	@XmlElementWrapper(name = "platform-sensor-configs")
 	@XmlElementRefs({ @XmlElementRef(type = ClassLoadingSensorConfig.class), @XmlElementRef(type = CompilationSensorConfig.class), @XmlElementRef(type = CpuSensorConfig.class),
-			@XmlElementRef(type = MemorySensorConfig.class), @XmlElementRef(type = RuntimeSensorConfig.class), @XmlElementRef(type = SystemSensorConfig.class),
-			@XmlElementRef(type = ThreadSensorConfig.class) })
+		@XmlElementRef(type = MemorySensorConfig.class), @XmlElementRef(type = RuntimeSensorConfig.class), @XmlElementRef(type = SystemSensorConfig.class),
+		@XmlElementRef(type = ThreadSensorConfig.class) })
 	private final List<IPlatformSensorConfig> platformSensorConfigs = ConfigurationDefaultsFactory.getAvailablePlatformSensorConfigs();
 
 	/**
@@ -104,8 +111,8 @@ public class Environment {
 	 */
 	@XmlElementWrapper(name = "method-sensor-configs")
 	@XmlElementRefs({ @XmlElementRef(type = ConnectionSensorConfig.class), @XmlElementRef(type = HttpSensorConfig.class), @XmlElementRef(type = InvocationSequenceSensorConfig.class),
-			@XmlElementRef(type = PreparedStatementParameterSensorConfig.class), @XmlElementRef(type = PreparedStatementSensorConfig.class), @XmlElementRef(type = StatementSensorConfig.class),
-			@XmlElementRef(type = TimerSensorConfig.class), @XmlElementRef(type = Log4jLoggingSensorConfig.class) })
+		@XmlElementRef(type = PreparedStatementParameterSensorConfig.class), @XmlElementRef(type = PreparedStatementSensorConfig.class), @XmlElementRef(type = StatementSensorConfig.class),
+		@XmlElementRef(type = TimerSensorConfig.class), @XmlElementRef(type = Log4jLoggingSensorConfig.class) })
 	private final List<IMethodSensorConfig> methodSensorConfigs = ConfigurationDefaultsFactory.getAvailableMethodSensorConfigs();
 
 	/**
@@ -324,6 +331,15 @@ public class Environment {
 	}
 
 	/**
+	 * Gets {@link #eumConfig}.
+	 *
+	 * @return {@link #eumConfig}
+	 */
+	public EndUserMonitoringConfig getEumConfig() {
+		return eumConfig;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -333,6 +349,7 @@ public class Environment {
 		result = (prime * result) + ((bufferStrategyConfig == null) ? 0 : bufferStrategyConfig.hashCode());
 		result = (prime * result) + (classLoadingDelegation ? 1231 : 1237);
 		result = (prime * result) + ((description == null) ? 0 : description.hashCode());
+		result = (prime * result) + ((eumConfig == null) ? 0 : eumConfig.hashCode());
 		result = (prime * result) + ((exceptionSensorConfig == null) ? 0 : exceptionSensorConfig.hashCode());
 		result = (prime * result) + ((id == null) ? 0 : id.hashCode());
 		result = (prime * result) + ((methodSensorConfigs == null) ? 0 : methodSensorConfigs.hashCode());
@@ -374,6 +391,13 @@ public class Environment {
 				return false;
 			}
 		} else if (!description.equals(other.description)) {
+			return false;
+		}
+		if (eumConfig == null) {
+			if (other.eumConfig != null) {
+				return false;
+			}
+		} else if (!eumConfig.equals(other.eumConfig)) {
 			return false;
 		}
 		if (exceptionSensorConfig == null) {
