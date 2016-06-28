@@ -79,7 +79,7 @@ public class Environment {
 	 * End User Monitoring config. We have only one.
 	 */
 	@XmlElementRef(type = EndUserMonitoringConfig.class)
-	private final EndUserMonitoringConfig eumConfig = ConfigurationDefaultsFactory.getDefaultEndUserMonitoringConfig();
+	private EndUserMonitoringConfig eumConfig = ConfigurationDefaultsFactory.getDefaultEndUserMonitoringConfig();
 
 	/**
 	 * Configuration for the sending strategy.
@@ -337,6 +337,16 @@ public class Environment {
 	 */
 	public EndUserMonitoringConfig getEumConfig() {
 		return eumConfig;
+	}
+
+	/**
+	 * Sets {@link #eumConfig}.
+	 *
+	 * @param eumConfig
+	 *            New value for {@link #eumConfig}
+	 */
+	public void setEumConfig(EndUserMonitoringConfig eumConfig) {
+		this.eumConfig = eumConfig;
 	}
 
 	/**

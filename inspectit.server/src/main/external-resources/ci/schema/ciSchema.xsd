@@ -14,6 +14,8 @@
   <xs:element name="connection-sensor-config" type="connectionSensorConfig"/>
 
   <xs:element name="cpu-sensor-config" type="cpuSensorConfig"/>
+  
+  <xs:element name="end-user-monitoring-config" type="endUserMonitoringConfig"/>
 
   <xs:element name="environment" type="environment"/>
 
@@ -93,6 +95,7 @@
 
   <xs:complexType name="environment">
     <xs:sequence>
+    <xs:element ref="end-user-monitoring-config"/>
       <xs:choice>
         <xs:element ref="time-sending-strategy-config"/>
         <xs:element ref="list-sending-strategy-config"/>
@@ -146,6 +149,12 @@
     <xs:attribute name="name" type="xs:string" use="required"/>
     <xs:attribute name="description" type="xs:string"/>
     <xs:attribute name="revision" type="xs:int" use="optional"/>
+  </xs:complexType>
+  
+  <xs:complexType name="endUserMonitoringConfig">
+    <xs:sequence/>
+   	<xs:attribute name="eum-enabled" type="xs:boolean" use="required"/>
+    <xs:attribute name="eum-script-base-url" type="xs:string" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="timeSendingStrategyConfig">

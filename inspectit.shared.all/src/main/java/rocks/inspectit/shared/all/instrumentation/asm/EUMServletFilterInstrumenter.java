@@ -1,15 +1,17 @@
 package rocks.inspectit.shared.all.instrumentation.asm;
 
+
 import info.novatec.inspectit.org.objectweb.asm.Label;
 import info.novatec.inspectit.org.objectweb.asm.MethodVisitor;
 import info.novatec.inspectit.org.objectweb.asm.Opcodes;
 import info.novatec.inspectit.org.objectweb.asm.Type;
 import info.novatec.inspectit.org.objectweb.asm.commons.AdviceAdapter;
+import info.novatec.inspectit.org.objectweb.asm.commons.Method;
 
 /**
- * Instrumenter that adds byte code for the class loading delegation.
+ * Instrumenter that adds byte code for the interception of EUm reqeusts and for injecting scripts.
  *
- * @author Ivan Senic
+ * @author Jonas Kunz
  *
  */
 public class EUMServletFilterInstrumenter extends AdviceAdapter {
@@ -17,22 +19,18 @@ public class EUMServletFilterInstrumenter extends AdviceAdapter {
 	/**
 	 * Class name where our IAgent exists as a field.
 	 */
-	private static final String AGENT_INTERNAL_NAME = "info/novatec/inspectit/agent/Agent";
+	private static final Type AGENT_TYPE = Type.getType("Linfo/novatec/inspectit/agent/IAgent;");
+
+	private final Type OBJECT_TYPE = Type.getType(Object.class);
+
+	private static final Type AGENT_OWNER = Type.getType("Linfo/novatec/inspectit/agent/Agent;");
 
 	/**
-	 * Internal name of our IAgent.
+	 * Class name where our IAgent exists as a field.
 	 */
-	private static final String IAGENT_INTERNAL_NAME = "info/novatec/inspectit/agent/IAgent";
+	private static final Type SERVLET_INSTRUMENTER_TYPE = Type.getType("Linfo/novatec/inspectit/agent/eum/IServletInstrumenter;");
 
-	/**
-	 * Descriptor of our IAgent.
-	 */
-	private static final String IAGENT_DESCRIPTOR = "L" + IAGENT_INTERNAL_NAME + ";";
-
-	/**
-	 * Method descriptor of the load class method in the IAgent class.
-	 */
-	private static final String IAGENT_LOAD_CLASS_METHOD_DESCRIPTOR = Type.getMethodDescriptor(Type.getType(Class.class), Type.getType(Object[].class));
+	private final Label tryBlockStart;
 
 	/**
 	 * @param mv
@@ -46,6 +44,8 @@ public class EUMServletFilterInstrumenter extends AdviceAdapter {
 	 */
 	public EUMServletFilterInstrumenter(MethodVisitor mv, int access, String name, String desc) {
 		super(Opcodes.ASM5, mv, access, name, desc);
+		System.out.println("instrumenting " + name);
+		tryBlockStart = new Label();
 	}
 
 	/**
@@ -53,32 +53,97 @@ public class EUMServletFilterInstrumenter extends AdviceAdapter {
 	 */
 	@Override
 	protected void onMethodEnter() {
-		loadAgent();
+		System.out.println("method enter... ");
 
-		// then push parameters
-		loadArgArray();
+		Type servletResponseType = Type.getType("Ljavax/servlet/ServletResponse;");
 
-		// now invoke loadClass(Object[] params) method (no parameters here)
-		mv.visitMethodInsn(Opcodes.INVOKEINTERFACE, IAGENT_INTERNAL_NAME, "loadClass", IAGENT_LOAD_CLASS_METHOD_DESCRIPTOR, true);
+		Method interceptRequestMethod = new Method("interceptRequest", Type.BOOLEAN_TYPE, new Type[] { OBJECT_TYPE, OBJECT_TYPE, OBJECT_TYPE });
+		Method instrumentResponseMethod = new Method("instrumentResponse", OBJECT_TYPE, new Type[] { OBJECT_TYPE, OBJECT_TYPE, OBJECT_TYPE });
 
-		dup();
+		loadServletInstrumenter();
 
+		dup(); // duplicate ServletIsntrumenter for further invocations
+
+		loadThis();
+		loadArg(0);
+		loadArg(1);
+		invokeInterface(SERVLET_INSTRUMENTER_TYPE, interceptRequestMethod);
+
+		// return if the request was intercepted
 		Label label = new Label();
-		ifNull(label);
+		ifZCmp(EQ, label);
 
-		returnValue();
+		pop(); // pop servletInstrumenter
+		returnValue(); // return
 
 		visitLabel(label);
+
+		loadThis();
+		loadArg(0);
+		loadArg(1);
+		invokeInterface(SERVLET_INSTRUMENTER_TYPE, instrumentResponseMethod);
+		checkCast(servletResponseType);
+		storeArg(1); // store the result as the new response object
+
+		visitLabel(tryBlockStart);
+
 	}
 
 	/**
-	 * Loads agent on the stack so that methods can be executed on it.
-	 * <p>
-	 * Protected access so we can change in tests.
+	 *
 	 */
-	protected void loadAgent() {
-		// load first the Agent.agent static field
-		mv.visitFieldInsn(Opcodes.GETSTATIC, AGENT_INTERNAL_NAME, "agent", IAGENT_DESCRIPTOR);
+	private void loadServletInstrumenter() {
+		getStatic(AGENT_OWNER, "agent", AGENT_TYPE);
+		invokeInterface(AGENT_TYPE, new Method("getServletInstrumenter", SERVLET_INSTRUMENTER_TYPE, new Type[] {}));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected void onMethodExit(int opcode) {
+		// we wont add any byte-code prior to athrow return
+		// if exception is thrown we will execute calls in the finally block we are adding
+		if (opcode == ATHROW) {
+			// exception return
+			return;
+		} else {
+			servletOrFilterExit();
+		}
+
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void visitMaxs(int maxStack, int maxLocals) {
+		// the definition of the end of the try block
+		Label tryBlockEnd = new Label();
+		visitLabel(tryBlockEnd);
+
+		Label finallyHandler = new Label();
+		// setup for the finally block
+		super.visitTryCatchBlock(tryBlockStart, tryBlockEnd, finallyHandler, null);
+		visitLabel(finallyHandler);
+
+		// generate code for calling first and second
+		// push nulls as we don't have a result
+		servletOrFilterExit();
+
+		mv.visitInsn(ATHROW);
+
+		// update the max stack stuff
+		super.visitMaxs(maxStack, maxLocals);
+	}
+
+	private void servletOrFilterExit() {
+		Method servletOrFilterExitMethod = new Method("servletOrFilterExit", Type.VOID_TYPE, new Type[] { OBJECT_TYPE });
+
+		loadServletInstrumenter();
+		loadThis();
+		invokeInterface(SERVLET_INSTRUMENTER_TYPE, servletOrFilterExitMethod);
+
 	}
 
 }
