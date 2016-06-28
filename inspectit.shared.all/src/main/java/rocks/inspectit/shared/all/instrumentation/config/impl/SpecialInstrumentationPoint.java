@@ -3,6 +3,7 @@ package rocks.inspectit.shared.all.instrumentation.config.impl;
 import info.novatec.inspectit.org.objectweb.asm.MethodVisitor;
 
 import rocks.inspectit.shared.all.instrumentation.asm.ClassLoaderDelegationMethodInstrumenter;
+import rocks.inspectit.shared.all.instrumentation.asm.EUMServletFilterInstrumenter;
 import rocks.inspectit.shared.all.instrumentation.config.IMethodInstrumentationPoint;
 import rocks.inspectit.shared.all.instrumentation.config.SpecialInstrumentationType;
 
@@ -50,6 +51,8 @@ public class SpecialInstrumentationPoint implements IMethodInstrumentationPoint 
 		switch (instrumentationType) {
 		case CLASS_LOADING_DELEGATION:
 			return new ClassLoaderDelegationMethodInstrumenter(superMethodVisitor, access, name, desc);
+		case EUM_SERVLET_OR_FILTER_INSPECTION:
+			return new EUMServletFilterInstrumenter(superMethodVisitor, access, name, desc);
 		default:
 			return null;
 		}

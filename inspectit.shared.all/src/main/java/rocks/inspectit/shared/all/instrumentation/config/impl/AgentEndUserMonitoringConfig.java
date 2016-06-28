@@ -10,6 +10,11 @@ public class AgentEndUserMonitoringConfig {
 
 	private String scriptBaseUrl;
 
+	public AgentEndUserMonitoringConfig() {
+		isEnabled = false;
+		scriptBaseUrl = "/";
+	}
+
 	/**
 	 * @param isEnabled
 	 * @param scriptBaseUrl
