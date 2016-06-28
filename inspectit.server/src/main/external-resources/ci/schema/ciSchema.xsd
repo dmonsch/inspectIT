@@ -26,6 +26,8 @@
   <xs:element name="connection-sensor-config" type="connectionSensorConfig"/>
 
   <xs:element name="cpu-sensor-config" type="cpuSensorConfig"/>
+  
+  <xs:element name="end-user-monitoring-config" type="endUserMonitoringConfig"/>
 
   <xs:element name="environment" type="environment"/>
 
@@ -406,6 +408,12 @@
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
+  </xs:complexType>
+  
+  <xs:complexType name="endUserMonitoringConfig">
+    <xs:sequence/>
+   	<xs:attribute name="eum-enabled" type="xs:boolean" use="required"/>
+    <xs:attribute name="eum-script-base-url" type="xs:string" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="timeSendingStrategyConfig">
