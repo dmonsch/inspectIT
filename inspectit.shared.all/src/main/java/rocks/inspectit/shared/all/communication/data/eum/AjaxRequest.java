@@ -1,7 +1,7 @@
 /**
  *
  */
-package rocks.inspectit.agent.java.eum.data;
+package rocks.inspectit.shared.all.communication.data.eum;
 
 /**
  * @author David Monschein
@@ -10,7 +10,9 @@ package rocks.inspectit.agent.java.eum.data;
 public class AjaxRequest extends Request {
 	private long startTime;
 	private long endTime;
+	private int status;
 	private String method;
+	private String baseUrl;
 	/**
 	 * Gets {@link #startTime}.
 	 *
@@ -67,7 +69,41 @@ public class AjaxRequest extends Request {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean isPageLoad() {
-		return false;
+	public RequestType getRequestType() {
+		return RequestType.AJAX;
+	}
+	/**
+	 * Gets {@link #status}.
+	 *
+	 * @return {@link #status}
+	 */
+	public int getStatus() {
+		return status;
+	}
+	/**
+	 * Sets {@link #status}.
+	 *
+	 * @param status
+	 *            New value for {@link #status}
+	 */
+	public void setStatus(int status) {
+		this.status = status;
+	}
+	/**
+	 * Gets {@link #baseUrl}.
+	 *   
+	 * @return {@link #baseUrl}  
+	 */ 
+	public String getBaseUrl() {
+		return baseUrl;
+	}
+	/**  
+	 * Sets {@link #baseUrl}.  
+	 *   
+	 * @param baseUrl  
+	 *            New value for {@link #baseUrl}  
+	 */
+	public void setBaseUrl(String baseUrl) {
+		this.baseUrl = baseUrl;
 	}
 }

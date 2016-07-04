@@ -1,7 +1,7 @@
 /**
  *
  */
-package rocks.inspectit.agent.java.eum.data;
+package rocks.inspectit.shared.all.communication.data.eum;
 
 import java.util.ArrayList;
 import java.util.List;
