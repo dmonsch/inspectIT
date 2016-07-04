@@ -1,7 +1,7 @@
 /**
  *
  */
-package rocks.inspectit.agent.java.eum.data;
+package rocks.inspectit.shared.all.communication.data.eum;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,5 +58,15 @@ public class PageLoadAction extends UserAction {
 
 	public void addRequest(Request r) {
 		this.requests.add(r);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<Request> getChildRequests() {
+		List<Request> copy = new ArrayList<Request>(this.requests);
+		copy.add(pageLoadRequest);
+		return copy;
 	}
 }

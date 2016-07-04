@@ -1,7 +1,7 @@
 /**
  *
  */
-package rocks.inspectit.agent.java.eum.data;
+package rocks.inspectit.shared.all.communication.data.eum;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonSubTypes;
@@ -58,5 +58,5 @@ abstract public class Request {
 		this.url = url;
 	}
 
-	abstract public boolean isPageLoad();
+	abstract public RequestType getRequestType();
 }

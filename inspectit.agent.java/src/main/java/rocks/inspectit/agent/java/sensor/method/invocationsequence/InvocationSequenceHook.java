@@ -656,4 +656,18 @@ public class InvocationSequenceHook implements IMethodHook, IConstructorHook, IC
 		throw new UnsupportedMethodException();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public void addEumData(EUMData data) {
+		throw new UnsupportedMethodException();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public EUMData getEumData() {
+		throw new UnsupportedMethodException();
+	}
+
 }

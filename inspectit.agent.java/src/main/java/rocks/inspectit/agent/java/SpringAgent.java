@@ -78,6 +78,11 @@ public class SpringAgent implements IAgent {
 	 * Ignore classes patterns.
 	 */
 	private Collection<IMatchPattern> ignoreClassesPatterns;
+	
+	/**
+	 * The hook dispatcher used by the instrumented methods.
+	 */
+	private IServletInstrumenter servletInstrumenter;
 
 	/**
 	 * Thread local to control the instrumentation transform disabled states for threads.
@@ -162,6 +167,7 @@ public class SpringAgent implements IAgent {
 
 			// load all necessary beans right away
 			hookDispatcher = beanFactory.getBean(IHookDispatcher.class);
+			servletInstrumenter = beanFactory.getBean(IServletInstrumenter.class);
 			configurationStorage = beanFactory.getBean(IConfigurationStorage.class);
 			byteCodeAnalyzer = beanFactory.getBean(IByteCodeAnalyzer.class);
 
@@ -258,6 +264,13 @@ public class SpringAgent implements IAgent {
 	 */
 	public IHookDispatcher getHookDispatcher() {
 		return hookDispatcher;
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	public IServletInstrumenter getServletInstrumenter() {
+		return servletInstrumenter;
 	}
 
 	/**

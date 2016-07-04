@@ -103,6 +103,13 @@ public class TagInjectionResponseWrapper implements IProxySubject{
 		this.contentLengthSet = len;
 	}
 
+	@ProxyMethod
+	public void setContentLengthLong(long len) {
+		// we do not delegate this call at this moment- maybe we have to used chunked encoding for
+		// the request
+		this.contentLengthSet = (int) len;
+	}
+
 
 	/**
 	 * Called when the headers are commited. At this point of time we have to decide whether we force chunked encoding.
