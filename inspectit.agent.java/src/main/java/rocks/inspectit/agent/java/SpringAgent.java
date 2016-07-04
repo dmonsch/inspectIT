@@ -11,6 +11,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import rocks.inspectit.agent.java.analyzer.IByteCodeAnalyzer;
 import rocks.inspectit.agent.java.config.IConfigurationStorage;
+import rocks.inspectit.agent.java.eum.IServletInstrumenter;
 import rocks.inspectit.agent.java.hooking.IHookDispatcher;
 import rocks.inspectit.agent.java.logback.LogInitializer;
 import rocks.inspectit.agent.java.spring.SpringConfiguration;
@@ -78,6 +79,11 @@ public class SpringAgent implements IAgent {
 	 * Ignore classes patterns.
 	 */
 	private Collection<IMatchPattern> ignoreClassesPatterns;
+
+	/**
+	 * The hook dispatcher used by the instrumented methods.
+	 */
+	private IServletInstrumenter servletInstrumenter;
 
 	/**
 	 * Constructor initializing this agent.
@@ -152,6 +158,7 @@ public class SpringAgent implements IAgent {
 
 			// load all necessary beans right away
 			hookDispatcher = beanFactory.getBean(IHookDispatcher.class);
+			servletInstrumenter = beanFactory.getBean(IServletInstrumenter.class);
 			configurationStorage = beanFactory.getBean(IConfigurationStorage.class);
 			byteCodeAnalyzer = beanFactory.getBean(IByteCodeAnalyzer.class);
 
@@ -248,6 +255,13 @@ public class SpringAgent implements IAgent {
 	 */
 	public IHookDispatcher getHookDispatcher() {
 		return hookDispatcher;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public IServletInstrumenter getServletInstrumenter() {
+		return servletInstrumenter;
 	}
 
 	/**

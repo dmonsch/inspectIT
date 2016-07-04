@@ -1,7 +1,7 @@
 /**
  *
  */
-package rocks.inspectit.agent.java.eum.data;
+package rocks.inspectit.shared.all.communication.data.eum;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -175,6 +175,14 @@ public class ClickAction extends UserAction implements IJavaScriptEvListenerActi
 	 */
 	public void addRequest(Request r) {
 		this.requests.add(r);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<Request> getChildRequests() {
+		return this.requests;
 	}
 
 }

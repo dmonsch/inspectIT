@@ -1,14 +1,12 @@
 package rocks.inspectit.agent.java.eum;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.CharBuffer;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.springframework.beans.BeansException;
@@ -28,10 +26,6 @@ import rocks.inspectit.shared.all.spring.logger.Log;
  */
 @Component
 public class ServletInstrumenter implements IServletInstrumenter, InitializingBean {
-
-	// TODO: important: only instrument non container-core filters! Can be done by adding a
-	// blacklisting / whitelisting mechanism
-
 	/**
 	 * The runtime linker for creating proxies.
 	 */
@@ -59,26 +53,16 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 * The url to which the instrumentation script is mapped, should not overwrite any server
 	 * resources.
 	 */
-	private static final String JAVASCRIPT_URL_PREFIX = "/wps/eumscript/";
+	private static final String JAVASCRIPT_URL_PREFIX = "/wps/eumscript/inspectit_jsagent_";
 
 	/**
 	 * The url which gets called by our javascript for sending back the captured data.
 	 */
 	private static final String BEACON_URL = "/wps/contenthandler/eum_handler";
-
-	// TODO: insert the cookie in the agent and not in a seperate file
-	private static final String COOKIE_SETUP_JAVASCRIPT = "window.inspectIT_eum_cookieId = \"{{id}}\";";
 	/**
 	 * the script tag which will be inserted in the head section of every html document.
 	 */
-	private static final String SCRIPT_TAG = "\r\n<script type=\"text/javascript\" src=\"/wps/eumscript/EUMCookie.js\">\r\n</script>\r\n<script type=\"text/javascript\" src=\"/wps/eumscript/inspectit_js_agent.js\"></script>\r\n";
-	/**
-	 * the path to the javascript in the resources.
-	 */
-	private static final String SCRIPT_RESOURCE_PATH = "/js/";
-
-	public ServletInstrumenter() {
-	}
+	private static final String SCRIPT_TAG = "<script type=\"text/javascript\" src=\"/wps/eumscript/inspectit_jsagent_ablr12.js\"></script>\r\n";
 
 	/**
 	 * {@inheritDoc}
@@ -100,16 +84,9 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 		}
 
 		if (path.toLowerCase().startsWith(JAVASCRIPT_URL_PREFIX.toLowerCase())) {
-			String scriptPath = SCRIPT_RESOURCE_PATH + path.substring(JAVASCRIPT_URL_PREFIX.length());
-			if (scriptPath.equals(SCRIPT_RESOURCE_PATH + "EUMCookie.js")) {
-				// sending an dynamic generated id for cookie
-				String generatedId = UUID.randomUUID().toString(); // will be unique
-				String cookieSetupJS = COOKIE_SETUP_JAVASCRIPT.replace("{{id}}", generatedId);
-				InputStream stringStream = new ByteArrayInputStream(cookieSetupJS.getBytes());
-				sendScript(res, stringStream);
-			} else {
-				sendScript(res, getClass().getResourceAsStream(scriptPath));
-			}
+			String scriptArgumentsWithEnding = path.substring(JAVASCRIPT_URL_PREFIX.length());
+			String scriptArgumentsNoEnding = scriptArgumentsWithEnding.substring(0, scriptArgumentsWithEnding.lastIndexOf('.'));
+			sendScript(res, JSAgentBuilder.buildJsFile(scriptArgumentsNoEnding));
 			return true;
 		} else if (path.equalsIgnoreCase(BEACON_URL)) {
 			// send everything ok response
@@ -151,8 +128,8 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 *
 	 * @param res
 	 *            the response to write
-	 * @param resourcePath
-	 *            path to the javascript resources
+	 * @param resource
+	 *            stream from the resource.
 	 */
 	private void sendScript(W_HttpServletResponse res, InputStream resource) {
 		// we respond with the script code
@@ -167,8 +144,7 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 		try {
 			fr = new InputStreamReader(in);
 			CharBuffer buf = CharBuffer.allocate(4096);
-			while (fr.ready()) {
-				fr.read(buf);
+			while (fr.read(buf) != -1) {
 				res.getWriter().write(buf.array(), 0, buf.position());
 				buf.position(0);
 			}

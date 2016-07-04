@@ -1,7 +1,7 @@
 /**
  *
  */
-package rocks.inspectit.agent.java.eum.data;
+package rocks.inspectit.shared.all.communication.data.eum;
 
 /**
  * @author David Monschein
@@ -94,8 +94,8 @@ public class ResourceLoadRequest extends Request {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean isPageLoad() {
-		return false;
+	public RequestType getRequestType() {
+		return RequestType.RESOURCELOAD;
 	}
 
 }

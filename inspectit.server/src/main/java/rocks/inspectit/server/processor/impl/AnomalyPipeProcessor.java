@@ -30,7 +30,9 @@ public class AnomalyPipeProcessor extends AbstractCmrDataProcessor {
 	 */
 	@Override
 	protected void processData(DefaultData defaultData, EntityManager entityManager) {
-		streamSystem.process((InvocationSequenceData) defaultData);
+		/*
+		 * streamSystem.process((InvocationSequenceData) defaultData);
+		 */
 	}
 
 	/**

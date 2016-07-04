@@ -4,9 +4,7 @@
 package rocks.inspectit.agent.java.eum.data;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jackson.JsonNode;
@@ -14,12 +12,24 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import rocks.inspectit.agent.java.core.ICoreService;
+import rocks.inspectit.shared.all.communication.data.EUMData;
+import rocks.inspectit.shared.all.communication.data.eum.AjaxRequest;
+import rocks.inspectit.shared.all.communication.data.eum.ClickAction;
+import rocks.inspectit.shared.all.communication.data.eum.PageLoadAction;
+import rocks.inspectit.shared.all.communication.data.eum.PageLoadRequest;
+import rocks.inspectit.shared.all.communication.data.eum.Request;
+import rocks.inspectit.shared.all.communication.data.eum.RequestType;
+import rocks.inspectit.shared.all.communication.data.eum.ResourceLoadRequest;
+import rocks.inspectit.shared.all.communication.data.eum.UserAction;
+import rocks.inspectit.shared.all.communication.data.eum.UserSession;
 
 /**
  * Class for processing beacons which the javascript agent sends back to the agent.
  *
  * @author David Monschein
  */
+
+// TODO if data not in our format don't accept it
 public class DataHandler {
 
 	// JSON OBJ CONFIG CONSTANTS (STRUCTURE OF THE JSON OBJ)
@@ -40,11 +50,6 @@ public class DataHandler {
 	private final Map<String, UserSession> sessionMap;
 
 	/**
-	 * A list containing all user actions which need to get send to the CMR.
-	 */
-	private final List<UserAction> actions;
-
-	/**
 	 * Needed for parsing json beacon data.
 	 */
 	private final ObjectMapper jsonMapper = new ObjectMapper();
@@ -58,7 +63,6 @@ public class DataHandler {
 	 * Creates a new instance which handles sessions and user actions.
 	 */
 	public DataHandler(ICoreService coreService) {
-		this.actions = new ArrayList<UserAction>();
 		this.sessionMap = new HashMap<String, UserSession>();
 		this.coreService = coreService;
 	}
@@ -135,7 +139,7 @@ public class DataHandler {
 
 				if (parsedAction != null) {
 					parsedAction.setUserSession(userSession);
-					actions.add(parsedAction);
+					sendAction(parsedAction);
 				}
 			}
 		}
@@ -154,7 +158,7 @@ public class DataHandler {
 		for (JsonNode req : contentArray) {
 			try {
 				Request childRequest = jsonMapper.readValue(req, Request.class);
-				if (childRequest.isPageLoad()) {
+				if (childRequest.getRequestType() == RequestType.PAGELOAD) {
 					// no instanceof :)
 					rootAction.setPageLoadRequest((PageLoadRequest) childRequest);
 				} else {
@@ -208,7 +212,34 @@ public class DataHandler {
 		// for creating a session when the client already has one but it disappeared on the server
 		UserSession r = new UserSession();
 		r.setSessionId(id);
+		r.setBrowser("unknown");
+		r.setDevice("unknown");
+		r.setLanguage("unknown");
 		sessionMap.put(id, r);
+	}
+
+	private void sendAction(UserAction action) {
+		// transform to EUM data and add
+		EUMData data = new EUMData();
+		data.setUserSession(action.getUserSession());
+
+		for (Request req : action.getChildRequests()) {
+			switch (req.getRequestType()) {
+			case AJAX:
+				data.addAjaxRequest((AjaxRequest) req);
+				break;
+			case PAGELOAD:
+				data.addPageLoadRequest((PageLoadRequest) req);
+				break;
+			case RESOURCELOAD:
+				data.addResourceLoadRequest((ResourceLoadRequest) req);
+				break;
+			default:
+				break;
+			}
+		}
+
+		this.coreService.addEumData(data);
 	}
 
 }

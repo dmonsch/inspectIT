@@ -1,6 +1,8 @@
 package rocks.inspectit.agent.java.core.impl;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +32,7 @@ import rocks.inspectit.shared.all.communication.DefaultData;
 import rocks.inspectit.shared.all.communication.ExceptionEvent;
 import rocks.inspectit.shared.all.communication.MethodSensorData;
 import rocks.inspectit.shared.all.communication.SystemSensorData;
+import rocks.inspectit.shared.all.communication.data.EUMData;
 import rocks.inspectit.shared.all.communication.data.ExceptionSensorData;
 import rocks.inspectit.shared.all.communication.data.JmxSensorValueData;
 import rocks.inspectit.shared.all.spring.logger.Log;
@@ -325,6 +328,21 @@ public class CoreService implements ICoreService, InitializingBean, DisposableBe
 		builder.append(throwableIdentityHashCode);
 
 		return (ExceptionSensorData) sensorDataObjects.get(builder.toString());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void addEumData(EUMData data) {
+		data.setTimeStamp(new Timestamp(new Date().getTime()));
+		sensorDataObjects.put("eumdata", data);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public EUMData getEumData() {
+		return (EUMData) sensorDataObjects.get("eumdata");
 	}
 
 	/**

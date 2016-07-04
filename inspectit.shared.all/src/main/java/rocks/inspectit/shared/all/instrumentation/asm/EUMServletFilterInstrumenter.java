@@ -19,16 +19,16 @@ public class EUMServletFilterInstrumenter extends AdviceAdapter {
 	/**
 	 * Class name where our IAgent exists as a field.
 	 */
-	private static final Type AGENT_TYPE = Type.getType("Linfo/novatec/inspectit/agent/IAgent;");
+	private static final Type AGENT_TYPE = Type.getType("Lrocks/inspectit/agent/java/IAgent;");
 
 	private final Type OBJECT_TYPE = Type.getType(Object.class);
 
-	private static final Type AGENT_OWNER = Type.getType("Linfo/novatec/inspectit/agent/Agent;");
+	private static final Type AGENT_OWNER = Type.getType("Lrocks/inspectit/agent/java/Agent;");
 
 	/**
 	 * Class name where our IAgent exists as a field.
 	 */
-	private static final Type SERVLET_INSTRUMENTER_TYPE = Type.getType("Linfo/novatec/inspectit/agent/eum/IServletInstrumenter;");
+	private static final Type SERVLET_INSTRUMENTER_TYPE = Type.getType("Lrocks/inspectit/agent/java/eum/IServletInstrumenter;");
 
 	private final Label tryBlockStart;
 
@@ -44,7 +44,6 @@ public class EUMServletFilterInstrumenter extends AdviceAdapter {
 	 */
 	public EUMServletFilterInstrumenter(MethodVisitor mv, int access, String name, String desc) {
 		super(Opcodes.ASM5, mv, access, name, desc);
-		System.out.println("instrumenting " + name);
 		tryBlockStart = new Label();
 	}
 
@@ -53,8 +52,6 @@ public class EUMServletFilterInstrumenter extends AdviceAdapter {
 	 */
 	@Override
 	protected void onMethodEnter() {
-		System.out.println("method enter... ");
-
 		Type servletResponseType = Type.getType("Ljavax/servlet/ServletResponse;");
 
 		Method interceptRequestMethod = new Method("interceptRequest", Type.BOOLEAN_TYPE, new Type[] { OBJECT_TYPE, OBJECT_TYPE, OBJECT_TYPE });
