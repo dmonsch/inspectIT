@@ -9,29 +9,11 @@ package rocks.inspectit.shared.all.communication.data.eum;
  */
 public class ResourceLoadRequest extends Request {
 
-	private String name;
 	private long startTime;
 	private long endTime;
 	private String initiatorType;
-
-	/**
-	 * Gets {@link #name}.
-	 *
-	 * @return {@link #name}
-	 */
-	public String getName() {
-		return this.name;
-	}
-
-	/**
-	 * Sets {@link #name}.
-	 *
-	 * @param name
-	 *            New value for {@link #name}
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+	private long transferSize;
+	private String initiatorUrl;
 
 	/**
 	 * Gets {@link #startTime}.
@@ -96,6 +78,44 @@ public class ResourceLoadRequest extends Request {
 	@Override
 	public RequestType getRequestType() {
 		return RequestType.RESOURCELOAD;
+	}
+
+	/**
+	 * Gets {@link #transferSize}.
+	 *
+	 * @return {@link #transferSize}
+	 */
+	public long getTransferSize() {
+		return transferSize;
+	}
+
+	/**
+	 * Sets {@link #transferSize}.
+	 *
+	 * @param transferSize
+	 *            New value for {@link #transferSize}
+	 */
+	public void setTransferSize(long transferSize) {
+		this.transferSize = transferSize;
+	}
+
+	/**
+	 * Gets {@link #initiatorUrl}.
+	 *   
+	 * @return {@link #initiatorUrl}  
+	 */ 
+	public String getInitiatorUrl() {
+		return initiatorUrl;
+	}
+
+	/**  
+	 * Sets {@link #initiatorUrl}.  
+	 *   
+	 * @param initiatorUrl  
+	 *            New value for {@link #initiatorUrl}  
+	 */
+	public void setInitiatorUrl(String initiatorUrl) {
+		this.initiatorUrl = initiatorUrl;
 	}
 
 }

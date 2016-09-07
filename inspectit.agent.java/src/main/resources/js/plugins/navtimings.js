@@ -1,3 +1,4 @@
+
 // TIMINGS MODULE
 inspectIT.timings = (function () {
 	var rum_speedindex = null;

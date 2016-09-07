@@ -33,6 +33,7 @@ import rocks.inspectit.shared.all.communication.data.eum.UserSession;
 public class DataHandler {
 
 	// JSON OBJ CONFIG CONSTANTS (STRUCTURE OF THE JSON OBJ)
+	private static final String JSON_BASEURL_ATTRIBUTE = "baseUrl";
 	private static final String JSON_SESSIONID_ATTRIBUTE = "sessionId";
 	private static final String JSON_TYPE_ATTRIBUTE = "type";
 	private static final String JSON_TYPE_SESSION = "userSession";
@@ -119,11 +120,11 @@ public class DataHandler {
 	 *            json object representing a user action
 	 */
 	private void createUserAction(JsonNode obj) {
-		if (obj.has(JSON_SESSIONID_ATTRIBUTE) && obj.has(JSON_ACTION_CONTENTS) && obj.has(JSON_ACTION_SPECTYPE)) {
+		if (obj.has(JSON_SESSIONID_ATTRIBUTE) && obj.has(JSON_ACTION_CONTENTS) && obj.has(JSON_ACTION_SPECTYPE) && obj.has(JSON_BASEURL_ATTRIBUTE)) {
 			String specType = obj.get(JSON_ACTION_SPECTYPE).asText();
 			String sessionId = obj.get(JSON_SESSIONID_ATTRIBUTE).asText();
+			String baseUrl = obj.get(JSON_BASEURL_ATTRIBUTE).asText();
 
-			// do we need this in reality?
 			if (!sessionMap.containsKey(sessionId)) {
 				createEmptySession(sessionId);
 			}
@@ -139,6 +140,7 @@ public class DataHandler {
 
 				if (parsedAction != null) {
 					parsedAction.setUserSession(userSession);
+					parsedAction.setBaseUrl(baseUrl);
 					sendAction(parsedAction);
 				}
 			}
@@ -218,9 +220,16 @@ public class DataHandler {
 		sessionMap.put(id, r);
 	}
 
+	/**
+	 * Generates an EUM data object and sends it to the cmr.
+	 *
+	 * @param action
+	 *            the action which should be transfered to the cmr.
+	 */
 	private void sendAction(UserAction action) {
 		// transform to EUM data and add
 		EUMData data = new EUMData();
+		data.setBaseUrl(action.getBaseUrl());
 		data.setUserSession(action.getUserSession());
 
 		for (Request req : action.getChildRequests()) {
