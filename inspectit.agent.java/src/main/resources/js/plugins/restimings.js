@@ -1,3 +1,4 @@
+
 // TIMINGS MODULE
 inspectIT.timings = (function () {
 	
@@ -21,7 +22,9 @@ inspectIT.timings = (function () {
 					url : resourceList[i].name,
 					startTime : Math.round(resourceList[i].startTime),
 					endTime : Math.round(resourceList[i].responseEnd),
-					initiatorType : resourceList[i].initiatorType
+					initiatorType : resourceList[i].initiatorType,
+					transferSize : resourceList[i].decodedBodySize,
+					initiatorUrl : window.location.href
 				});
 			}
 			if (timingsList.length > 0) {

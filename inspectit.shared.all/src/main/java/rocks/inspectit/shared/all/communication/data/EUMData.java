@@ -3,9 +3,6 @@ package rocks.inspectit.shared.all.communication.data;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.Transient;
-
 import rocks.inspectit.shared.all.communication.DefaultData;
 import rocks.inspectit.shared.all.communication.data.eum.AjaxRequest;
 import rocks.inspectit.shared.all.communication.data.eum.PageLoadRequest;
@@ -13,10 +10,11 @@ import rocks.inspectit.shared.all.communication.data.eum.ResourceLoadRequest;
 import rocks.inspectit.shared.all.communication.data.eum.UserSession;
 
 /**
+ * Class for communicating eum data between agent and CMR.
+ *
  * @author David Monschein
  *
  */
-@Entity
 public class EUMData extends DefaultData {
 
 	/**
@@ -24,15 +22,15 @@ public class EUMData extends DefaultData {
 	 */
 	private static final long serialVersionUID = 6706272659481517962L;
 
-	@Transient
 	private UserSession userSession;
 
-	@Transient
 	private List<PageLoadRequest> pageLoadRequests;
-	@Transient
+
 	private List<ResourceLoadRequest> resourceLoadRequests;
-	@Transient
+
 	private List<AjaxRequest> ajaxRequests;
+
+	private String baseUrl;
 
 	public EUMData() {
 		this.pageLoadRequests = new ArrayList<PageLoadRequest>();
@@ -96,6 +94,25 @@ public class EUMData extends DefaultData {
 	 */
 	public void setUserSession(UserSession userSession) {
 		this.userSession = userSession;
+	}
+
+	/**
+	 * Gets {@link #baseUrl}.
+	 *   
+	 * @return {@link #baseUrl}  
+	 */ 
+	public String getBaseUrl() {
+		return baseUrl;
+	}
+
+	/**  
+	 * Sets {@link #baseUrl}.  
+	 *   
+	 * @param baseUrl  
+	 *            New value for {@link #baseUrl}  
+	 */
+	public void setBaseUrl(String baseUrl) {
+		this.baseUrl = baseUrl;
 	}
 
 }
