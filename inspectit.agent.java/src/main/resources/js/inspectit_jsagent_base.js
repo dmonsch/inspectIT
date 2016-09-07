@@ -113,6 +113,8 @@ inspectIT.util = (function () {
 		xhrPost.setRequestHeader("Content-Type", "application/json");
 		// add sessionid
 		dataObject.sessionId = inspectIT.cookies.getCurrentId();
+		dataObject.baseUrl = window.location.href;
+		
 		xhrPost.send(JSON.stringify(dataObject));
 	}
 	
@@ -159,19 +161,11 @@ inspectIT.cookies = (function () {
 	}
 	
 	function checkCookieId() {
-		
-		// check if we have an existing action
-		inspectIT.action.restoreFromSession();
 		if (!inspectIT.action.hasActions()) {
 			// NEW PAGELOADACTION
 			var pageLoadAction = inspectIT.action.enterAction("pageLoad");
 			window.addEventListener("load", function() {
 				inspectIT.action.leaveAction(pageLoadAction);
-			});
-		} else {
-			// PAGELOAD because of useraction
-			window.addEventListener("load", function() {
-				inspectIT.action.finishRestoredActionRoot();
 			});
 		}
 		
@@ -205,16 +199,13 @@ inspectIT.cookies = (function () {
 
 //ACTION MODULE
 //Identifying user actions and send if they're complete
-//NEEDS : SESSIONSTORAGE
 inspectIT.action = (function () {
 	var actions = [];
 	var actionChildIds = [];
 	var finishedChilds = [];
-	var snapshotData = [];
 	
 	var offset = 0;
 	var restoredActions = 0;
-	var unloadInited = false;
 	
 	// For action capturing
 	function enterAction(specType) {
@@ -290,38 +281,12 @@ inspectIT.action = (function () {
 		snapshotData.splice(id, 1);
 	}
 	
-	// finishes the action which caused a new page load
-	function finishRestoredActionRoot() {
-		if (restoredActions > 0) {
-			for (var i = 0; i < restoredActions; i++) {
-				// assign end time
-				actions[i].contents[0].endTime = inspectIT.util.timestamp();
-				finishedChilds[i].push(actionChildIds[i][0]);
-			}
-		}
-	}
-	
 	// submits data to a action
-	function submitData(entrId, data, isSnapshot) {
-		if (typeof isSnapshot === 'undefined') { isSnapshot = false; }
-		
+	function submitData(entrId, data) {
 		var currentAction = getActionFromId(entrId);
 		if (currentAction >= 0) {
-			if (!isSnapshot) {
-				actions[currentAction].contents.push(data);
-			} else {
-				snapshotData[currentAction].push(data);
-			}
+			actions[currentAction].contents.push(data);
 		} // otherwise we can't assign it to an action
-	}
-	
-	// adds the snapshot data to the action data
-	// if the action wasn't finished and the site disappears or something similar
-	function swapSnapshotData(id) {
-		if (!(id < snapshotData.length)) return;
-		for (var i = 0; i < snapshotData[id].length; i++) {
-			actions[id].contents.push(snapshotData[id][i]);
-		}
 	}
 	
 	// gets the action id from child id
@@ -334,80 +299,6 @@ inspectIT.action = (function () {
 		return -1;
 	}
 	
-	// determines wheter the root of the action was finished or not
-	function actionRootComplete(actionId) {
-		if (actionId >= actions.length) return true;
-		for (var i = 0; i < finishedChilds[actionId].length; i++) {
-			if (finishedChilds[actionId][i] == actionChildIds[actionId][0]) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	// finish all actions except of the one (or none) who "caused" the unload
-	function beforeUnload() {
-		unloadInited = true;
-		
-		var k = 0;
-		while (k < actions.length) { // will terminate always
-			if (actionRootComplete(k)) {
-				// we need to do the ajax sync otherwise it will be cancelled
-				finishAction(k, true);
-			} else {
-				swapSnapshotData(k);
-				k++;
-			}
-		}
-		
-		saveToSession();
-	}
-	
-	// SESSION STORAGE THINGS
-	function saveToSession() {
-		// max 1 action (the one which caused the location change)
-		if (window.sessionStorage && actions.length > 0) {
-			sessionStorage.setItem("inspectIT_actions", JSON.stringify(actions));
-			sessionStorage.setItem("inspectIT_actionChilds", JSON.stringify(actionChildIds));
-			sessionStorage.setItem("inspectIT_finishedChilds", JSON.stringify(finishedChilds));
-			sessionStorage.setItem("inspectIT_offset", String(actionChildIds[0][0]));
-		}
-	}
-	
-	function restoreFromSession() {
-		if (window.sessionStorage) {
-			if (sessionStorage.getItem("inspectIT_actions") !== null
-					&& sessionStorage.getItem("inspectIT_actionChilds") !== null
-					&& sessionStorage.getItem("inspectIT_finishedChilds") !== null
-					&& sessionStorage.getItem("inspectIT_offset") !== null) {
-				
-				actions = JSON.parse(sessionStorage.getItem("inspectIT_actions"));
-				actionChildIds = JSON.parse(sessionStorage.getItem("inspectIT_actionChilds"));
-				finishedChilds = JSON.parse(sessionStorage.getItem("inspectIT_finishedChilds"));
-				offset = JSON.parse(sessionStorage.getItem("inspectIT_offset"));
-				
-				clearSessionStorage();
-				
-				restoredActions = actions.length;
-			}
-		}
-	}
-	
-	function clearSessionStorage() {
-		sessionStorage.removeItem("inspectIT_actions");
-		sessionStorage.removeItem("inspectIT_actionChilds");
-		sessionStorage.removeItem("inspectIT_finishedChilds");
-		sessionStorage.removeItem("inspectIT_offset");
-	}
-	
-	// CREATE LISTENERS AND INSTRUMENT SOME FUNCS
-	function initialize() {
-		// add listener for before unload
-		window.addEventListener("beforeunload", function (event) {
-			inspectIT.action.beforeUnload();
-		});
-	}
-	
 	return {
 		enterAction : enterAction,
 		leaveAction : leaveAction,
@@ -417,8 +308,7 @@ inspectIT.action = (function () {
 		restoreFromSession : restoreFromSession,
 		hasActions : hasActions,
 		beforeUnload : beforeUnload,
-		finishRestoredActionRoot : finishRestoredActionRoot,
-		init : initialize
+		finishRestoredActionRoot : finishRestoredActionRoot
 	}
 })();
 

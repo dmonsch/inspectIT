@@ -1,3 +1,4 @@
+
 // LISTENER MODULE
 inspectIT.listener = (function () {
 	var instrumentedEvents = {
@@ -107,7 +108,6 @@ inspectIT.listener = (function () {
 			activeEvents[currId] = function(e) {
 				var currAction = inspectIT.action.enterAction("click");
 				dataObj.beginTime = inspectIT.util.timestamp();
-				inspectIT.action.submitData(currAction, dataObj, true);
 				
 				callback.call(this, e);
 				

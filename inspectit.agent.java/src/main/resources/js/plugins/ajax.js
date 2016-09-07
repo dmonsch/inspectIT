@@ -1,3 +1,4 @@
+
 // AJAX MODULE
 inspectIT.ajax = (function () {
 	var settings = window.inspectIT_settings;
@@ -16,7 +17,8 @@ inspectIT.ajax = (function () {
 					method : method,
 					url : url,
 					async : async,
-					status : 200
+					status : 200,
+					startTime : inspectIT.util.timestamp()
 				};
 				
 				// action capturing
@@ -45,7 +47,7 @@ inspectIT.ajax = (function () {
 						 var percentComplete = oEvent.loaded / oEvent.total;
 						 if (percentComplete >= 1) { // -> we're finished
 							 ajaxRecord.status = this.status;
-							 ajaxRecord.baseUrl = document.location.href;
+							 ajaxRecord.baseUrl = window.location.href;
 							 ajaxRecord.endTime = inspectIT.util.timestamp();
 							 inspectIT.action.submitData(currAjaxAction, ajaxRecord);
 							 ajaxRecord.sent = true;

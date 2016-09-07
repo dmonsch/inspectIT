@@ -441,18 +441,18 @@ public class PageLoadRequest extends Request {
 
 	/**
 	 * Gets {@link #firstpaint}.
-	 *   
-	 * @return {@link #firstpaint}  
-	 */ 
+	 *
+	 * @return {@link #firstpaint}
+	 */
 	public double getFirstpaint() {
 		return firstpaint;
 	}
 
-	/**  
-	 * Sets {@link #firstpaint}.  
-	 *   
-	 * @param firstpaint  
-	 *            New value for {@link #firstpaint}  
+	/**
+	 * Sets {@link #firstpaint}.
+	 *
+	 * @param firstpaint
+	 *            New value for {@link #firstpaint}
 	 */
 	public void setFirstpaint(double firstpaint) {
 		this.firstpaint = firstpaint;
@@ -460,20 +460,47 @@ public class PageLoadRequest extends Request {
 
 	/**
 	 * Gets {@link #speedindex}.
-	 *   
-	 * @return {@link #speedindex}  
-	 */ 
+	 *
+	 * @return {@link #speedindex}
+	 */
 	public double getSpeedindex() {
 		return speedindex;
 	}
 
-	/**  
-	 * Sets {@link #speedindex}.  
-	 *   
-	 * @param speedindex  
-	 *            New value for {@link #speedindex}  
+	/**
+	 * Sets {@link #speedindex}.
+	 *
+	 * @param speedindex
+	 *            New value for {@link #speedindex}
 	 */
 	public void setSpeedindex(double speedindex) {
 		this.speedindex = speedindex;
+	}
+
+	/**
+	 * Rebases all navigation timing api values to the navigation start.
+	 */
+	public void baseline() {
+		this.setConnectEndW(Math.max(connectEndW - navigationStartW, 0L));
+		this.setConnectStartW(Math.max(connectStartW - navigationStartW, 0L));
+		this.setDomainLookupEndW(Math.max(domainLookupEndW - navigationStartW, 0L));
+		this.setDomainLookupStartW(Math.max(domainLookupStartW - navigationStartW, 0L));
+		this.setDomCompleteW(Math.max(domCompleteW - navigationStartW, 0L));
+		this.setDomContentLoadedEventEndW(Math.max(domContentLoadedEventEndW - navigationStartW, 0L));
+		this.setDomContentLoadedEventStartW(Math.max(domContentLoadedEventStartW - navigationStartW, 0L));
+		this.setDomInteractiveW(Math.max(domInteractiveW - navigationStartW, 0L));
+		this.setDomLoadingW(Math.max(domLoadingW - navigationStartW, 0L));
+		this.setFetchStartW(Math.max(fetchStartW - navigationStartW, 0L));
+		this.setLoadEventEndW(Math.max(loadEventEndW - navigationStartW, 0L));
+		this.setLoadEventStartW(Math.max(loadEventStartW - navigationStartW, 0L));
+		this.setRedirectEndW(Math.max(redirectEndW - navigationStartW, 0L));
+		this.setRedirectStartW(Math.max(redirectStartW - navigationStartW, 0L));
+		this.setRequestStartW(Math.max(requestStartW - navigationStartW, 0L));
+		this.setResponseEndW(Math.max(responseEndW - navigationStartW, 0L));
+		this.setResponseStartW(Math.max(responseStartW - navigationStartW, 0L));
+		this.setSecureConnectionStartW(Math.max(secureConnectionStartW - navigationStartW, 0L));
+		this.setUnloadEventEndW(Math.max(unloadEventEndW - navigationStartW, 0L));
+		this.setUnloadEventStartW(Math.max(unloadEventStartW - navigationStartW, 0L));
+		this.setNavigationStartW(0L);
 	}
 }

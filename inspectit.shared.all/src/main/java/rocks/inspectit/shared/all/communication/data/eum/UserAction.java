@@ -12,6 +12,7 @@ import java.util.List;
 public abstract class UserAction {
 
 	private UserSession userSession;
+	private String baseUrl;
 
 	/**
 	 * Gets {@link #userSession}.
@@ -33,5 +34,24 @@ public abstract class UserAction {
 	}
 
 	public abstract List<Request> getChildRequests();
+
+	/**
+	 * Gets {@link #baseUrl}.
+	 *   
+	 * @return {@link #baseUrl}  
+	 */ 
+	public String getBaseUrl() {
+		return baseUrl;
+	}
+
+	/**  
+	 * Sets {@link #baseUrl}.  
+	 *   
+	 * @param baseUrl  
+	 *            New value for {@link #baseUrl}  
+	 */
+	public void setBaseUrl(String baseUrl) {
+		this.baseUrl = baseUrl;
+	}
 
 }
