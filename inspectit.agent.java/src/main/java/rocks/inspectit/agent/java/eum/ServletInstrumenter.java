@@ -7,9 +7,9 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.CharBuffer;
+import java.util.UUID;
 
 import org.slf4j.Logger;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -38,7 +38,7 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 */
 	@Autowired
 	private ICoreService coreService;
-
+	
 	/**
 	 * Configuration storage to read settings from.
 	 */
@@ -60,13 +60,14 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 * The url to which the instrumentation script is mapped, should not overwrite any server
 	 * resources.
 	 */
-	private String javascriptUrlPrefix = "/wps/eumscript/inspectit_jsagent_";
+	private static final String JAVASCRIPT_URL_PREFIX = "inspectit_jsagent_";
 
 	/**
 	 * The url which gets called by our javascript for sending back the captured data.
 	 */
-	private static final String BEACON_URL = "/wps/contenthandler/eum_handler";
+	private static final String BEACON_SUB_PATH = "eum_handler";
 
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -85,13 +86,15 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 			e2.printStackTrace();
 			return false;
 		}
+		
+		String jsScriptPrefix = getJavascriptPrefix();
 
-		if (path.toLowerCase().startsWith(javascriptUrlPrefix.toLowerCase())) {
-			String scriptArgumentsWithEnding = path.substring(javascriptUrlPrefix.length());
+		if (path.toLowerCase().startsWith(jsScriptPrefix.toLowerCase())) {
+			String scriptArgumentsWithEnding = path.substring(jsScriptPrefix.length());
 			String scriptArgumentsNoEnding = scriptArgumentsWithEnding.substring(0, scriptArgumentsWithEnding.lastIndexOf('.'));
 			sendScript(res, JSAgentBuilder.buildJsFile(scriptArgumentsNoEnding));
 			return true;
-		} else if (path.equalsIgnoreCase(BEACON_URL)) {
+		} else if (path.equalsIgnoreCase(getBeaconUrl())) {
 			// send everything ok response
 			res.setStatus(200);
 			res.getWriter().flush();
@@ -176,8 +179,11 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 		if (W_HttpServletResponse.isInstance(httpResponseObj)) {
 			if (!linker.isProxyInstance(httpResponseObj, TagInjectionResponseWrapper.class)) {
 
+				Object sessionIdCookie = generateSessionIDCookie(httpRequestObj);
+
+
 				ClassLoader cl = httpResponseObj.getClass().getClassLoader();
-				TagInjectionResponseWrapper wrap = new TagInjectionResponseWrapper(httpResponseObj, generateScriptTag());
+				TagInjectionResponseWrapper wrap = new TagInjectionResponseWrapper(httpResponseObj, sessionIdCookie, getScriptTag());
 				Object proxy = linker.createProxy(TagInjectionResponseWrapper.class, wrap, cl);
 				if (proxy == null) {
 					return httpResponseObj;
@@ -191,18 +197,73 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * @param httpRequestObj
 	 */
-	public void servletOrFilterExit(Object servletOrFilter) {
-		log.info("Exited: " + servletOrFilter.getClass().getName());
+	private Object generateSessionIDCookie(Object httpRequestObj) {
+
+		// check if it already has an id set
+		W_HttpServletRequest request = W_HttpServletRequest.wrap(httpRequestObj);
+		Object[] cookies = request.getCookies();
+		if (cookies != null) {
+			for (Object cookieObj : cookies) {
+				W_Cookie cookie = W_Cookie.wrap(cookieObj);
+				if (cookie.getName().equals(JSAgentBuilder.SESSION_ID_COOKIE_NAME)) {
+					return null;
+				}
+			}
+		}
+
+		String id = generateUEMId();
+
+		//otherweise generate the cookie
+		Object cookie = W_Cookie.newInstance(httpRequestObj.getClass().getClassLoader(), JSAgentBuilder.SESSION_ID_COOKIE_NAME, id);
+		W_Cookie wrappedCookie = W_Cookie.wrap(cookie);
+		wrappedCookie.setMaxAge(JSAgentBuilder.SESSION_COOKIE_MAX_AGE_SECONDS);
+		wrappedCookie.setPath("/");
+		return cookie;
+	}
+
+	/**
+	 *
+	 */
+	private String generateUEMId() {
+		return UUID.randomUUID().toString(); // will be unique
+	}
+
+	private String getBeaconUrl() {
+		String base = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
+		if (!base.endsWith("/")) {
+			base += "/";
+		}
+		return base + BEACON_SUB_PATH;
+	}
+
+
+	private String getJavascriptPrefix() {
+		String base = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
+		if (!base.endsWith("/")) {
+			base += "/";
+		}
+		return base + JAVASCRIPT_URL_PREFIX;
+	}
+
+	private String getScriptTag() {
+		StringBuilder tags = new StringBuilder();
+		tags.append("<script type=\"text/javascript\">\r\n");
+		tags.append("window.inspectIT_settings = {\r\n");
+		tags.append("eumManagementServer : \"").append(getBeaconUrl()).append("\"\r\n");
+		tags.append("};\r\n");
+		tags.append("</script>\r\n");
+		tags.append("<script type=\"text/javascript\" src=\"").append(getJavascriptPrefix()).append("a12").append(".js\"></script>\r\n");
+		return tags.toString();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object postProcessAfterInitialization(Object arg0, String arg1) throws BeansException {
+	public void servletOrFilterExit(Object servletOrFilter) {
 		// TODO Auto-generated method stub
-		return null;
+
 	}
 
 	/**
@@ -210,26 +271,5 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 */
 	public void afterPropertiesSet() throws Exception {
 		dataHandler = new DataHandler(coreService);
-
-		String scriptBaseUrl = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
-		if (!scriptBaseUrl.equals("")) {
-			// reformat it
-			if (!scriptBaseUrl.endsWith("/")) {
-				scriptBaseUrl += "/";
-			}
-			scriptBaseUrl += "inspectit_jsagent_";
-			// set it
-			javascriptUrlPrefix = scriptBaseUrl;
-		}
-	}
-
-	/**
-	 * Generates the script tag to inject into all HTML responses.
-	 *
-	 * @return generated script tag.
-	 */
-	private String generateScriptTag() {
-		String configString = "ablr12"; // here we can define the modules
-		return "<script type=\"text/javascript\" src=\"" + javascriptUrlPrefix + configString + ".js\"></script>\r\n";
 	}
 }

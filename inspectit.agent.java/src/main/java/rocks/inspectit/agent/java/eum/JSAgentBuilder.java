@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Helper class for creating a javascript agent which only has some specified modules (plugins).
@@ -17,6 +16,16 @@ import java.util.UUID;
  *
  */
 public final class JSAgentBuilder {
+
+	/**
+	 * The name of the cookie to use for storing the UEM session ID.
+	 */
+	public static final String SESSION_ID_COOKIE_NAME = "inspectIT_cookieId";
+
+	/**
+	 * The max-age of the UEM session cookie. Currently set to 60 minutes.
+	 */
+	public static final int SESSION_COOKIE_MAX_AGE_SECONDS = 60 * 60;
 
 	/**
 	 * Maps argument chars (strings with one character) to plugin files.
@@ -37,10 +46,7 @@ public final class JSAgentBuilder {
 		}
 	};
 
-	/**
-	 * The javascript for setting the session id.
-	 */
-	private static final String COOKIE_SETUP_JAVASCRIPT = "window.inspectIT_eum_cookieId = \"{{id}}\";\r\n";
+
 
 	/**
 	 * Javascript code which starts the execution at the end when all plugins are loaded.
@@ -66,12 +72,8 @@ public final class JSAgentBuilder {
 	 */
 	protected static InputStream buildJsFile(String arguments) {
 		// generate cookie script
-		String generatedId = UUID.randomUUID().toString(); // will be unique
-		String cookieSetupJS = COOKIE_SETUP_JAVASCRIPT.replace("{{id}}", generatedId);
-		InputStream stringStream = new ByteArrayInputStream(cookieSetupJS.getBytes());
 
 		List<InputStream> streams = new ArrayList<InputStream>();
-		streams.add(stringStream);
 		streams.add(JSAgentBuilder.class.getResourceAsStream(JSBASE_RESOURCE));
 
 		// add wanted plugins

@@ -4,12 +4,10 @@ package rocks.inspectit.agent.java.eum;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class W_HttpServletResponse {
 
 	private static final String CLAZZ = "javax.servlet.http.HttpServletResponse";
-	private static final ConcurrentHashMap<ClassLoader, Class<?>> clazzCache = new ConcurrentHashMap<ClassLoader, Class<?>>();
 
 	private static final CachedMethod<Void> setStatus = new CachedMethod<Void>(CLAZZ,"setStatus",int.class);
 	private static final CachedMethod<Void> setContentType = new CachedMethod<Void>(CLAZZ,"setContentType",String.class);
@@ -20,6 +18,7 @@ public class W_HttpServletResponse {
 	private static final CachedMethod<Void> setLocale = new CachedMethod<Void>(CLAZZ,"setLocale",Locale.class);
 	private static final CachedMethod<PrintWriter> getWriter = new CachedMethod<PrintWriter>(CLAZZ,"getWriter");
 	private static final CachedMethod<OutputStream> getOutputStream = new CachedMethod<OutputStream>(CLAZZ,"getOutputStream");
+	private static final CachedMethod<Void> addCookie = new CachedMethod<Void>(CLAZZ, "addCookie", "javax.servlet.http.Cookie");
 
 	private Object instance;
 
@@ -28,15 +27,7 @@ public class W_HttpServletResponse {
 	}
 
 	public static boolean isInstance(Object instance) {
-		ClassLoader cl = instance.getClass().getClassLoader();
-		if (!clazzCache.containsKey(cl)) {
-			try {
-				clazzCache.putIfAbsent(cl, Class.forName(CLAZZ, false, cl));
-			} catch (ClassNotFoundException e) {
-				return false;
-			}
-		}
-		return clazzCache.get(cl).isInstance(instance);
+		return ClassLoaderAwareClassCache.isInstance(instance, CLAZZ);
 	}
 
 	public static W_HttpServletResponse wrap(Object request) {
@@ -88,6 +79,12 @@ public class W_HttpServletResponse {
 		return instance;
 	}
 
+	/**
+	 * @param cookieToSet
+	 */
+	public void addCookie(Object cookieToSet) {
+		addCookie.callSafe(instance, cookieToSet);
+	}
 
 
 }
