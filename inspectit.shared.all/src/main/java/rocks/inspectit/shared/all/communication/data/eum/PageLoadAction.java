@@ -7,13 +7,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Represents a Pageloadaction which is an user action.
+ * 
  * @author David Monschein
- *
  */
 public class PageLoadAction extends UserAction {
+	/**
+	 * Belonging Pageload request with 1 to 1 relationship.
+	 */
 	private PageLoadRequest pageLoadRequest;
+
+	/**
+	 * List of all subrequests.
+	 */
 	private List<Request> requests;
 
+	/**
+	 * Creates a new page load action with no child requests.
+	 */
 	public PageLoadAction() {
 		this.requests = new ArrayList<Request>();
 	}
@@ -56,6 +67,12 @@ public class PageLoadAction extends UserAction {
 		this.requests = requests;
 	}
 
+	/**
+	 * Adds a single request to this action.
+	 *
+	 * @param r
+	 *            the request which should belong to this action.
+	 */
 	public void addRequest(Request r) {
 		this.requests.add(r);
 	}

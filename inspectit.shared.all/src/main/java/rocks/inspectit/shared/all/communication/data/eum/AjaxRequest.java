@@ -4,14 +4,34 @@
 package rocks.inspectit.shared.all.communication.data.eum;
 
 /**
+ * Representing an AJAX request.
+ * 
  * @author David Monschein
- *
  */
 public class AjaxRequest extends Request {
+
+	/**
+	 * Start time of the Ajax request.
+	 */
 	private long startTime;
+
+	/**
+	 * End time of the Ajax request.
+	 */
 	private long endTime;
+	/**
+	 * Status with which the Ajax request was completed. (e.g. 200 for successful)
+	 */
 	private int status;
+
+	/**
+	 * Method which was used to send the Ajax request (e.g. GET or POST).
+	 */
 	private String method;
+
+	/**
+	 * The base URL of the ajax request.
+	 */
 	private String baseUrl;
 	/**
 	 * Gets {@link #startTime}.
@@ -91,17 +111,17 @@ public class AjaxRequest extends Request {
 	}
 	/**
 	 * Gets {@link #baseUrl}.
-	 *   
-	 * @return {@link #baseUrl}  
-	 */ 
+	 *
+	 * @return {@link #baseUrl}
+	 */
 	public String getBaseUrl() {
 		return baseUrl;
 	}
-	/**  
-	 * Sets {@link #baseUrl}.  
-	 *   
-	 * @param baseUrl  
-	 *            New value for {@link #baseUrl}  
+	/**
+	 * Sets {@link #baseUrl}.
+	 *
+	 * @param baseUrl
+	 *            New value for {@link #baseUrl}
 	 */
 	public void setBaseUrl(String baseUrl) {
 		this.baseUrl = baseUrl;

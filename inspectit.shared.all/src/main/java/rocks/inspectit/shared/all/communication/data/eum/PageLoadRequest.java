@@ -4,32 +4,147 @@
 package rocks.inspectit.shared.all.communication.data.eum;
 
 /**
- * @author David Monschein
+ * Representing a page load request.
  *
+ * @author David Monschein
  */
 public class PageLoadRequest extends Request {
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long navigationStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long unloadEventStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long unloadEventEndW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long redirectStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long redirectEndW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long fetchStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long domainLookupStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long domainLookupEndW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long connectStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long connectEndW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long secureConnectionStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long requestStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long responseStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long responseEndW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long domLoadingW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long domInteractiveW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long domContentLoadedEventStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long domContentLoadedEventEndW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long domCompleteW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long loadEventStartW;
+	/**
+	 * refers to @see
+	 * <a href="https://www.w3.org/TR/navigation-timing/#sec-navigation-timing-interface">Navigation
+	 * timings</a>.
+	 */
 	private long loadEventEndW;
+
+	/**
+	 * UEM speed index.
+	 * @see <a href="https://github.com/WPO-Foundation/RUM-SpeedIndex">RUM speedindex</a>
+	 */
 	private double speedindex;
+
+	/**
+	 * First paint event which is involved in the speedindex calculation progress.
+	 */
 	private double firstpaint;
 
 	/**

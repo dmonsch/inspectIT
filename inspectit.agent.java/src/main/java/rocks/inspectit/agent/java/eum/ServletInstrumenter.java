@@ -14,6 +14,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import rocks.inspectit.agent.java.config.IConfigurationStorage;
 import rocks.inspectit.agent.java.core.ICoreService;
 import rocks.inspectit.agent.java.eum.data.DataHandler;
 import rocks.inspectit.agent.java.proxy.IRuntimeLinker;
@@ -39,6 +40,12 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	private ICoreService coreService;
 
 	/**
+	 * Configuration storage to read settings from.
+	 */
+	@Autowired
+	private IConfigurationStorage configurationStorage;
+
+	/**
 	 * Handles the data which we get from the JS agent.
 	 */
 	private DataHandler dataHandler;
@@ -53,16 +60,12 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 * The url to which the instrumentation script is mapped, should not overwrite any server
 	 * resources.
 	 */
-	private static final String JAVASCRIPT_URL_PREFIX = "/wps/eumscript/inspectit_jsagent_";
+	private String javascriptUrlPrefix = "/wps/eumscript/inspectit_jsagent_";
 
 	/**
 	 * The url which gets called by our javascript for sending back the captured data.
 	 */
 	private static final String BEACON_URL = "/wps/contenthandler/eum_handler";
-	/**
-	 * the script tag which will be inserted in the head section of every html document.
-	 */
-	private static final String SCRIPT_TAG = "<script type=\"text/javascript\" src=\"/wps/eumscript/inspectit_jsagent_ablr12.js\"></script>\r\n";
 
 	/**
 	 * {@inheritDoc}
@@ -83,8 +86,8 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 			return false;
 		}
 
-		if (path.toLowerCase().startsWith(JAVASCRIPT_URL_PREFIX.toLowerCase())) {
-			String scriptArgumentsWithEnding = path.substring(JAVASCRIPT_URL_PREFIX.length());
+		if (path.toLowerCase().startsWith(javascriptUrlPrefix.toLowerCase())) {
+			String scriptArgumentsWithEnding = path.substring(javascriptUrlPrefix.length());
 			String scriptArgumentsNoEnding = scriptArgumentsWithEnding.substring(0, scriptArgumentsWithEnding.lastIndexOf('.'));
 			sendScript(res, JSAgentBuilder.buildJsFile(scriptArgumentsNoEnding));
 			return true;
@@ -174,7 +177,7 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 			if (!linker.isProxyInstance(httpResponseObj, TagInjectionResponseWrapper.class)) {
 
 				ClassLoader cl = httpResponseObj.getClass().getClassLoader();
-				TagInjectionResponseWrapper wrap = new TagInjectionResponseWrapper(httpResponseObj, SCRIPT_TAG);
+				TagInjectionResponseWrapper wrap = new TagInjectionResponseWrapper(httpResponseObj, generateScriptTag());
 				Object proxy = linker.createProxy(TagInjectionResponseWrapper.class, wrap, cl);
 				if (proxy == null) {
 					return httpResponseObj;
@@ -207,5 +210,26 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 */
 	public void afterPropertiesSet() throws Exception {
 		dataHandler = new DataHandler(coreService);
+
+		String scriptBaseUrl = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
+		if (!scriptBaseUrl.equals("")) {
+			// reformat it
+			if (!scriptBaseUrl.endsWith("/")) {
+				scriptBaseUrl += "/";
+			}
+			scriptBaseUrl += "inspectit_jsagent_";
+			// set it
+			javascriptUrlPrefix = scriptBaseUrl;
+		}
+	}
+
+	/**
+	 * Generates the script tag to inject into all HTML responses.
+	 *
+	 * @return generated script tag.
+	 */
+	private String generateScriptTag() {
+		String configString = "ablr12"; // here we can define the modules
+		return "<script type=\"text/javascript\" src=\"" + javascriptUrlPrefix + configString + ".js\"></script>\r\n";
 	}
 }
