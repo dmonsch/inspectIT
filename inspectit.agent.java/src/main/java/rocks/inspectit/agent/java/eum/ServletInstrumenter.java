@@ -38,7 +38,7 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 */
 	@Autowired
 	private ICoreService coreService;
-	
+
 	/**
 	 * Configuration storage to read settings from.
 	 */
@@ -65,9 +65,13 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	/**
 	 * The url which gets called by our javascript for sending back the captured data.
 	 */
-	private static final String BEACON_SUB_PATH = "eum_handler";
+	private static final String BEACON_SUB_PATH = "inspectIT_beacon_handler";
 
-	
+	private String completeBeaconURL;
+	private String completeJavascriptURLPrefix;
+	private String completeScriptTags;
+
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -86,15 +90,13 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 			e2.printStackTrace();
 			return false;
 		}
-		
-		String jsScriptPrefix = getJavascriptPrefix();
 
-		if (path.toLowerCase().startsWith(jsScriptPrefix.toLowerCase())) {
-			String scriptArgumentsWithEnding = path.substring(jsScriptPrefix.length());
+		if (path.toLowerCase().startsWith(completeJavascriptURLPrefix.toLowerCase())) {
+			String scriptArgumentsWithEnding = path.substring(completeJavascriptURLPrefix.length());
 			String scriptArgumentsNoEnding = scriptArgumentsWithEnding.substring(0, scriptArgumentsWithEnding.lastIndexOf('.'));
 			sendScript(res, JSAgentBuilder.buildJsFile(scriptArgumentsNoEnding));
 			return true;
-		} else if (path.equalsIgnoreCase(getBeaconUrl())) {
+		} else if (path.equalsIgnoreCase(completeBeaconURL)) {
 			// send everything ok response
 			res.setStatus(200);
 			res.getWriter().flush();
@@ -183,7 +185,7 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 
 
 				ClassLoader cl = httpResponseObj.getClass().getClassLoader();
-				TagInjectionResponseWrapper wrap = new TagInjectionResponseWrapper(httpResponseObj, sessionIdCookie, getScriptTag());
+				TagInjectionResponseWrapper wrap = new TagInjectionResponseWrapper(httpResponseObj, sessionIdCookie, completeScriptTags);
 				Object proxy = linker.createProxy(TagInjectionResponseWrapper.class, wrap, cl);
 				if (proxy == null) {
 					return httpResponseObj;
@@ -230,34 +232,6 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 		return UUID.randomUUID().toString(); // will be unique
 	}
 
-	private String getBeaconUrl() {
-		String base = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
-		if (!base.endsWith("/")) {
-			base += "/";
-		}
-		return base + BEACON_SUB_PATH;
-	}
-
-
-	private String getJavascriptPrefix() {
-		String base = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
-		if (!base.endsWith("/")) {
-			base += "/";
-		}
-		return base + JAVASCRIPT_URL_PREFIX;
-	}
-
-	private String getScriptTag() {
-		StringBuilder tags = new StringBuilder();
-		tags.append("<script type=\"text/javascript\">\r\n");
-		tags.append("window.inspectIT_settings = {\r\n");
-		tags.append("eumManagementServer : \"").append(getBeaconUrl()).append("\"\r\n");
-		tags.append("};\r\n");
-		tags.append("</script>\r\n");
-		tags.append("<script type=\"text/javascript\" src=\"").append(getJavascriptPrefix()).append("a12").append(".js\"></script>\r\n");
-		return tags.toString();
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -271,5 +245,36 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 */
 	public void afterPropertiesSet() throws Exception {
 		dataHandler = new DataHandler(coreService);
+		completeBeaconURL = buildBeaconUrl();
+		completeJavascriptURLPrefix = buildJavascriptPrefix();
+		completeScriptTags = buildScriptTag();
+	}
+
+	private String buildBeaconUrl() {
+		String base = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
+		if (!base.endsWith("/")) {
+			base += "/";
+		}
+		return base + BEACON_SUB_PATH;
+	}
+
+
+	private String buildJavascriptPrefix() {
+		String base = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
+		if (!base.endsWith("/")) {
+			base += "/";
+		}
+		return base + JAVASCRIPT_URL_PREFIX;
+	}
+
+	private String buildScriptTag() {
+		StringBuilder tags = new StringBuilder();
+		tags.append("<script type=\"text/javascript\">\r\n");
+		tags.append("window.inspectIT_settings = {\r\n");
+		tags.append("eumManagementServer : \"").append(completeBeaconURL).append("\"\r\n");
+		tags.append("};\r\n");
+		tags.append("</script>\r\n");
+		tags.append("<script type=\"text/javascript\" src=\"").append(completeJavascriptURLPrefix).append("a12").append(".js\"></script>\r\n");
+		return tags.toString();
 	}
 }
