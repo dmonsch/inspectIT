@@ -4,15 +4,35 @@
 package rocks.inspectit.shared.all.communication.data.eum;
 
 /**
- * @author David Monschein
+ * Request which contains informations about a single resource load. (e.g. CSS file)
  *
+ * @author David Monschein
  */
 public class ResourceLoadRequest extends Request {
 
+	/**
+	 * Start time of the resource load request.
+	 */
 	private long startTime;
+
+	/**
+	 * End time of the resource load request.
+	 */
 	private long endTime;
+
+	/**
+	 * Determines from what the resource loading got triggered.
+	 */
 	private String initiatorType;
+
+	/**
+	 * The size in octets of the resource.
+	 */
 	private long transferSize;
+
+	/**
+	 * The URL which triggered the resource load.
+	 */
 	private String initiatorUrl;
 
 	/**
@@ -101,18 +121,18 @@ public class ResourceLoadRequest extends Request {
 
 	/**
 	 * Gets {@link #initiatorUrl}.
-	 *   
-	 * @return {@link #initiatorUrl}  
-	 */ 
+	 *
+	 * @return {@link #initiatorUrl}
+	 */
 	public String getInitiatorUrl() {
 		return initiatorUrl;
 	}
 
-	/**  
-	 * Sets {@link #initiatorUrl}.  
-	 *   
-	 * @param initiatorUrl  
-	 *            New value for {@link #initiatorUrl}  
+	/**
+	 * Sets {@link #initiatorUrl}.
+	 *
+	 * @param initiatorUrl
+	 *            New value for {@link #initiatorUrl}
 	 */
 	public void setInitiatorUrl(String initiatorUrl) {
 		this.initiatorUrl = initiatorUrl;

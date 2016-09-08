@@ -9,15 +9,25 @@ import org.codehaus.jackson.annotate.JsonSubTypes.Type;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 
 /**
+ * Represents a request. This is either an ajax request, a page load request or a resource load
+ * request.
+ * 
  * @author David Monschein
- *
  */
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ @Type(value = AjaxRequest.class), @Type(value = PageLoadRequest.class), @Type(value = ResourceLoadRequest.class) })
-abstract public class Request {
+public abstract class Request {
+
+	/**
+	 * Invocation sequence id. -> Not implemented yet.
+	 */
 	private long invocationSeqId;
+
+	/**
+	 * The URL for this request.
+	 */
 	private String url;
 
 	/**
@@ -58,5 +68,10 @@ abstract public class Request {
 		this.url = url;
 	}
 
-	abstract public RequestType getRequestType();
+	/**
+	 * Gets the type of this request.
+	 *
+	 * @return type of this request.
+	 */
+	public abstract RequestType getRequestType();
 }

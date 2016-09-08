@@ -1,22 +1,16 @@
-//configuration
-window.inspectIT_settings = {
-	eumManagementServer : "/wps/contenthandler/eum_handler"
-};
-
 // STARTUP MODULE
 var inspectIT = (function() {
 	
 	function init() {
-		if (window.diagnoseIT_isRunning) {
+		if (window.inspectIT_isRunning) {
 			console.log("Injected script is already running, terminating new instance.");
 			return;
 		} else {
-			window.diagnoseIT_isRunning = true;
+			window.inspectIT_isRunning = true;
 		}
 		
 		// check if id exists and set if not
 		inspectIT.cookies.checkCookieId();
-		inspectIT.action.init();
 		for (plugin in inspectIT.plugins) {
 			inspectIT.plugins[plugin].init();
 		}
@@ -46,7 +40,6 @@ var inspectIT = (function() {
 
 //UTILITY MODULE
 inspectIT.util = (function () {
-	
 	var settings = window.inspectIT_settings;
 	
 	function getCurrentTimeStamp() {
@@ -108,14 +101,14 @@ inspectIT.util = (function () {
 	}
 	
 	function sendToEUMServer(dataObject, forceSynchronous) {
-		var xhrPost = new XMLHttpRequest();
-		xhrPost.open("POST", settings["eumManagementServer"], !forceSynchronous);
-		xhrPost.setRequestHeader("Content-Type", "application/json");
-		// add sessionid
-		dataObject.sessionId = inspectIT.cookies.getCurrentId();
-		dataObject.baseUrl = window.location.href;
-		
-		xhrPost.send(JSON.stringify(dataObject));
+		if (typeof navigator.sendBeacon !== "undefined") {
+			navigator.sendBeacon(settings["eumManagementServer"], JSON.stringify(dataObject));
+		} else {
+			var xhrPost = new XMLHttpRequest();
+			xhrPost.open("POST", settings["eumManagementServer"], !forceSynchronous);
+			xhrPost.setRequestHeader("Content-Type", "application/json");
+			xhrPost.send(JSON.stringify(dataObject));
+		}
 	}
 	
 	function getFunctionName(func) {
@@ -137,12 +130,6 @@ inspectIT.util = (function () {
 inspectIT.cookies = (function () {
 	function hasCookie(name) {
 		return getCookie(name) !== null;
-	}
-	
-	function setCookie(key, value, expireMinutes) {
-		var d = new Date();
-		d.setTime(d.getTime() + (expireMinutes * 60 * 1000));
-		document.cookie = key + "=" + value + "; expires=" + d.toUTCString(); 
 	}
 	
 	function getCookie(key) {
@@ -169,21 +156,16 @@ inspectIT.cookies = (function () {
 			});
 		}
 		
-		if (!hasCookie("inspectIT_cookieId")) {
-			// see if we have an id to set
-			if (typeof window.inspectIT_eum_cookieId !== "undefined") {
-				setCookie("inspectIT_cookieId", window.inspectIT_eum_cookieId, 60);
-				
-				// new UserSession
-				var browserData = inspectIT.util.browserinfo();
-				var sessionData = {
-					type : "userSession",
-					device : browserData.os,
-					browser : browserData.name,
-					language : browserData.lang
-				}
-				inspectIT.util.callback(sessionData);
+		if (hasCookie("inspectIT_cookieId")) {
+			var browserData = inspectIT.util.browserinfo();
+			var sessionData = {
+				type : "userSession",
+				device : browserData.os,
+				browser : browserData.name,
+				language : browserData.lang,
+				sessionId : inspectIT.cookies.getCurrentId()
 			}
+			inspectIT.util.callback(sessionData);
 		}
 	}
 	
@@ -197,6 +179,46 @@ inspectIT.cookies = (function () {
 	}
 })();
 
+inspectIT.actionBundler = (function () {
+	var currentBundle = [];
+	var timeoutTask = null;
+	var taskFinished = true;
+	var lastRequest = null;
+	var TIMEWINDOW = 2500;
+	var MAXTIMEWINDOW = 15000;
+	
+	function addAction(action) {
+		action.sessionId = inspectIT.cookies.getCurrentId();
+		action.baseUrl = window.location.href;
+		
+		currentBundle.push(action);
+		if (!taskFinished) {
+			clearTimeout(timeoutTask);
+		}
+		
+		var currStamp = inspectIT.util.timestamp();
+		if (lastRequest != null && currStamp - lastRequest >= MAXTIMEWINDOW) {
+			// send immediately
+			finishBundle();
+			taskFinished = true;
+		} else {
+			if (lastRequest == null) lastRequest = currStamp;
+			timeoutTask = setTimeout(finishBundle, TIMEWINDOW);
+			taskFinished = false;
+		}
+	}
+	
+	function finishBundle() {
+		inspectIT.util.callback(currentBundle);
+		currentBundle = [];
+		lastRequest = inspectIT.util.timestamp();
+	}
+	
+	return {
+		addAction : addAction
+	}
+})();
+
 //ACTION MODULE
 //Identifying user actions and send if they're complete
 inspectIT.action = (function () {
@@ -205,7 +227,6 @@ inspectIT.action = (function () {
 	var finishedChilds = [];
 	
 	var offset = 0;
-	var restoredActions = 0;
 	
 	// For action capturing
 	function enterAction(specType) {
@@ -216,13 +237,12 @@ inspectIT.action = (function () {
 		});
 		actionChildIds.push([++offset]);
 		finishedChilds.push([]);
-		snapshotData.push([]);
 		return offset;
 	}
 	
 	function leaveAction(enterId) {
 		var actionId = getActionFromId(enterId);
-		if (actionId >= 0 && !unloadInited) {
+		if (actionId >= 0) {
 			finishedChilds[actionId].push(enterId);
 			actionFinished(actionId); // check if finished
 		}
@@ -265,7 +285,7 @@ inspectIT.action = (function () {
 	function finishAction(id, sync) {
 		if (typeof sync === "undefined") sync = false;
 		
-		inspectIT.util.callback(actions[id], sync);
+		inspectIT.actionBundler.addAction(actions[id]);
 		forceRemove(id);
 		
 		if (actions.length == 0) {
@@ -278,7 +298,6 @@ inspectIT.action = (function () {
 		actions.splice(id, 1);
 		finishedChilds.splice(id, 1);
 		actionChildIds.splice(id, 1);
-		snapshotData.splice(id, 1);
 	}
 	
 	// submits data to a action
@@ -305,10 +324,7 @@ inspectIT.action = (function () {
 		enterChild : enterChild,
 		leaveChild : leaveChild,
 		submitData : submitData,
-		restoreFromSession : restoreFromSession,
-		hasActions : hasActions,
-		beforeUnload : beforeUnload,
-		finishRestoredActionRoot : finishRestoredActionRoot
+		hasActions : hasActions
 	}
 })();
 
