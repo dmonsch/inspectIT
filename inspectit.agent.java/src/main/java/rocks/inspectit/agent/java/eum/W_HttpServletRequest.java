@@ -2,17 +2,16 @@ package rocks.inspectit.agent.java.eum;
 
 import java.io.BufferedReader;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 
 public class W_HttpServletRequest {
 
 	private static final String CLAZZ = "javax.servlet.http.HttpServletRequest";
-	private static final ConcurrentHashMap<ClassLoader, Class<?>> clazzCache = new ConcurrentHashMap<ClassLoader, Class<?>>();
 
 	private static final CachedMethod<String> getRequestURI = new CachedMethod<String>(CLAZZ,"getRequestURI");
 	private static final CachedMethod<Map<java.lang.String,java.lang.String[]>> getParameterMap = new CachedMethod<Map<java.lang.String,java.lang.String[]>>(CLAZZ,"getParameterMap");
 	private static final CachedMethod<BufferedReader> getReader = new CachedMethod<BufferedReader>(CLAZZ, "getReader");
+	private static final CachedMethod<Object[]> getCookies = new CachedMethod<Object[]>(CLAZZ, "getCookies");
 
 	private Object instance;
 
@@ -25,15 +24,7 @@ public class W_HttpServletRequest {
 	}
 
 	public static boolean isInstance(Object instance) {
-		ClassLoader cl = instance.getClass().getClassLoader();
-		if (!clazzCache.containsKey(cl)) {
-			try {
-				clazzCache.putIfAbsent(cl, Class.forName(CLAZZ, false, cl));
-			} catch (ClassNotFoundException e) {
-				return false;
-			}
-		}
-		return clazzCache.get(cl).isInstance(instance);
+		return ClassLoaderAwareClassCache.isInstance(instance, CLAZZ);
 	}
 
 	public String getRequestURI() {
@@ -46,5 +37,9 @@ public class W_HttpServletRequest {
 
 	public BufferedReader getReader() {
 		return getReader.callSafe(instance);
+	}
+
+	public Object[] getCookies() {
+		return getCookies.callSafe(instance);
 	}
 }
