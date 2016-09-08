@@ -37,10 +37,13 @@ public class TagInjectionResponseWrapper implements IProxySubject{
 
 	private String tagToInject;
 
+	private Object cookieToSet;
+
 	private Integer contentLengthSet = null;
 
-	public TagInjectionResponseWrapper(Object responseObject, String tagToInject) {
+	public TagInjectionResponseWrapper(Object responseObject, Object cookieToSet, String tagToInject) {
 		this.tagToInject = tagToInject;
+		this.cookieToSet = cookieToSet;
 		wrappedResponse = W_HttpServletResponse.wrap(responseObject);
 	}
 
@@ -58,7 +61,7 @@ public class TagInjectionResponseWrapper implements IProxySubject{
 	@ProxyMethod
 	public PrintWriter getWriter() throws IOException {
 		if(wrappedWriter == null) {
-			commitContentLength();
+			commitHeaderData();
 			PrintWriter originalWriter = wrappedResponse.getWriter();
 			//avoid rewrapping or unnecessary wrapping
 			if(isNonHTMLContentTypeSet() || (originalWriter instanceof TagInjectionPrintWriter)) {
@@ -75,7 +78,7 @@ public class TagInjectionResponseWrapper implements IProxySubject{
 	public OutputStream getOutputStream() throws IOException {
 
 		if (wrappedStream == null) {
-			commitContentLength();
+			commitHeaderData();
 			OutputStream originalStream = wrappedResponse.getOutputStream();
 			//avoid rewrapping or unncessary wrapping
 			if (isNonHTMLContentTypeSet() || linker.isProxyInstance(originalStream, TagInjectionOutputStream.class)) {
@@ -114,10 +117,14 @@ public class TagInjectionResponseWrapper implements IProxySubject{
 	/**
 	 * Called when the headers are commited. At this point of time we have to decide whether we force chunked encoding.
 	 */
-	private void commitContentLength() {
-		if(contentLengthSet != null) {
-			if(isNonHTMLContentTypeSet()) {
+	private void commitHeaderData() {
+		if (isNonHTMLContentTypeSet()) {
+			if (contentLengthSet != null) {
 				wrappedResponse.setContentLength(contentLengthSet);
+			}
+		} else {
+			if (cookieToSet != null) {
+				wrappedResponse.addCookie(cookieToSet);
 			}
 		}
 	}

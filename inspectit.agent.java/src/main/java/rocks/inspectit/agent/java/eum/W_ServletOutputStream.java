@@ -3,12 +3,10 @@ package rocks.inspectit.agent.java.eum;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class W_ServletOutputStream {
 
 	private static final String CLAZZ = "javax.servlet.ServletOutputStream";
-	private static final ConcurrentHashMap<ClassLoader, Class<?>> clazzCache = new ConcurrentHashMap<ClassLoader, Class<?>>();
 
 	private static final CachedMethod<Void> print_bool = new CachedMethod<Void>(CLAZZ,"print",boolean.class);
 	private static final CachedMethod<Void> print_char = new CachedMethod<Void>(CLAZZ,"print",char.class);
@@ -42,15 +40,7 @@ public class W_ServletOutputStream {
 	}
 
 	public static boolean isInstance(Object instance) {
-		ClassLoader cl = instance.getClass().getClassLoader();
-		if (!clazzCache.containsKey(cl)) {
-			try {
-				clazzCache.putIfAbsent(cl, Class.forName(CLAZZ, false, cl));
-			} catch (ClassNotFoundException e) {
-				return false;
-			}
-		}
-		return clazzCache.get(cl).isInstance(instance);
+		return ClassLoaderAwareClassCache.isInstance(instance, CLAZZ);
 	}
 
 	public void print(boolean val) {
