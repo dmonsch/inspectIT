@@ -9,22 +9,54 @@ import java.util.List;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
- * @author David Monschein
+ * Containing informations about an user session. A session should be unique for every user.
  *
+ * @author David Monschein
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserSession {
 
+	/**
+	 * The browser name.
+	 */
 	private String browser;
+
+	/**
+	 * The device name.
+	 */
 	private String device;
+	/**
+	 * The browser language.
+	 */
 	private String language;
+	/**
+	 * The session id.
+	 */
 	private String sessionId;
 
+	/**
+	 * All useractions which belong to a certain session.
+	 */
 	private List<UserAction> userActions;
 
+	/**
+	 * Creates a new user session containing no information about the user.
+	 */
 	public UserSession() {
 	}
 
+	/**
+	 * Creates a new user session with all information about the user initialized.
+	 *
+	 * @param browser
+	 *            the browser which is used
+	 * @param device
+	 *            the device of the user
+	 * @param lang
+	 *            the language of he users browser
+	 * @param id
+	 *            an unique id representing this user
+	 */
 	public UserSession(String browser, String device, String lang, String id) {
 		this.browser = browser;
 		this.device = device;
@@ -129,6 +161,12 @@ public class UserSession {
 		this.userActions = userActions;
 	}
 
+	/**
+	 * Adds a single user action to this session.
+	 *
+	 * @param action
+	 *            the user action which should be added to this user session.
+	 */
 	public void addUserAction(UserAction action) {
 		this.userActions.add(action);
 	}

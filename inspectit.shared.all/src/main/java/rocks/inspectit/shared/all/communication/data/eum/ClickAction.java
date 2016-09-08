@@ -9,21 +9,46 @@ import java.util.List;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
+ * Represents a user action by the user. This is doesn't need to be a click.
+ * 
  * @author David Monschein
- *
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ClickAction extends UserAction implements IJavaScriptEvListenerAction {
+	/**
+	 * Method name which was triggered by the user action.
+	 */
 	private String methodName;
 
+	/**
+	 * Timestamp when the method which was triggered gets started.
+	 */
 	private long beginTime;
+	/**
+	 * Timestamp when the executed method was finished.
+	 */
 	private long endTime;
+	/**
+	 * HTML tag name of the element which triggered the user action.
+	 */
 	private String tagName;
+	/**
+	 * HTML id attribute value of the element which triggered the user action.
+	 */
 	private String elementId;
+	/**
+	 * HTML name attribute value of the element which triggered the user action.
+	 */
 	private String elementName;
 
+	/**
+	 * Contains all subrequests belonging to this user action.
+	 */
 	private List<Request> requests;
 
+	/**
+	 * Creates a user action with no child requests.
+	 */
 	public ClickAction() {
 		this.requests = new ArrayList<Request>();
 	}

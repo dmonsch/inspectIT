@@ -33,15 +33,41 @@ import rocks.inspectit.shared.all.communication.data.eum.UserSession;
 public class DataHandler {
 
 	// JSON OBJ CONFIG CONSTANTS (STRUCTURE OF THE JSON OBJ)
+	/**
+	 * Json Attribute name for the base url.
+	 */
 	private static final String JSON_BASEURL_ATTRIBUTE = "baseUrl";
+	/**
+	 * Json Attribute name for the session id.
+	 */
 	private static final String JSON_SESSIONID_ATTRIBUTE = "sessionId";
+	/**
+	 * Json Attribute name for the type of a beacon.
+	 */
 	private static final String JSON_TYPE_ATTRIBUTE = "type";
+	/**
+	 * Json Attribute value for session creation.
+	 */
 	private static final String JSON_TYPE_SESSION = "userSession";
+	/**
+	 * Json Attribute value for action creation.
+	 */
 	private static final String JSON_TYPE_ACTION = "userAction";
+	/**
+	 * Json Attribute name which stores the requests which belong to an action.
+	 */
 	private static final String JSON_ACTION_CONTENTS = "contents";
+	/**
+	 * Json attribute name which indicates what type of user action the beacon contains.
+	 */
 	private static final String JSON_ACTION_SPECTYPE = "specialType";
-
+	/**
+	 * Json Attribute value for a pageload action.
+	 */
 	private static final String JSON_ACTION_TYPE_PAGELOAD = "pageLoad";
+	/**
+	 * Json attribute value for a click action.
+	 */
 	private static final String JSON_ACTION_TYPE_CLICK = "click";
 	// __________________________ //
 
@@ -62,6 +88,9 @@ public class DataHandler {
 
 	/**
 	 * Creates a new instance which handles sessions and user actions.
+	 *
+	 * @param coreService
+	 *            CoreService which is needed to send data to the CMR.
 	 */
 	public DataHandler(ICoreService coreService) {
 		this.sessionMap = new HashMap<String, UserSession>();
@@ -92,6 +121,16 @@ public class DataHandler {
 				} else if (type.equals(JSON_TYPE_ACTION)) {
 					createUserAction(jsonObj);
 				}
+			} else if (jsonObj.isArray()) {
+				// multiple entries
+				for (JsonNode action : jsonObj) {
+					if (action.has(JSON_TYPE_ATTRIBUTE)) {
+						String innerType = action.get(JSON_TYPE_ATTRIBUTE).asText();
+						if (innerType.equals(JSON_TYPE_ACTION)) {
+							createUserAction(action);
+						}
+					}
+				}
 			}
 		}
 	}
@@ -105,7 +144,9 @@ public class DataHandler {
 	private void createSession(JsonNode obj) {
 		try {
 			UserSession newSession = jsonMapper.readValue(obj, UserSession.class);
-			sessionMap.put(newSession.getSessionId(), newSession);
+			if (!sessionMap.containsKey(newSession.getSessionId())) {
+				sessionMap.put(newSession.getSessionId(), newSession);
+			}
 		} catch (JsonParseException e) {
 			return;
 		} catch (IOException e) {
