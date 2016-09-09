@@ -1,6 +1,14 @@
 package rocks.inspectit.ui.rcp.ci.form.part;
 
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -8,6 +16,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IPropertyListener;
@@ -17,7 +27,9 @@ import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 
+import rocks.inspectit.shared.all.instrumentation.config.impl.JSAgentModule;
 import rocks.inspectit.shared.cs.ci.Environment;
+import rocks.inspectit.shared.cs.ci.eum.EndUserMonitoringConfig;
 import rocks.inspectit.ui.rcp.InspectIT;
 import rocks.inspectit.ui.rcp.InspectITImages;
 import rocks.inspectit.ui.rcp.ci.form.input.EnvironmentEditorInput;
@@ -50,6 +62,8 @@ public class EUMSettingsPart extends SectionPart implements IPropertyListener {
 	 */
 	private Button eumEnabledButton;
 
+	private TableViewer tableViewer;
+
 	/**
 	 * Default constructor.
 	 *
@@ -73,8 +87,8 @@ public class EUMSettingsPart extends SectionPart implements IPropertyListener {
 		createPart(getSection(), toolkit);
 
 		// text and description on our own
-		getSection().setText("End-User Monitoring");
-		Label label = toolkit.createLabel(getSection(), "Configuration of the End-User Monitoring");
+		getSection().setText("User Experience Monitoring");
+		Label label = toolkit.createLabel(getSection(), "Configuration of the User Experience Monitoring");
 		label.setForeground(toolkit.getColors().getColor(IFormColors.TITLE));
 		getSection().setDescriptionControl(label);
 	}
@@ -95,19 +109,43 @@ public class EUMSettingsPart extends SectionPart implements IPropertyListener {
 		section.setClient(mainComposite);
 
 		// enable / disable button
-		toolkit.createLabel(mainComposite, "Enable End-User Monitoring:").setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+		toolkit.createLabel(mainComposite, "Enable User Experience Monitoring:").setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 		eumEnabledButton = toolkit.createButton(mainComposite, "Active", SWT.CHECK);
 		eumEnabledButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		eumEnabledButton.setSelection(environment.getEumConfig().isEumEnabled());
-		createInfoLabel(mainComposite, toolkit, "If activated, the agent will inject a script into the webpages and monitor client-side performance data.");
+		createInfoLabel(mainComposite, toolkit, "If activated, the java agent will inject a script (the JS-Agent) into the webpages and monitor client-side performance data.");
 
 		toolkit.createLabel(mainComposite, "Script Base URL:").setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 		scriptBaseUrl = toolkit.createText(mainComposite, environment.getEumConfig().getScriptBaseUrl(), SWT.BORDER | SWT.RIGHT);
-		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, false);
-		// gd.widthHint = 50;
-		scriptBaseUrl.setLayoutData(gd);
+		scriptBaseUrl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		createInfoLabel(mainComposite, toolkit,
 				"The url-prefix under which the agents monitoring scripts will be made accessible to the client.\nThis Url must be mapped by at least one servlet or filter, usually the base-url of other static content like scripts or images is a good choice here.");
+
+		Table table = toolkit.createTable(mainComposite, SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.CHECK);
+
+		GridData tableLayout = new GridData(SWT.FILL, SWT.FILL, true, false);
+		tableLayout.horizontalSpan = 2;
+		table.setLayoutData(tableLayout);
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true);
+
+		tableViewer = new TableViewer(table);
+		createColumns();
+		ColumnViewerToolTipSupport.enableFor(tableViewer);
+		tableViewer.setContentProvider(new ArrayContentProvider());
+		tableViewer.setInput(JSAgentModule.values());
+		tableViewer.refresh();
+		updateCheckedItems();
+		table.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (e.detail == SWT.CHECK) {
+					if (!isDirty()) {
+						markDirty();
+					}
+				}
+			}
+		});
 
 		// dirty listener
 		Listener dirtyListener = new Listener() {
@@ -122,6 +160,59 @@ public class EUMSettingsPart extends SectionPart implements IPropertyListener {
 		scriptBaseUrl.addListener(SWT.Modify, dirtyListener);
 	}
 
+	private void createColumns() {
+		TableViewerColumn activeColumn = new TableViewerColumn(tableViewer, SWT.NONE);
+		activeColumn.getColumn().setResizable(false);
+		activeColumn.getColumn().setWidth(60);
+		activeColumn.getColumn().setText("Active");
+		activeColumn.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				return "";
+			}
+		});
+		activeColumn.getColumn().setToolTipText("Only active modules will be included in the JS Agent and sent to the clients.");
+
+		TableViewerColumn moduleNameColumn = new TableViewerColumn(tableViewer, SWT.NONE);
+		moduleNameColumn.getColumn().setResizable(true);
+		moduleNameColumn.getColumn().setWidth(250);
+		moduleNameColumn.getColumn().setText("Module");
+		moduleNameColumn.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				return ((JSAgentModule) element).getUiName();
+			}
+
+			@Override
+			public Image getImage(Object element) {
+				// TODO add images to modules;
+				return null; // ImageFormatter.getSensorConfigImage((ISensorConfig) element);
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			@Override
+			public String getToolTipText(Object element) {
+				return ((JSAgentModule) element).getUiDescription();
+			}
+
+
+		});
+		moduleNameColumn.getColumn().setToolTipText("Module type.");
+	}
+
+	/**
+	 * Updates states of the check boxes next to the elements.
+	 */
+	private void updateCheckedItems() {
+		for (TableItem item : tableViewer.getTable().getItems()) {
+			JSAgentModule moduleInfo = (JSAgentModule) item.getData();
+			EndUserMonitoringConfig eumConfig = environment.getEumConfig();
+			item.setChecked(eumConfig.getActiveModules().contains("" + moduleInfo.getIdentifier()));
+		}
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -131,6 +222,14 @@ public class EUMSettingsPart extends SectionPart implements IPropertyListener {
 			super.commit(onSave);
 			environment.getEumConfig().setEumEnabled(eumEnabledButton.getSelection());
 			environment.getEumConfig().setScriptBaseUrl(scriptBaseUrl.getText());
+			StringBuilder moduleString = new StringBuilder();
+			for (TableItem item : tableViewer.getTable().getItems()) {
+				JSAgentModule moduleInfo = (JSAgentModule) item.getData();
+				if (item.getChecked()) {
+					moduleString.append(moduleInfo.getIdentifier());
+				}
+			}
+			environment.getEumConfig().setActiveModules(moduleString.toString());
 			getManagedForm().dirtyStateChanged();
 		}
 	}

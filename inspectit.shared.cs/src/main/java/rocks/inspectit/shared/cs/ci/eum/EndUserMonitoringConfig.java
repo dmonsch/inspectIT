@@ -1,4 +1,5 @@
 package rocks.inspectit.shared.cs.ci.eum;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -8,11 +9,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "end-user-monitoring-config")
 public class EndUserMonitoringConfig {
 
+
 	@XmlAttribute(name = "eum-enabled", required = true)
 	private boolean eumEnabled = false;
 
 	@XmlAttribute(name = "eum-script-base-url", required = true)
 	private String scriptBaseUrl = "/";
+
+	@XmlAttribute(name = "active-modules", required = true)
+	private String activeModules = "12";
 
 	/**
 	 * Gets {@link #eumEnabled}.
@@ -53,14 +58,34 @@ public class EndUserMonitoringConfig {
 	}
 
 	/**
+	 * Gets {@link #activeModules}.
+	 * 
+	 * @return {@link #activeModules}
+	 */
+	public String getActiveModules() {
+		return this.activeModules;
+	}
+
+	/**
+	 * Sets {@link #activeModules}.
+	 * 
+	 * @param activeModulesString
+	 *            New value for {@link #activeModules}
+	 */
+	public void setActiveModules(String activeModulesString) {
+		this.activeModules = activeModulesString;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = (prime * result) + (eumEnabled ? 1231 : 1237);
-		result = (prime * result) + ((scriptBaseUrl == null) ? 0 : scriptBaseUrl.hashCode());
+		result = (prime * result) + ((this.activeModules == null) ? 0 : this.activeModules.hashCode());
+		result = (prime * result) + (this.eumEnabled ? 1231 : 1237);
+		result = (prime * result) + ((this.scriptBaseUrl == null) ? 0 : this.scriptBaseUrl.hashCode());
 		return result;
 	}
 
@@ -79,17 +104,25 @@ public class EndUserMonitoringConfig {
 			return false;
 		}
 		EndUserMonitoringConfig other = (EndUserMonitoringConfig) obj;
-		if (eumEnabled != other.eumEnabled) {
+		if (this.activeModules == null) {
+			if (other.activeModules != null) {
+				return false;
+			}
+		} else if (!this.activeModules.equals(other.activeModules)) {
 			return false;
 		}
-		if (scriptBaseUrl == null) {
+		if (this.eumEnabled != other.eumEnabled) {
+			return false;
+		}
+		if (this.scriptBaseUrl == null) {
 			if (other.scriptBaseUrl != null) {
 				return false;
 			}
-		} else if (!scriptBaseUrl.equals(other.scriptBaseUrl)) {
+		} else if (!this.scriptBaseUrl.equals(other.scriptBaseUrl)) {
 			return false;
 		}
 		return true;
 	}
+
 
 }

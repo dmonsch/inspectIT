@@ -2,11 +2,9 @@ package rocks.inspectit.agent.java.eum;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.CharBuffer;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -18,6 +16,7 @@ import rocks.inspectit.agent.java.config.IConfigurationStorage;
 import rocks.inspectit.agent.java.core.ICoreService;
 import rocks.inspectit.agent.java.eum.data.DataHandler;
 import rocks.inspectit.agent.java.proxy.IRuntimeLinker;
+import rocks.inspectit.shared.all.instrumentation.config.impl.JSAgentModule;
 import rocks.inspectit.shared.all.spring.logger.Log;
 
 /**
@@ -93,6 +92,8 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 
 		if (path.toLowerCase().startsWith(completeJavascriptURLPrefix.toLowerCase())) {
 			String scriptArgumentsWithEnding = path.substring(completeJavascriptURLPrefix.length());
+			// remove revision and ignore it, we always send the newest version
+			scriptArgumentsWithEnding = scriptArgumentsWithEnding.substring(scriptArgumentsWithEnding.indexOf('_') + 1);
 			String scriptArgumentsNoEnding = scriptArgumentsWithEnding.substring(0, scriptArgumentsWithEnding.lastIndexOf('.'));
 			sendScript(res, JSAgentBuilder.buildJsFile(scriptArgumentsNoEnding));
 			return true;
@@ -136,42 +137,18 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 *
 	 * @param res
 	 *            the response to write
-	 * @param resource
-	 *            stream from the resource.
+	 * @param scriptSource
+	 *            the source of the script to send.
 	 */
-	private void sendScript(W_HttpServletResponse res, InputStream resource) {
+	private void sendScript(W_HttpServletResponse res, String scriptSource) {
 		// we respond with the script code
 		res.setStatus(200);
 		res.setContentType("application/javascript");
-		res.setCharacterEncoding("UTF-8");
-		// TODO: set the caching header
-		// TODO: compression (gzip) ?
-		// res.setHeader(arg0, arg1);
-		InputStreamReader fr = null;
-		InputStream in = resource;
-		try {
-			fr = new InputStreamReader(in);
-			CharBuffer buf = CharBuffer.allocate(4096);
-			while (fr.read(buf) != -1) {
-				res.getWriter().write(buf.array(), 0, buf.position());
-				buf.position(0);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e1) {
-				}
-			}
-			if (fr != null) {
-				try {
-					fr.close();
-				} catch (IOException e1) {
-				}
-			}
-		}
+		res.addHeader("Cache-Control", "public, max-age=" + JSAgentBuilder.JS_AGENT_CACHE_MAX_AGE_SECONDS);
+
+		PrintWriter writer = res.getWriter();
+		writer.write(scriptSource);
+		writer.flush();
 	}
 
 	/**
@@ -274,7 +251,11 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 		tags.append("eumManagementServer : \"").append(completeBeaconURL).append("\"\r\n");
 		tags.append("};\r\n");
 		tags.append("</script>\r\n");
-		tags.append("<script type=\"text/javascript\" src=\"").append(completeJavascriptURLPrefix).append("a12").append(".js\"></script>\r\n");
+		tags.append("<script type=\"text/javascript\" src=\"");
+		tags.append(completeJavascriptURLPrefix);
+		tags.append(JSAgentModule.JS_AGENT_REVISION).append("_");
+		tags.append(configurationStorage.getEndUserMonitoringConfig().getActiveModules());
+		tags.append(".js\"></script>\r\n");
 		return tags.toString();
 	}
 }
