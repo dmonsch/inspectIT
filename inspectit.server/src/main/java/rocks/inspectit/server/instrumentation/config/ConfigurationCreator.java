@@ -91,7 +91,7 @@ public class ConfigurationCreator {
 
 		// eum config
 		EndUserMonitoringConfig eumConf = environment.getEumConfig();
-		agentConfiguration.setEumConfig(new AgentEndUserMonitoringConfig(eumConf.isEumEnabled(), eumConf.getScriptBaseUrl()));
+		agentConfiguration.setEumConfig(new AgentEndUserMonitoringConfig(eumConf.isEumEnabled(), eumConf.getScriptBaseUrl(), eumConf.getActiveModules()));
 
 		// buffer strategy
 		IStrategyConfig bufferStrategyConfig = environment.getBufferStrategyConfig();

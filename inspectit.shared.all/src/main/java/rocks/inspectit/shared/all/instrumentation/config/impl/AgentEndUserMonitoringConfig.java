@@ -10,19 +10,23 @@ public class AgentEndUserMonitoringConfig {
 
 	private String scriptBaseUrl;
 
+	private String activeModules;
+
 	public AgentEndUserMonitoringConfig() {
 		isEnabled = false;
 		scriptBaseUrl = "/";
+		activeModules = "";
 	}
 
 	/**
 	 * @param isEnabled
 	 * @param scriptBaseUrl
 	 */
-	public AgentEndUserMonitoringConfig(boolean isEnabled, String scriptBaseUrl) {
+	public AgentEndUserMonitoringConfig(boolean isEnabled, String scriptBaseUrl, String activeModules) {
 		super();
 		this.isEnabled = isEnabled;
 		this.scriptBaseUrl = scriptBaseUrl;
+		this.activeModules = activeModules;
 	}
 
 	/**
@@ -61,6 +65,25 @@ public class AgentEndUserMonitoringConfig {
 	 */
 	public void setScriptBaseUrl(String scriptBaseUrl) {
 		this.scriptBaseUrl = scriptBaseUrl;
+	}
+
+	/**
+	 * Gets {@link #activeModules}.
+	 * 
+	 * @return {@link #activeModules}
+	 */
+	public String getActiveModules() {
+		return this.activeModules;
+	}
+
+	/**
+	 * Sets {@link #activeModules}.
+	 * 
+	 * @param activeModules
+	 *            New value for {@link #activeModules}
+	 */
+	public void setActiveModules(String activeModules) {
+		this.activeModules = activeModules;
 	}
 
 }

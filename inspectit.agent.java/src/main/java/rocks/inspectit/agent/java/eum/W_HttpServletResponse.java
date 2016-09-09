@@ -19,6 +19,7 @@ public class W_HttpServletResponse {
 	private static final CachedMethod<PrintWriter> getWriter = new CachedMethod<PrintWriter>(CLAZZ,"getWriter");
 	private static final CachedMethod<OutputStream> getOutputStream = new CachedMethod<OutputStream>(CLAZZ,"getOutputStream");
 	private static final CachedMethod<Void> addCookie = new CachedMethod<Void>(CLAZZ, "addCookie", "javax.servlet.http.Cookie");
+	private static final CachedMethod<Void> addHeader = new CachedMethod<Void>(CLAZZ, "addHeader", String.class, String.class);
 
 	private Object instance;
 
@@ -86,5 +87,12 @@ public class W_HttpServletResponse {
 		addCookie.callSafe(instance, cookieToSet);
 	}
 
+	/**
+	 * @param headerName
+	 * @param headerValue
+	 */
+	public void addHeader(String headerName, String headerValue) {
+		addHeader.callSafe(instance, headerName, headerValue);
+	}
 
 }

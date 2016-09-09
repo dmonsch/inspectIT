@@ -1,13 +1,15 @@
 package rocks.inspectit.agent.java.eum;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.nio.CharBuffer;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import rocks.inspectit.shared.all.instrumentation.config.impl.JSAgentModule;
 
 /**
  * Helper class for creating a javascript agent which only has some specified modules (plugins).
@@ -16,6 +18,8 @@ import java.util.Map;
  *
  */
 public final class JSAgentBuilder {
+
+	private static final Logger LOG = LoggerFactory.getLogger(JSAgentBuilder.class);
 
 	/**
 	 * The name of the cookie to use for storing the UEM session ID.
@@ -28,24 +32,9 @@ public final class JSAgentBuilder {
 	public static final int SESSION_COOKIE_MAX_AGE_SECONDS = 60 * 60;
 
 	/**
-	 * Maps argument chars (strings with one character) to plugin files.
+	 * Defines how long the JS Agent of the current revision shall stay in the browsers cache.
 	 */
-	private static final Map<String, String> ARGUMENT_FILE_MAPPING = new HashMap<String, String>() {
-		/**
-		 * Generated UID.
-		 */
-		private static final long serialVersionUID = -6495278113683161832L;
-
-		{
-			put("a", "plugins/ajax.js");
-			put("b", "plugins/async.js");
-			put("l", "plugins/listener.js");
-			put("r", "plugins/rum-speedindex.js");
-			put("1", "plugins/navtimings.js");
-			put("2", "plugins/restimings.js");
-		}
-	};
-
+	public static final long JS_AGENT_CACHE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 
 
 	/**
@@ -63,6 +52,10 @@ public final class JSAgentBuilder {
 	 */
 	private static final String JSBASE_RESOURCE = SCRIPT_RESOURCE_PATH + "inspectit_jsagent_base.js";
 
+	private static ConcurrentHashMap<JSAgentModule, String> moduleSourceCache = new ConcurrentHashMap<JSAgentModule, String>();
+
+	private static String agentCoreSource = null;
+
 	/**
 	 * Builds the JS agent from single char arguments.
 	 *
@@ -70,23 +63,64 @@ public final class JSAgentBuilder {
 	 *            all arguments together as a string.
 	 * @return the generated stream which builds the agent.
 	 */
-	protected static InputStream buildJsFile(String arguments) {
-		// generate cookie script
+	public static String buildJsFile(String arguments) {
 
-		List<InputStream> streams = new ArrayList<InputStream>();
-		streams.add(JSAgentBuilder.class.getResourceAsStream(JSBASE_RESOURCE));
+		StringBuilder script = new StringBuilder();
+		script.append(getAgentCoreSource());
 
 		// add wanted plugins
-		String[] args = arguments.split("");
-		for (String argument : args) {
-			if (ARGUMENT_FILE_MAPPING.containsKey(argument)) {
-				streams.add(JSAgentBuilder.class.getResourceAsStream(SCRIPT_RESOURCE_PATH + ARGUMENT_FILE_MAPPING.get(argument)));
+		for (char moduleIdentifier : arguments.toCharArray()) {
+			if (JSAgentModule.IDENTIFIER_MAP.containsKey(moduleIdentifier)) {
+				JSAgentModule module = JSAgentModule.IDENTIFIER_MAP.get(moduleIdentifier);
+				script.append(getAgentModuleSource(module));
 			}
 		}
 
-		streams.add(new ByteArrayInputStream(EXECUTE_START_JAVASCRIPT.getBytes()));
+		script.append("\r\n").append(EXECUTE_START_JAVASCRIPT);
 
-		return new SequenceInputStream(Collections.enumeration(streams));
+		return script.toString();
+	}
+
+	private static String getAgentCoreSource() {
+		if (agentCoreSource == null) {
+			try {
+				agentCoreSource = readResourceFile(JSBASE_RESOURCE);
+			} catch (Exception e) {
+				LOG.error("unable to read JS Agent core");
+				return "";
+			}
+		}
+		return agentCoreSource;
+	}
+
+	private static String getAgentModuleSource(JSAgentModule module) {
+		if (!moduleSourceCache.containsKey(module)) {
+			try {
+				String src = readResourceFile(SCRIPT_RESOURCE_PATH + module.getModuleSourceFile());
+				moduleSourceCache.putIfAbsent(module, src);
+				return src;
+			} catch (Exception e) {
+				LOG.error("unable to read JS Agent core");
+				return "";
+			}
+		} else {
+			return moduleSourceCache.get(module);
+		}
+	}
+
+	private static String readResourceFile(String path) throws IOException {
+		InputStreamReader fr = new InputStreamReader(JSAgentBuilder.class.getResourceAsStream(path));
+		try {
+			CharBuffer buf = CharBuffer.allocate(4096);
+			StringWriter stringWriter = new StringWriter();
+			while (fr.read(buf) != -1) {
+				stringWriter.write(buf.array(), 0, buf.position());
+				buf.position(0);
+			}
+			return stringWriter.toString();
+		} finally {
+			fr.close();
+		}
 	}
 
 	/**
