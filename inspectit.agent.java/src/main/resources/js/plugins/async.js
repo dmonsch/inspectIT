@@ -1,10 +1,16 @@
 
-// INSTRUMENTATION FOR TIMER (setTimeout etc.)
+/**
+ * Async module for instrumenting asynchronous Javascript functions like setTimeout.
+ * That allows us to be more precise with assigning requests to an user action.
+ */
 inspectIT.async = (function () {
 	
 	var originalSetTimeout = window.setTimeout;
 	var originalClearTimeout = window.clearTimeout;
 	
+	/**
+	 * Instruments the setTimeout and clearTimeout function to be supported by the Action Bundling.
+	 */
 	function instrumentTimers() {
 		var timerChildMap = {};
 		
@@ -32,6 +38,7 @@ inspectIT.async = (function () {
 		}
 	}
 	
+	// adds the plugin
 	inspectIT.plugins.asnyc = {
 		init : instrumentTimers
 	};

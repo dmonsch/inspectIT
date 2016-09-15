@@ -1,9 +1,15 @@
 
-// TIMINGS MODULE
-inspectIT.timings = (function () {
+/**
+ * Module for dealing with the Resoure Timings API.
+ * Collects the loaded Resources and hands the data over the Action module.
+ */
+inspectIT.restimings = (function () {
 	
 	var resourceTimingsBlock = -1;
 	
+	/**
+	 * Starts the child action for gathering the loaded Resources.
+	 */
 	function collectResourceTimings() {
 		if (("performance" in window) && ("getEntriesByType" in window.performance) && (window.performance.getEntriesByType("resource") instanceof Array)) {
 			resourceTimingsBlock = inspectIT.action.enterChild();
@@ -12,6 +18,10 @@ inspectIT.timings = (function () {
 		}
 	}
 	
+	/**
+	 * Collects the loaded Resources, ends the Child action
+	 * and hands over the data to the action module.
+	 */
 	function sendAndClearTimings() {
 		//add event listener, which is called after the site has fully finished loading
 		if (("performance" in window) && ("getEntriesByType" in window.performance) && (window.performance.getEntriesByType("resource") instanceof Array)) {

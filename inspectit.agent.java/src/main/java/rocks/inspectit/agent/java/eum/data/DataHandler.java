@@ -105,6 +105,9 @@ public class DataHandler {
 	 *            the beacon which should get parsed and processed
 	 */
 	public void insertBeacon(String data) {
+		if (data == null) {
+			return;
+		}
 		// either a useraction or sessioncreation
 		JsonNode jsonObj = null;
 		try {
@@ -274,18 +277,20 @@ public class DataHandler {
 		data.setUserSession(action.getUserSession());
 
 		for (Request req : action.getChildRequests()) {
-			switch (req.getRequestType()) {
-			case AJAX:
-				data.addAjaxRequest((AjaxRequest) req);
-				break;
-			case PAGELOAD:
-				data.addPageLoadRequest((PageLoadRequest) req);
-				break;
-			case RESOURCELOAD:
-				data.addResourceLoadRequest((ResourceLoadRequest) req);
-				break;
-			default:
-				break;
+			if (req != null) {
+				switch (req.getRequestType()) {
+				case AJAX:
+					data.addAjaxRequest((AjaxRequest) req);
+					break;
+				case PAGELOAD:
+					data.addPageLoadRequest((PageLoadRequest) req);
+					break;
+				case RESOURCELOAD:
+					data.addResourceLoadRequest((ResourceLoadRequest) req);
+					break;
+				default:
+					break;
+				}
 			}
 		}
 

@@ -1,6 +1,12 @@
 
-// LISTENER MODULE
+/**
+ * Instruments the addEventListener and removeEventListener functions for DOM nodes.
+ * This helps us to keep track of user actions.
+ */
 inspectIT.listener = (function () {
+	/**
+	 * The events which should get instrumented.
+	 */
 	var instrumentedEvents = {
 		"click" : true,
 		"onchange" : true,
@@ -16,6 +22,9 @@ inspectIT.listener = (function () {
 	var activeEvents = {};
 	var currId = 0;
 	
+	/**
+	 * Instruments global listeners like document and window.
+	 */
 	function instrumentDocumentListener() {
 		var docListeners = [
 		    [document, false],
@@ -28,6 +37,9 @@ inspectIT.listener = (function () {
 		}
 	}
 	
+	/**
+	 * Instruments event listeners for common DOM elements.
+	 */
 	function instrumentListener() {
 		// FOR COMMON ELEMENTS
 		var commonListeners = null;
@@ -49,6 +61,11 @@ inspectIT.listener = (function () {
 		}
 	}
 	
+	/**
+	 * Performs the instrumentation of the addEventListener function.
+	 * @param base The node which should get instrumented
+	 * @param prot whether the prototype should get instrumented or not
+	 */
 	function instrumentAddListener(base, prot) {
 		if (typeof base === "undefined") return;
 		if (prot && typeof base.prototype === "undefined") return;
@@ -67,6 +84,11 @@ inspectIT.listener = (function () {
 		}
 	}
 	
+	/**
+	 * Performs the instrumentation of the removeEventListener function.
+	 * @param base The node which should get instrumented
+	 * @param prot whether the prototype should get instrumented or not
+	 */
 	function instrumentRemoveListener(base, prot) {
 		if (typeof base === "undefined") return;
 		if (prot && typeof base.prototype === "undefined") return;
@@ -85,6 +107,13 @@ inspectIT.listener = (function () {
 		}
 	}
 	
+	/**
+	 * Function which gets called instead of the original removeEventListener function.
+	 * @param realMethod the original method - which gets called after executing our own code
+	 * @param event the name of the event
+	 * @param callback the function which should get called when the event is raised
+	 * @param opt optional parameters for the realMethod
+	 */
 	function removeListenerInstrumentation(realMethod, event, callback, opt) {
 		if (event in instrumentedEvents && typeof callback.___id !== "undefined") {
 			realMethod.call(this, event, activeEvents[callback.___id], opt);
@@ -92,6 +121,13 @@ inspectIT.listener = (function () {
 		}
 	}
 	
+	/**
+	 * Function which gets called instead of the original addEventListener function.
+	 * @param realMethod the original method
+	 * @param event the name of the event
+	 * @param callback the function which gets called when the event is raised
+	 * @param bubble A Boolean value that specifies whether the event should be executed in the capturing or in the bubbling phase
+	 */
 	function addListenerInstrumentation(realMethod, event, callback, bubble) {
 		var dataObj = {
 			tagName : (typeof this.tagName !== "undefined" ? this.tagName : ""),

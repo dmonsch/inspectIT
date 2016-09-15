@@ -3,6 +3,8 @@
  */
 package rocks.inspectit.shared.all.communication.data.eum;
 
+import java.util.Objects;
+
 /**
  * Request which contains informations about a single resource load. (e.g. CSS file)
  *
@@ -136,6 +138,27 @@ public class ResourceLoadRequest extends Request {
 	 */
 	public void setInitiatorUrl(String initiatorUrl) {
 		this.initiatorUrl = initiatorUrl;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) {
+			return true;
+		}
+		if (other == null) {
+			return false;
+		}
+		if (other instanceof ResourceLoadRequest) {
+			ResourceLoadRequest cp = (ResourceLoadRequest) other;
+			return cp.getUrl().equals(getUrl()) && (cp.getStartTime() == startTime) && (cp.getEndTime() == endTime) && cp.getInitiatorType().equals(initiatorType)
+					&& cp.initiatorUrl.equals(initiatorUrl) && (cp.transferSize == transferSize);
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getUrl(), this.endTime, this.startTime, this.initiatorType, this.initiatorUrl, this.transferSize);
 	}
 
 }

@@ -2,6 +2,7 @@ package rocks.inspectit.shared.all.communication.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import rocks.inspectit.shared.all.communication.DefaultData;
 import rocks.inspectit.shared.all.communication.data.eum.AjaxRequest;
@@ -98,21 +99,55 @@ public class EUMData extends DefaultData {
 
 	/**
 	 * Gets {@link #baseUrl}.
-	 *   
-	 * @return {@link #baseUrl}  
-	 */ 
+	 *
+	 * @return {@link #baseUrl}
+	 */
 	public String getBaseUrl() {
 		return baseUrl;
 	}
 
-	/**  
-	 * Sets {@link #baseUrl}.  
-	 *   
-	 * @param baseUrl  
-	 *            New value for {@link #baseUrl}  
+	/**
+	 * Sets {@link #baseUrl}.
+	 *
+	 * @param baseUrl
+	 *            New value for {@link #baseUrl}
 	 */
 	public void setBaseUrl(String baseUrl) {
 		this.baseUrl = baseUrl;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) {
+			return true;
+		}
+		if (other == null) {
+			return false;
+		}
+		if (other instanceof EUMData) {
+			EUMData compare = (EUMData) other;
+			return baseUrl.equals(compare.baseUrl) && userSession.equals(compare.userSession) && listEqual(compare.ajaxRequests, ajaxRequests) && listEqual(compare.pageLoadRequests, pageLoadRequests)
+					&& listEqual(compare.resourceLoadRequests, resourceLoadRequests);
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(baseUrl, userSession, ajaxRequests, resourceLoadRequests, pageLoadRequests);
+	}
+
+	/**
+	 * Determines whether two lists are equal with the order doesn't matter.
+	 *
+	 * @param a
+	 *            first list
+	 * @param b
+	 *            second list
+	 * @return true if the lists contain the same items, false otherwise
+	 */
+	private boolean listEqual(List<?> a, List<?> b) {
+		return a.containsAll(b) && b.containsAll(a);
 	}
 
 }

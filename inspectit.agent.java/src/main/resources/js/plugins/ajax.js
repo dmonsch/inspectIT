@@ -1,8 +1,14 @@
 
-// AJAX MODULE
+/**
+ * Plugin for instrumenting Ajax requests.
+ * Initializes a inspectIT plugin which instruments Ajax calls.
+ */
 inspectIT.ajax = (function () {
 	var settings = window.inspectIT_settings;
 	
+	/**
+	 * Function which performs the Ajax instrumentation with overriding the XMLHttpRequest functions.
+	 */
 	function instrumentAjax() {
 		// instrument xmlhttprequest
 		XMLHttpRequest.prototype.uninstrumentedOpen = XMLHttpRequest.prototype.open;
@@ -78,8 +84,8 @@ inspectIT.ajax = (function () {
 		}
 	}
 	
-	// add to plugins
+	// APPLYING THE PLUGIN
 	inspectIT.plugins.ajax = {
-			init : instrumentAjax
+		init : instrumentAjax
 	};
 })();
