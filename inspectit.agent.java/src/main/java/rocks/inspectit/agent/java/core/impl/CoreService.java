@@ -334,8 +334,10 @@ public class CoreService implements ICoreService, InitializingBean, DisposableBe
 	 * {@inheritDoc}
 	 */
 	public void addEumData(EUMData data) {
-		data.setTimeStamp(new Timestamp(new Date().getTime()));
-		sensorDataObjects.put("eumdata", data);
+		if (data != null) {
+			data.setTimeStamp(new Timestamp(new Date().getTime()));
+			sensorDataObjects.put("eumdata", data);
+		}
 	}
 
 	/**

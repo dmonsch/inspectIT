@@ -171,4 +171,23 @@ public class UserSession {
 		this.userActions.add(action);
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) {
+			return true;
+		}
+		if (other == null) {
+			return false;
+		}
+		if (other instanceof UserSession) {
+			return ((UserSession) other).getSessionId().equals(this.sessionId);
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return sessionId.hashCode();
+	}
+
 }
