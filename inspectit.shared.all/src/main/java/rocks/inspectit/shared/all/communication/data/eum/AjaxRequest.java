@@ -3,9 +3,11 @@
  */
 package rocks.inspectit.shared.all.communication.data.eum;
 
+import java.util.Objects;
+
 /**
  * Representing an AJAX request.
- * 
+ *
  * @author David Monschein
  */
 public class AjaxRequest extends Request {
@@ -125,5 +127,26 @@ public class AjaxRequest extends Request {
 	 */
 	public void setBaseUrl(String baseUrl) {
 		this.baseUrl = baseUrl;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) {
+			return true;
+		}
+		if (other == null) {
+			return false;
+		}
+		if (other instanceof AjaxRequest) {
+			AjaxRequest compare = (AjaxRequest) other;
+			return compare.getUrl().equals(this.getUrl()) && (compare.startTime == startTime) && (compare.endTime == endTime) && compare.baseUrl.equals(baseUrl) && (compare.status == status)
+					&& compare.method.equals(method);
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(startTime, endTime, baseUrl, status, method, getUrl());
 	}
 }

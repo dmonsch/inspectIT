@@ -1,4 +1,7 @@
-// STARTUP MODULE
+/**
+ * Defines the Core module with basic functionality. The functionality can be extended with plugins.
+ * @return Object containing Start function and plugin array.
+ */
 var inspectIT = (function() {
 	
 	function init() {
@@ -9,8 +12,10 @@ var inspectIT = (function() {
 			window.inspectIT_isRunning = true;
 		}
 		
-		// check if id exists and set if not
+		// check if id exists and set if not - need to be first
 		inspectIT.cookies.checkCookieId();
+		
+		// init plugins
 		for (plugin in inspectIT.plugins) {
 			inspectIT.plugins[plugin].init();
 		}
@@ -38,10 +43,17 @@ var inspectIT = (function() {
 	};
 })();
 
-//UTILITY MODULE
+/**
+ * Utility module providing some often needed functionality.
+ * @return utility module with needed functionality.
+ */
 inspectIT.util = (function () {
 	var settings = window.inspectIT_settings;
 	
+	/**
+	 * Gets the current timestamp with the Performance API, if supported.
+	 * @return current timestamp
+	 */
 	function getCurrentTimeStamp() {
 		if (window.performance) {
 			if (performance.timing.navigationStart != 0) {
@@ -51,6 +63,10 @@ inspectIT.util = (function () {
 		return Date.now();
 	}
 	
+	/**
+	 * Gets the operating system by parsing the user agent.
+	 * @return returns one of the following values: iOS|Android|Windows|Mac|Linux|null
+	 */
 	function getOS() { // gets the operation system, null if we can't recognize it
 		var os = null;
 		var userAgent = navigator.userAgent;
@@ -67,6 +83,10 @@ inspectIT.util = (function () {
 		return os;
 	}
 	
+	/**
+	 * Detects which browser, which language and which operating system is used by the client with feature detection.
+	 * @return The information about the user listed above.
+	 */
 	function getBrowserInformation() {
 		// gets information about the browser of the user
 		// feature detection
@@ -100,6 +120,11 @@ inspectIT.util = (function () {
 		return retObj;
 	}
 	
+	/**
+	 * Sends a beacon to the EUM server.
+	 * @param dataObject The beacon which should get sent to the server.
+	 * @param forceSynchronous Whether the POST-Request to the EUM server should be synchronous. Default value is false.
+	 */
 	function sendToEUMServer(dataObject, forceSynchronous) {
 		if (typeof navigator.sendBeacon !== "undefined") {
 			navigator.sendBeacon(settings["eumManagementServer"], JSON.stringify(dataObject));
@@ -111,6 +136,9 @@ inspectIT.util = (function () {
 		}
 	}
 	
+	/**
+	 * Gets the Javascript function name. (Only works >=ES6)
+	 */
 	function getFunctionName(func) {
 		if (!(typeof func === "function")) return null;
 		if (func.hasOwnProperty("name")) return func.name; // ES6
@@ -126,12 +154,24 @@ inspectIT.util = (function () {
 	}
 })();
 
-//COOKIE MODULE
+/**
+ * Providing common functions to operate on cookies.
+ * @return Basic functionality for working with cookies.
+ */
 inspectIT.cookies = (function () {
+	/**
+	 * Detects whether a cookie is set or not.
+	 * @return true if the cookie is present - false if not
+	 */
 	function hasCookie(name) {
 		return getCookie(name) !== null;
 	}
 	
+	/**
+	 * Gets a cookie with a specified key.
+	 * @param key The key of the cookie
+	 * @return The value of the cookie which is specified by the key - null if the cookie doesn't exist
+	 */
 	function getCookie(key) {
 		var name = key + "=";
 	    var ca = document.cookie.split(';');
@@ -147,9 +187,13 @@ inspectIT.cookies = (function () {
 	    return null;
 	}
 	
+	/**
+	 * Checks the cookie which contains the inspectIT Session ID.
+	 * If it exists we send a message to the EUM server.
+	 */
 	function checkCookieId() {
 		if (!inspectIT.action.hasActions()) {
-			// NEW PAGELOADACTION
+			// Creates a new pageLoad User Action
 			var pageLoadAction = inspectIT.action.enterAction("pageLoad");
 			window.addEventListener("load", function() {
 				inspectIT.action.leaveAction(pageLoadAction);
@@ -169,6 +213,10 @@ inspectIT.cookies = (function () {
 		}
 	}
 	
+	/**
+	 * Gets the current Session ID by reading a cookie.
+	 * @return current Session ID which can be null if there is no Session ID.
+	 */
 	function getCurrentId() {
 		return getCookie("inspectIT_cookieId");
 	}
@@ -179,6 +227,10 @@ inspectIT.cookies = (function () {
 	}
 })();
 
+/**
+ * Module which handles the bundling of responses to the EUM server to keep the network overhead low.
+ * @return Function for adding beacons which should get sent back to the EUM server
+ */
 inspectIT.actionBundler = (function () {
 	var currentBundle = [];
 	var timeoutTask = null;
@@ -187,6 +239,10 @@ inspectIT.actionBundler = (function () {
 	var TIMEWINDOW = 2500;
 	var MAXTIMEWINDOW = 15000;
 	
+	/**
+	 * Adds an action and decides whether we immediately send the Beacon or buffer it.
+	 * @param User action which is finished and can be sent to the EUM server
+	 */
 	function addAction(action) {
 		action.sessionId = inspectIT.cookies.getCurrentId();
 		action.baseUrl = window.location.href;
@@ -208,6 +264,9 @@ inspectIT.actionBundler = (function () {
 		}
 	}
 	
+	/**
+	 * Private functions which handles the transmission of the buffered actions.
+	 */
 	function finishBundle() {
 		inspectIT.util.callback(currentBundle);
 		currentBundle = [];
@@ -219,8 +278,9 @@ inspectIT.actionBundler = (function () {
 	}
 })();
 
-//ACTION MODULE
-//Identifying user actions and send if they're complete
+/**
+ * Module for identifying User actions and their belonging requests.
+ */
 inspectIT.action = (function () {
 	var actions = [];
 	var actionChildIds = [];
@@ -228,7 +288,11 @@ inspectIT.action = (function () {
 	
 	var offset = 0;
 	
-	// For action capturing
+	/**
+	 * Creates a new user action with no child requests
+	 * @param specType the type of the user action (e.g. click / pageLoad)
+	 * @return the ID of the created action
+	 */
 	function enterAction(specType) {
 		actions.push({
 			type : "userAction",
@@ -240,6 +304,10 @@ inspectIT.action = (function () {
 		return offset;
 	}
 	
+	/**
+	 * Ends a user action and checks if it is finished - that means it will be checked if all child requests are finished.
+	 * @param ID of the user action
+	 */
 	function leaveAction(enterId) {
 		var actionId = getActionFromId(enterId);
 		if (actionId >= 0) {
@@ -248,6 +316,11 @@ inspectIT.action = (function () {
 		}
 	}
 	
+	/**
+	 * Creates a new node for a child request which belongs to an user action.
+	 * @param parentId ID of the user action
+	 * @return ID of the created child.
+	 */
 	function enterChild(parentId) {
 		var currentAction;
 		if (typeof parentId === "undefined") {
@@ -261,6 +334,10 @@ inspectIT.action = (function () {
 		}
 	}
 	
+	/**
+	 * Finishes the child action and checks whether the user action is finished.
+	 * @param ID of the child
+	 */
 	function leaveChild(enterId) {
 		var actionId = getActionFromId(enterId);
 		if (actionId >= 0) {
@@ -268,9 +345,11 @@ inspectIT.action = (function () {
 			actionFinished(actionId); // check if finished
 		} 
 	}
-	// END For actipn capturing
 	
-	// determines wheter the action has finished or not
+	/**
+	 * Checks whether an user action is finished.
+	 * @param id ID of the user action
+	 */
 	function actionFinished(id) {
 		if (actionChildIds[id].length == finishedChilds[id].length) {
 			//  the action is finished
@@ -278,10 +357,18 @@ inspectIT.action = (function () {
 		}
 	}
 	
+	/**
+	 * Checks if there are any user actions running at the moment.
+	 */
 	function hasActions() {
 		return actions.length > 0;
 	}
 	
+	/**
+	 * Finishes an user action and creates the beacon which gets handed over to the Action Bundler module.
+	 * @param id The ID of the user action
+	 * @param sync whether the beacon should get sent synchronous or not - default is false (asynchronous)
+	 */
 	function finishAction(id, sync) {
 		if (typeof sync === "undefined") sync = false;
 		
@@ -294,13 +381,21 @@ inspectIT.action = (function () {
 		}
 	}
 	
+	/**
+	 * Forces the remove of an user action.
+	 * @param id ID of the user action.
+	 */
 	function forceRemove(id) {
 		actions.splice(id, 1);
 		finishedChilds.splice(id, 1);
 		actionChildIds.splice(id, 1);
 	}
 	
-	// submits data to a action
+	/**
+	 * Assigns data, which should get sent to the EUM server, to an user action.
+	 * @param entrId ID of the user action
+	 * @param data The data which should be added to the user action
+	 */
 	function submitData(entrId, data) {
 		var currentAction = getActionFromId(entrId);
 		if (currentAction >= 0) {
@@ -308,7 +403,10 @@ inspectIT.action = (function () {
 		} // otherwise we can't assign it to an action
 	}
 	
-	// gets the action id from child id
+	/**
+	 * Help function for retrieving the user action ID for a child request.
+	 * @param id the ID of the child request
+	 */
 	function getActionFromId(id) {
 		for (var i = 0; i < actionChildIds.length; i++) {
 			for (var j = 0; j < actionChildIds[i].length; j++) {

@@ -3,6 +3,8 @@
  */
 package rocks.inspectit.shared.all.communication.data.eum;
 
+import java.util.Objects;
+
 /**
  * Representing a page load request.
  *
@@ -617,5 +619,32 @@ public class PageLoadRequest extends Request {
 		this.setUnloadEventEndW(Math.max(unloadEventEndW - navigationStartW, 0L));
 		this.setUnloadEventStartW(Math.max(unloadEventStartW - navigationStartW, 0L));
 		this.setNavigationStartW(0L);
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) {
+			return true;
+		}
+		if (other == null) {
+			return false;
+		}
+		if (other instanceof PageLoadRequest) {
+			PageLoadRequest cp = (PageLoadRequest) other;
+			return (cp.connectEndW == connectEndW) && (cp.connectStartW == connectStartW) && (cp.domainLookupEndW == domainLookupEndW) && (cp.domainLookupStartW == domainLookupStartW)
+					&& (cp.domCompleteW == domCompleteW) && (cp.domContentLoadedEventEndW == domContentLoadedEventEndW) && (cp.domContentLoadedEventStartW == domContentLoadedEventStartW)
+					&& (cp.domInteractiveW == domInteractiveW) && (cp.domLoadingW == domLoadingW) && (cp.fetchStartW == fetchStartW) && (cp.firstpaint == firstpaint)
+					&& (cp.loadEventEndW == loadEventEndW) && (cp.loadEventStartW == loadEventStartW) && (cp.navigationStartW == navigationStartW) && (cp.redirectEndW == redirectEndW)
+					&& (cp.redirectStartW == redirectStartW) && (cp.requestStartW == requestStartW) && (cp.responseEndW == responseEndW) && (cp.responseStartW == responseStartW)
+					&& (cp.secureConnectionStartW == secureConnectionStartW) && (cp.speedindex == speedindex) && (cp.unloadEventEndW == unloadEventEndW) && (cp.unloadEventStartW == unloadEventStartW);
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.connectEndW, this.connectStartW, this.domainLookupEndW, this.domainLookupStartW, this.domCompleteW, this.domContentLoadedEventEndW, this.domContentLoadedEventStartW,
+				this.domInteractiveW, this.domLoadingW, this.fetchStartW, this.firstpaint, this.loadEventEndW, this.loadEventStartW, this.navigationStartW, this.redirectEndW, this.redirectStartW,
+				this.requestStartW, this.responseEndW, this.responseStartW, this.secureConnectionStartW, this.speedindex, this.unloadEventEndW, this.unloadEventStartW);
 	}
 }
