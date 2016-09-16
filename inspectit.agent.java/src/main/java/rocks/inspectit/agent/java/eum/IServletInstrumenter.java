@@ -12,6 +12,8 @@ public interface IServletInstrumenter {
 	 * InspectIT will write the response of this request to the client and the application server
 	 * will not process this request any further.
 	 *
+	 * @param servletOrFilter
+	 *            the servlet or filter from which the call to this method originates
 	 * @param request
 	 *            the request (an instance of javax.servlet.ServletRequest)
 	 * @param response
@@ -24,6 +26,8 @@ public interface IServletInstrumenter {
 	/**
 	 * Lets InspectIT optionally instrument the given response by wrapping it.
 	 *
+	 * @param servletOrFilter
+	 *            the servlet or filter from which the call to this method originates
 	 * @param request
 	 *            the request (an instance of javax.servlet.ServletRequest)
 	 * @param response
@@ -32,6 +36,12 @@ public interface IServletInstrumenter {
 	 */
 	Object instrumentResponse(Object servletOrFilter, Object request, Object response);
 
+	/**
+	 * Called after the instrumented servlet or filter has finished processing the request.
+	 *
+	 * @param servletOrFilter
+	 *            the servlet or filter from which the call to this method originates
+	 */
 	void servletOrFilterExit(Object servletOrFilter);
 
 }

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 
 import rocks.inspectit.agent.java.proxy.IProxyBuildPlan;
-import rocks.inspectit.agent.java.proxy.IProxyBuildPlan.IMethodBuildPlan;
 import rocks.inspectit.agent.java.proxy.ProxyFor;
 import rocks.inspectit.agent.java.proxy.ProxyMethod;
 import rocks.inspectit.agent.java.util.AutoboxingHelper;
@@ -187,10 +186,10 @@ public final class ProxyBuildPlanImpl implements IProxyBuildPlan {
 	public List<Class<?>> getConstructorExceptions() {
 		try {
 
-			Constructor<?> constructor = getSuperClass().getDeclaredConstructor(constructorParameterTypes.toArray(new Class<?>[0]));
+			Constructor<?> constructor = getSuperClass().getDeclaredConstructor(constructorParameterTypes.toArray(new Class<?>[constructorParameterTypes.size()]));
 			return Arrays.asList(constructor.getExceptionTypes());
 		} catch (Exception e) {
-			throw new RuntimeException("Error fetching constructor exception types!");
+			throw new RuntimeException("Error fetching constructor exception types!", e);
 		}
 	}
 
@@ -268,7 +267,7 @@ public final class ProxyBuildPlanImpl implements IProxyBuildPlan {
 			InvalidProxyDescriptionException.throwException("The proxy class can't inherit from %s!", superClass);
 		}
 		for (Class<?> interf : implementedInterfaces) {
-			if (!interf.isInstance(interf)) {
+			if (!interf.isInterface()) {
 				InvalidProxyDescriptionException.throwException("%s is not an interface!", interf);
 			}
 		}
@@ -330,7 +329,7 @@ public final class ProxyBuildPlanImpl implements IProxyBuildPlan {
 	 *  Holds the information about a proxied method.
 	 * @author Jonas Kunz
 	 */
-	public final class MethodBuildPlanImpl implements IMethodBuildPlan {
+	private final class MethodBuildPlanImpl implements IMethodBuildPlan {
 
 		/**
 		 * The name of the method which will be proxied.
@@ -354,7 +353,7 @@ public final class ProxyBuildPlanImpl implements IProxyBuildPlan {
 		/**
 		 *
 		 */
-		private MethodBuildPlanImpl() {
+		MethodBuildPlanImpl() {
 			parameterTypes = new ArrayList<Class<?>>();
 		}
 
@@ -414,88 +413,7 @@ public final class ProxyBuildPlanImpl implements IProxyBuildPlan {
 			return true;
 		}
 
-		public List<Class<?>> getCheckedExceptions() {
-			//select the exception types based on the exception thrown by overwritten methods
-			Set<Class<?>> exceptions = null;
-			//check the superclass for the method
-			try {
-				Method overwritten = getSuperClass().getMethod(methodName, parameterTypes.toArray(new Class<?>[0]));
-				exceptions = new HashSet<Class<?>>(Arrays.asList(overwritten.getExceptionTypes()));
-			} catch (NoSuchMethodException e) {
-				//nothing todo, can happen
-			}
-			//check all implemented interfaces
-			for(Class<?> interf : getImplementedInterfaces()) {
-				try {
-					Method overwritten = interf.getMethod(methodName, parameterTypes.toArray(new Class<?>[0]));
-					HashSet<Class<?>> parentExceptions = new HashSet<Class<?>>(Arrays.asList(overwritten.getExceptionTypes()));
-					if(exceptions == null) {
-						exceptions = parentExceptions;
-					} else {
-						exceptions = mergeExceptions(exceptions, parentExceptions);
-					}
-				} catch (NoSuchMethodException e) {
-					//nothing todo, can happen
-				}
-			}
-			return exceptions == null ? Collections.<Class<?>>emptyList() : new ArrayList<Class<?>>(exceptions);
-		}
 
-		/**
-		 * merges the given throws clauses.
-		 * @param exceptionsA the thows decleration of the first method
-		 * @param exceptionsB the throws decleration of the second mehtod
-		 * @return
-		 */
-		private Set<Class<?>> mergeExceptions(Set<Class<?>> exceptionsA, Set<Class<?>> exceptionsB) {
-			//an exception is only if it is assignable to one of the exceptions in the other group.
-			Set<Class<?>> result = new HashSet<Class<?>>();
-			for(Class<?> exc : exceptionsA) {
-				boolean isAssignable = false;
-				for(Class<?> exc2 : exceptionsB) {
-					if(exc2.isAssignableFrom(exc)) {
-						isAssignable = true;
-					}
-				}
-				if(isAssignable) {
-					result.add(exc);
-				}
-			}
-			for(Class<?> exc : exceptionsB) {
-				boolean isAssignable = false;
-				for(Class<?> exc2 : exceptionsA) {
-					if(exc2.isAssignableFrom(exc)) {
-						isAssignable = true;
-					}
-				}
-				if(isAssignable) {
-					result.add(exc);
-				}
-			}
-			return removeSubTypes(result);
-		}
-
-		/**
-		 * Removes subtypes from the given set.
-		 * @param classes the set of classes to check
-		 * @return the new set
-		 */
-		private Set<Class<?>> removeSubTypes(Set<Class<?>> classes) {
-			Set<Class<?>> result = new HashSet<Class<?>>();
-			//an exception is only kept if it is only assignable from itself
-			for (Class<?> type : classes) {
-				boolean assignable = false;
-				for (Class<?> type2 : classes) {
-					if (type2.isAssignableFrom(type) && (type2 != type)) {
-						assignable = true;
-					}
-				}
-				if (!assignable) {
-					result.add(type);
-				}
-			}
-			return result;
-		}
 	}
 
 }

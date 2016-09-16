@@ -8,13 +8,11 @@ import java.net.URISyntaxException;
 import java.util.UUID;
 
 import org.slf4j.Logger;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import rocks.inspectit.agent.java.config.IConfigurationStorage;
-import rocks.inspectit.agent.java.core.ICoreService;
-import rocks.inspectit.agent.java.eum.data.DataHandler;
+import rocks.inspectit.agent.java.eum.data.IDataHandler;
 import rocks.inspectit.agent.java.proxy.IRuntimeLinker;
 import rocks.inspectit.shared.all.instrumentation.config.impl.JSAgentModule;
 import rocks.inspectit.shared.all.spring.logger.Log;
@@ -25,7 +23,7 @@ import rocks.inspectit.shared.all.spring.logger.Log;
  * @author Jonas Kunz
  */
 @Component
-public class ServletInstrumenter implements IServletInstrumenter, InitializingBean {
+public class ServletInstrumenter implements IServletInstrumenter {
 	/**
 	 * The runtime linker for creating proxies.
 	 */
@@ -33,21 +31,10 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	private IRuntimeLinker linker;
 
 	/**
-	 * The default core service.
-	 */
-	@Autowired
-	private ICoreService coreService;
-
-	/**
-	 * Configuration storage to read settings from.
-	 */
-	@Autowired
-	private IConfigurationStorage configurationStorage;
-
-	/**
 	 * Handles the data which we get from the JS agent.
 	 */
-	private DataHandler dataHandler;
+	@Autowired
+	private IDataHandler dataHandler;
 
 	/**
 	 * The logger.
@@ -59,34 +46,42 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 * The url to which the instrumentation script is mapped, should not overwrite any server
 	 * resources.
 	 */
-	private static final String JAVASCRIPT_URL_PREFIX = "inspectit_jsagent_";
+	public static final String JAVASCRIPT_URL_PREFIX = "inspectit_jsagent_";
 
 	/**
 	 * The url which gets called by our javascript for sending back the captured data.
 	 */
-	private static final String BEACON_SUB_PATH = "inspectIT_beacon_handler";
+	public static final String BEACON_SUB_PATH = "inspectIT_beacon_handler";
 
+	/**
+	 * Stores the full URL to which the JS Agent will send the beacons.
+	 */
 	private String completeBeaconURL;
-	private String completeJavascriptURLPrefix;
-	private String completeScriptTags;
 
+	/**
+	 * The prefix of the path to the JS-script including the full path.
+	 */
+	private String completeJavascriptURLPrefix;
+	/**
+	 * The tags to inject into the HTML.
+	 */
+	private String completeScriptTags;
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public boolean interceptRequest(Object servletOrFilter, Object requestObj, Object responseObj) {
 		// check the types:
-		if (!W_HttpServletRequest.isInstance(requestObj) || !W_HttpServletResponse.isInstance(responseObj)) {
+		if (!WHttpServletRequest.isInstance(requestObj) || !WHttpServletResponse.isInstance(responseObj)) {
 			return false;
 		}
-		W_HttpServletRequest req = W_HttpServletRequest.wrap(requestObj);
-		W_HttpServletResponse res = W_HttpServletResponse.wrap(responseObj);
+		WHttpServletRequest req = WHttpServletRequest.wrap(requestObj);
+		WHttpServletResponse res = WHttpServletResponse.wrap(responseObj);
 
 		String path = null;
 		try {
 			path = new URI(req.getRequestURI()).getPath();
 		} catch (URISyntaxException e2) {
-			e2.printStackTrace();
 			return false;
 		}
 
@@ -104,7 +99,6 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 			receiveBeacon(req);
 			return true;
 		} else {
-			log.info("Entered: " + servletOrFilter.getClass().getName());
 			return false;
 		}
 
@@ -116,13 +110,15 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 * @param req
 	 *            the request which holds the data as parameters
 	 */
-	private void receiveBeacon(W_HttpServletRequest req) {
+	private void receiveBeacon(WHttpServletRequest req) {
 		BufferedReader reader = req.getReader();
 		StringBuffer callbackData = new StringBuffer();
 		String line;
 		try {
-			while ((line = reader.readLine()) != null) {
+			line = reader.readLine();
+			while (line != null) {
 				callbackData.append(line);
+				line = reader.readLine();
 			}
 		} catch (IOException e) {
 			return;
@@ -140,7 +136,7 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 * @param scriptSource
 	 *            the source of the script to send.
 	 */
-	private void sendScript(W_HttpServletResponse res, String scriptSource) {
+	private void sendScript(WHttpServletResponse res, String scriptSource) {
 		// we respond with the script code
 		res.setStatus(200);
 		res.setContentType("application/javascript");
@@ -155,11 +151,10 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	 * {@inheritDoc}
 	 */
 	public Object instrumentResponse(Object servletOrFilter, Object httpRequestObj, Object httpResponseObj) {
-		if (W_HttpServletResponse.isInstance(httpResponseObj)) {
+		if (WHttpServletResponse.isInstance(httpResponseObj)) {
 			if (!linker.isProxyInstance(httpResponseObj, TagInjectionResponseWrapper.class)) {
 
 				Object sessionIdCookie = generateSessionIDCookie(httpRequestObj);
-
 
 				ClassLoader cl = httpResponseObj.getClass().getClassLoader();
 				TagInjectionResponseWrapper wrap = new TagInjectionResponseWrapper(httpResponseObj, sessionIdCookie, completeScriptTags);
@@ -176,37 +171,74 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 	}
 
 	/**
+	 *
+	 * Generates the cookie for tracking the user session. The returned Cookie is of type
+	 * javax.servlet.http.Cookie.
+	 *
 	 * @param httpRequestObj
+	 *            the incoming request
+	 * @return null, if a session cookie is already present. Otherwise, the Cookie is created and
+	 *         returned.
 	 */
 	private Object generateSessionIDCookie(Object httpRequestObj) {
 
 		// check if it already has an id set
-		W_HttpServletRequest request = W_HttpServletRequest.wrap(httpRequestObj);
+		WHttpServletRequest request = WHttpServletRequest.wrap(httpRequestObj);
 		Object[] cookies = request.getCookies();
 		if (cookies != null) {
 			for (Object cookieObj : cookies) {
-				W_Cookie cookie = W_Cookie.wrap(cookieObj);
+				WCookie cookie = WCookie.wrap(cookieObj);
 				if (cookie.getName().equals(JSAgentBuilder.SESSION_ID_COOKIE_NAME)) {
 					return null;
 				}
 			}
 		}
 
-		String id = generateUEMId();
+		String id = generateUserSessionID();
 
-		//otherweise generate the cookie
-		Object cookie = W_Cookie.newInstance(httpRequestObj.getClass().getClassLoader(), JSAgentBuilder.SESSION_ID_COOKIE_NAME, id);
-		W_Cookie wrappedCookie = W_Cookie.wrap(cookie);
+		// otherweise generate the cookie
+		Object cookie = WCookie.newInstance(httpRequestObj.getClass().getClassLoader(), JSAgentBuilder.SESSION_ID_COOKIE_NAME, id);
+		WCookie wrappedCookie = WCookie.wrap(cookie);
 		wrappedCookie.setMaxAge(JSAgentBuilder.SESSION_COOKIE_MAX_AGE_SECONDS);
 		wrappedCookie.setPath("/");
 		return cookie;
 	}
 
 	/**
+	 * Generates a unique ID to identify the user session.
 	 *
+	 * @return the generated id.
 	 */
-	private String generateUEMId() {
+	private String generateUserSessionID() {
+		// TODO: use different method for better performance?
 		return UUID.randomUUID().toString(); // will be unique
+	}
+
+	/**
+	 * Initializes the URL configuration using the given configuration storage.
+	 *
+	 * @param configurationStorage
+	 *            the configuration storage
+	 */
+	@Autowired
+	public void setConfigurationStorage(IConfigurationStorage configurationStorage) {
+
+		String base = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
+		if (!base.endsWith("/")) {
+			base += "/";
+		}
+		completeBeaconURL = base + BEACON_SUB_PATH;
+		completeJavascriptURLPrefix = base + JAVASCRIPT_URL_PREFIX;
+
+		StringBuilder tags = new StringBuilder();
+		tags.append("<script type=\"text/javascript\">\r\n" + "window.inspectIT_settings = {\r\n" + "eumManagementServer : \"");
+		tags.append(completeBeaconURL);
+		tags.append("\"\r\n};\r\n" + "</script>\r\n" + "<script type=\"text/javascript\" src=\"");
+		tags.append(completeJavascriptURLPrefix);
+		tags.append(JSAgentModule.JS_AGENT_REVISION).append('_');
+		tags.append(configurationStorage.getEndUserMonitoringConfig().getActiveModules());
+		tags.append(".js\"></script>\r\n");
+		completeScriptTags = tags.toString();
 	}
 
 	/**
@@ -217,45 +249,4 @@ public class ServletInstrumenter implements IServletInstrumenter, InitializingBe
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public void afterPropertiesSet() throws Exception {
-		dataHandler = new DataHandler(coreService);
-		completeBeaconURL = buildBeaconUrl();
-		completeJavascriptURLPrefix = buildJavascriptPrefix();
-		completeScriptTags = buildScriptTag();
-	}
-
-	private String buildBeaconUrl() {
-		String base = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
-		if (!base.endsWith("/")) {
-			base += "/";
-		}
-		return base + BEACON_SUB_PATH;
-	}
-
-
-	private String buildJavascriptPrefix() {
-		String base = configurationStorage.getEndUserMonitoringConfig().getScriptBaseUrl();
-		if (!base.endsWith("/")) {
-			base += "/";
-		}
-		return base + JAVASCRIPT_URL_PREFIX;
-	}
-
-	private String buildScriptTag() {
-		StringBuilder tags = new StringBuilder();
-		tags.append("<script type=\"text/javascript\">\r\n");
-		tags.append("window.inspectIT_settings = {\r\n");
-		tags.append("eumManagementServer : \"").append(completeBeaconURL).append("\"\r\n");
-		tags.append("};\r\n");
-		tags.append("</script>\r\n");
-		tags.append("<script type=\"text/javascript\" src=\"");
-		tags.append(completeJavascriptURLPrefix);
-		tags.append(JSAgentModule.JS_AGENT_REVISION).append("_");
-		tags.append(configurationStorage.getEndUserMonitoringConfig().getActiveModules());
-		tags.append(".js\"></script>\r\n");
-		return tags.toString();
-	}
 }

@@ -180,6 +180,11 @@ public interface IConfigurationStorage {
 	 */
 	Map<Collection<String>, InstrumentationDefinition> getInitialInstrumentationResults() throws StorageException;
 
-	public AgentEndUserMonitoringConfig getEndUserMonitoringConfig();
+	/**
+	 * Returns the configuration for the end user monitoring.
+	 *
+	 * @return the {@link AgentEndUserMonitoringConfig}.
+	 */
+	AgentEndUserMonitoringConfig getEndUserMonitoringConfig();
 
 }

@@ -37,11 +37,13 @@ public class HTMLScriptInjector {
 	 */
 	private enum Status {
 		/**
-		 * Initialisation status, the parser has not started or has not found anythin it can base its decision on.
+		 * Initialisation status, the parser has not started or has not found anything it can base
+		 * its decision on.
 		 */
 		INIT,
 		/**
-		 * Status saying that the document is non-html. No Injection wil lbe performed, the parser has terminated.
+		 * Status saying that the document is non-html. No Injection will be performed, the parser
+		 * has terminated.
 		 */
 		UNPARESABLE,
 
@@ -62,9 +64,16 @@ public class HTMLScriptInjector {
 	private static final String DEFAULT_ENCODING = "ISO-8859-1";
 
 	/**
+	 * constant used for code readability.
+	 */
+	private static final byte[] NO_LEFTOVER_CHARACTER_BYTES = {};
+
+	/**
 	 * A StringBuffer buffering of previous data.
 	 * Not everything needs to be buffered, for example already closed tags can be omitted.
 	 */
+	// Warning an be ignored as we regularly clear the buffer.
+	// TODO: replace with ringbuffer for better performance
 	private StringBuffer src;
 
 
@@ -85,9 +94,10 @@ public class HTMLScriptInjector {
 
 
 	/**
-	 * the left over of previous writes of incomplete encoded characters (e.g. only the first byte of an encoded '�').
+	 * the left over of previous writes of incomplete encoded characters (e.g. only the first byte
+	 * of an encoded special character).
 	 */
-	private byte[] leftOver;
+	private byte[] leftOver = NO_LEFTOVER_CHARACTER_BYTES;
 
 	/**
 	 * The decoder used for decoding encoded character data.
@@ -107,7 +117,6 @@ public class HTMLScriptInjector {
 	public HTMLScriptInjector(String tagToInject) {
 		this.tagToInject = tagToInject;
 
-		//TODO: replace with ringbuffer
 		src = new StringBuffer();
 		pos = new Carret(src, 0);
 
@@ -133,7 +142,7 @@ public class HTMLScriptInjector {
 	 * 		the original string if it did not contain the injection point, or the original stirng with tag inserted at the correct position.
 	 */
 	public String performInjection(String str) {
-		//TODO: check that leftover is null
+		// TODO: check that teher are no leftovers from previously written uncompleted characters
 		if (hasTerminated()) {
 			return str;
 		} else {
@@ -172,7 +181,7 @@ public class HTMLScriptInjector {
 			return encodedChars;
 		} else {
 
-			int previousLeftoverSize = leftOver == null ? 0 : leftOver.length;
+			int previousLeftoverSize = leftOver.length;
 
 			String decodedStr = decodeWithLeftOver(encodedChars);
 
@@ -224,7 +233,7 @@ public class HTMLScriptInjector {
 	private String decodeWithLeftOver(byte[] data) {
 		String decodedStr;
 		ByteBuffer input;
-		if (leftOver != null) {
+		if (leftOver.length != 0) {
 			input = ByteBuffer.allocate(leftOver.length + data.length);
 			input.put(leftOver);
 			input.put(data);
@@ -244,7 +253,7 @@ public class HTMLScriptInjector {
 			out.get(resultBuffer);
 			decodedStr = new String(resultBuffer);
 			if (input.remaining() == 0) {
-				leftOver = null; //no leftover, everything complete
+				leftOver = NO_LEFTOVER_CHARACTER_BYTES; // no leftover, everything complete
 			} else {
 				leftOver = new byte[input.remaining()];
 				input.get(leftOver);
@@ -315,7 +324,7 @@ public class HTMLScriptInjector {
 	private boolean handleTopLevelTag() {
 		//ignore if it is a comment, otherwise proceed with parsing the opening tag
 
-		Carret end = pos.clone();
+		Carret end = pos.copy();
 		boolean isClosed = end.walkToCharCC('>');
 
 		if (isClosed) {
@@ -339,10 +348,10 @@ public class HTMLScriptInjector {
 				pos.walkAfterCharCC('<');
 				pos.walkAfterWhitespaces();
 				boolean isImmediatelyClosed = end.get(-1) == '/';
-				Carret tagEnd = end.clone();
+				Carret tagEnd = end.copy();
 				//go back before the closing part
 				if (isImmediatelyClosed) {
-					tagEnd.go(-1);
+					tagEnd.goN(-1);
 				}
 				tagEnd.walkBackWhitespaces();
 				if (pos.startsWithIC("html")) {
@@ -371,17 +380,17 @@ public class HTMLScriptInjector {
 	 */
 	private boolean handleHTMLTag() {
 		//ignore if it is a comment, otherwise proceed with parsing the opening tag
-		Carret end = pos.clone();
+		Carret end = pos.copy();
 		boolean isClosed = end.walkToCharCC('>');
 		if (isClosed) {
 
 			pos.walkAfterCharCC('<');
 			pos.walkAfterWhitespaces();
 			boolean isImmediatelyClosed = end.get(-1) == '/';
-			Carret tagEnd = end.clone();
+			Carret tagEnd = end.copy();
 			//go back before the closing part
 			if (isImmediatelyClosed) {
-				tagEnd.go(-1);
+				tagEnd.goN(-1);
 			}
 			tagEnd.walkBackWhitespaces();
 			if ((pos.startsWithIC("head") || pos.startsWithIC("body")) && !isImmediatelyClosed) {
@@ -412,7 +421,7 @@ public class HTMLScriptInjector {
 	private boolean skipAllCommentsAndWhitespaces() {
 		pos.walkAfterWhitespaces();
 		while (pos.startsWithCC("<!--")) {
-			Carret end = pos.clone();
+			Carret end = pos.copy();
 			boolean endFound = end.walkAfterMatchCC("-->");
 			if (endFound) {
 				pos.goTo(end.getOffset());

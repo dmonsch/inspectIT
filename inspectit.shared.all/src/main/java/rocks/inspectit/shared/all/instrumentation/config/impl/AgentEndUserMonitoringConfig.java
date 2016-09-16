@@ -6,12 +6,25 @@ package rocks.inspectit.shared.all.instrumentation.config.impl;
  */
 public class AgentEndUserMonitoringConfig {
 
+	/**
+	 * switch to disable EUM entirely.
+	 */
 	private boolean isEnabled;
 
+	/**
+	 * The base url under which we will locate the JS Agent script and we will receive the beacons.
+	 */
 	private String scriptBaseUrl;
 
+	/**
+	 * A string containing the identifiers of all enabled JS agent modules, see
+	 * {@link JSAgentModule}.
+	 */
 	private String activeModules;
 
+	/**
+	 * Default constructor.
+	 */
 	public AgentEndUserMonitoringConfig() {
 		isEnabled = false;
 		scriptBaseUrl = "/";
@@ -20,7 +33,11 @@ public class AgentEndUserMonitoringConfig {
 
 	/**
 	 * @param isEnabled
+	 *            true, if end user monitoring is enabled
 	 * @param scriptBaseUrl
+	 *            the base url to place the script under and to sent the beacons to
+	 * @param activeModules
+	 *            the active modules, see {@link JSAgentModule}.
 	 */
 	public AgentEndUserMonitoringConfig(boolean isEnabled, String scriptBaseUrl, String activeModules) {
 		super();
@@ -69,7 +86,7 @@ public class AgentEndUserMonitoringConfig {
 
 	/**
 	 * Gets {@link #activeModules}.
-	 * 
+	 *
 	 * @return {@link #activeModules}
 	 */
 	public String getActiveModules() {
@@ -78,7 +95,7 @@ public class AgentEndUserMonitoringConfig {
 
 	/**
 	 * Sets {@link #activeModules}.
-	 * 
+	 *
 	 * @param activeModules
 	 *            New value for {@link #activeModules}
 	 */

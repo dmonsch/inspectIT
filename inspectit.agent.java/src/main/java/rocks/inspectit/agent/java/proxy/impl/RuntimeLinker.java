@@ -55,8 +55,13 @@ public final class RuntimeLinker implements IRuntimeLinker {
 	 */
 	private static final IProxyClassInfo UNLINKEABLE_MARKER = new IProxyClassInfo() {
 		// CHECKSTYLE:OFF
-		public Class<?> getProxyClass() { return null; }
-		public Object createProxy(IProxySubject proxySubject) {return null;}
+		public Class<?> getProxyClass() {
+			return null;
+		}
+
+		public Object createProxy(IProxySubject proxySubject) {
+			return null;
+		}
 		// CHECKSTYLE:ON
 	};
 
@@ -64,7 +69,7 @@ public final class RuntimeLinker implements IRuntimeLinker {
 	 * Creates an Runtime Linker.
 	 * Only one RuntimeLinker should exist in the entire VM.
 	 */
-	private RuntimeLinker() {
+	public RuntimeLinker() {
 		linkedClassCache = new ConcurrentHashMap<Class<?>, ConcurrentHashMap<ClassLoader, IProxyClassInfo>>();
 	}
 
@@ -135,7 +140,7 @@ public final class RuntimeLinker implements IRuntimeLinker {
 	 */
 	private <T> IProxyClassInfo getProxyClass(Class<T> subjectType, ClassLoader context, boolean create)  {
 		//we are not interested in the bootstrap loader
-		if(context == null) {
+		if (context == null) {
 			context = ClassLoader.getSystemClassLoader();
 		}
 		ConcurrentHashMap<ClassLoader, IProxyClassInfo> classLoaderMap = linkedClassCache.get(subjectType);

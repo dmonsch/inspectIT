@@ -19,6 +19,9 @@ import rocks.inspectit.shared.all.instrumentation.config.impl.JSAgentModule;
  */
 public final class JSAgentBuilder {
 
+	/**
+	 * The logger.
+	 */
 	private static final Logger LOG = LoggerFactory.getLogger(JSAgentBuilder.class);
 
 	/**
@@ -52,8 +55,14 @@ public final class JSAgentBuilder {
 	 */
 	private static final String JSBASE_RESOURCE = SCRIPT_RESOURCE_PATH + "inspectit_jsagent_base.js";
 
+	/**
+	 * Cache for the source of the individual JS Agent modules.
+	 */
 	private static ConcurrentHashMap<JSAgentModule, String> moduleSourceCache = new ConcurrentHashMap<JSAgentModule, String>();
 
+	/**
+	 * Cache variable for the JS agent core source code.
+	 */
 	private static String agentCoreSource = null;
 
 	/**
@@ -81,18 +90,32 @@ public final class JSAgentBuilder {
 		return script.toString();
 	}
 
+	/**
+	 * @return the core agent source code, either laoded from the resources or directly fetched form
+	 *         the cache.
+	 */
 	private static String getAgentCoreSource() {
 		if (agentCoreSource == null) {
-			try {
-				agentCoreSource = readResourceFile(JSBASE_RESOURCE);
-			} catch (Exception e) {
-				LOG.error("unable to read JS Agent core");
-				return "";
+			synchronized (JSAgentBuilder.class) {
+				if (agentCoreSource == null) {
+					try {
+						agentCoreSource = readResourceFile(JSBASE_RESOURCE);
+					} catch (Exception e) {
+						LOG.error("unable to read JS Agent core");
+						return "";
+					}
+				}
 			}
 		}
 		return agentCoreSource;
 	}
 
+	/**
+	 * @param module
+	 *            the module of which the source code shall be returned
+	 * @return @return the modules source code, either loaded from the resources or directly fetched
+	 *         form the cache.
+	 */
 	private static String getAgentModuleSource(JSAgentModule module) {
 		if (!moduleSourceCache.containsKey(module)) {
 			try {
@@ -108,6 +131,15 @@ public final class JSAgentBuilder {
 		}
 	}
 
+	/**
+	 * Utility method for reading resource text files.
+	 *
+	 * @param path
+	 *            the path of the resource to fetch
+	 * @return the read text contents of the resource
+	 * @throws IOException
+	 *             if the reading of the resource fails
+	 */
 	private static String readResourceFile(String path) throws IOException {
 		InputStreamReader fr = new InputStreamReader(JSAgentBuilder.class.getResourceAsStream(path));
 		try {

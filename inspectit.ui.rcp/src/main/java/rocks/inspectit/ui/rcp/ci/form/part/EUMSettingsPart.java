@@ -35,9 +35,9 @@ import rocks.inspectit.ui.rcp.InspectITImages;
 import rocks.inspectit.ui.rcp.ci.form.input.EnvironmentEditorInput;
 
 /**
- * Part for defining the environment general setting.
+ * Part for configuring the user experience management.
  *
- * @author Ivan Senic
+ * @author Jonas Kunz
  *
  */
 public class EUMSettingsPart extends SectionPart implements IPropertyListener {
@@ -52,16 +52,20 @@ public class EUMSettingsPart extends SectionPart implements IPropertyListener {
 	 */
 	private Environment environment;
 
+
 	/**
-	 * {@link Text} for sending strategy value.
+	 * The base URL under which the EUM will operate (e.g. place the script).
 	 */
 	private Text scriptBaseUrl;
 
 	/**
-	 * Button for class loading delegation.
+	 * Switch to disable or enable EUM.
 	 */
 	private Button eumEnabledButton;
 
+	/**
+	 * Table to disable / enable JSAgent modules.
+	 */
 	private TableViewer tableViewer;
 
 	/**
@@ -160,6 +164,9 @@ public class EUMSettingsPart extends SectionPart implements IPropertyListener {
 		scriptBaseUrl.addListener(SWT.Modify, dirtyListener);
 	}
 
+	/**
+	 * Builds the JSAgent module table.
+	 */
 	private void createColumns() {
 		TableViewerColumn activeColumn = new TableViewerColumn(tableViewer, SWT.NONE);
 		activeColumn.getColumn().setResizable(false);
@@ -209,7 +216,7 @@ public class EUMSettingsPart extends SectionPart implements IPropertyListener {
 		for (TableItem item : tableViewer.getTable().getItems()) {
 			JSAgentModule moduleInfo = (JSAgentModule) item.getData();
 			EndUserMonitoringConfig eumConfig = environment.getEumConfig();
-			item.setChecked(eumConfig.getActiveModules().contains("" + moduleInfo.getIdentifier()));
+			item.setChecked(eumConfig.getActiveModules().contains(String.valueOf(moduleInfo.getIdentifier())));
 		}
 	}
 

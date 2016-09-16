@@ -11,8 +11,8 @@ import rocks.inspectit.agent.java.util.AutoboxingHelper;
 /**
  * @author Jonas Kunz
  *
- *         A utility class for handling calls to a constructor via reflection. Performs the caching
- *         on a per-classloader level
+ *         A utility class for handling calls to a constructor via reflection. Performs caching on a
+ *         per-classloader level.
  *
  */
 public class CachedConstructor {
@@ -29,7 +29,7 @@ public class CachedConstructor {
 
 
 	/**
-	 * The types of the parameters.
+	 * The types of the parameters the cosntructor accepts.
 	 */
 	private String[] parameterTypes;
 
@@ -41,7 +41,7 @@ public class CachedConstructor {
 
 	/**
 	 * This will be the cache value if a given constructor does not exist. It is necessary because
-	 * null-values are used to show thaht the method has not been fetched yet.
+	 * null-values are used to show that the method has not been fetched yet.
 	 */
 	private static final Constructor<?> NOT_FOUND_MARKER;
 
@@ -69,7 +69,7 @@ public class CachedConstructor {
 
 	/**
 	 *
-	 * Creates a constructor cache based on the given class name and parameters.
+	 * Creates a constructor cache based on the given class name and constructor parameters.
 	 *
 	 * @param className
 	 *            the full qualified name of the class declaring the constructor
@@ -103,8 +103,16 @@ public class CachedConstructor {
 	}
 
 
-	@SuppressWarnings("unchecked")
-	private Constructor<?> findConstructor(ClassLoader cl) throws SecurityException {
+	/**
+	 * Fetches the Constructor based from the context of the given classloader. Caches the
+	 * constructor or marks it as unresolveable after the first invocation for this classloader.
+	 *
+	 * @param cl
+	 *            The context to fetch the constructor from.
+	 * @return The fetched constructor.
+	 *
+	 */
+	private Constructor<?> findConstructor(ClassLoader cl) {
 		if (!(cachedConstructors.containsKey(cl))) {
 
 			Constructor<?> constr;
@@ -113,8 +121,14 @@ public class CachedConstructor {
 				for (int i = 0; i < paramTypes.length; i++) {
 					paramTypes[i] = AutoboxingHelper.findClass(parameterTypes[i], false, cl);
 				}
-				constr = Class.forName(className, true, cl).getConstructor(paramTypes);
-				cachedConstructors.putIfAbsent(cl, constr);
+				Class<?> clazz = ClassLoaderAwareClassCache.lookupClass(className, cl);
+				if (clazz != null) {
+					constr = clazz.getConstructor(paramTypes);
+					cachedConstructors.putIfAbsent(cl, constr);
+				} else {
+					cachedConstructors.putIfAbsent(cl, NOT_FOUND_MARKER);
+					LOG.error("Could not find class: " + className);
+				}
 			} catch (NoSuchMethodException e) {
 				cachedConstructors.putIfAbsent(cl, NOT_FOUND_MARKER);
 				LOG.error("Could not find constructor of class " + className);
@@ -125,13 +139,22 @@ public class CachedConstructor {
 
 		}
 		Constructor<?> constr = cachedConstructors.get(cl);
-		if (constr == NOT_FOUND_MARKER) {
+		if (NOT_FOUND_MARKER.equals(constr)) {
 			return null;
 		} else {
 			return constr;
 		}
 	}
 
+	/**
+	 * Invokes the constructor in the given classloader context. Catches any occurring exceptions.
+	 *
+	 * @param env
+	 *            the context to fetch the constructor from
+	 * @param parameters
+	 *            the parameters to pass to the constructor
+	 * @return the newly created instance or null if the call to the constructor failed
+	 */
 	public Object newInstanceSafe(ClassLoader env, Object... parameters) {
 		try {
 			return newInstance(env, parameters);
@@ -141,8 +164,18 @@ public class CachedConstructor {
 		}
 	}
 
-
-	@SuppressWarnings("unchecked")
+	/**
+	 * Invokes the constructor in the given classloader context. Does not catch any occurring
+	 * exceptions.
+	 *
+	 * @param env
+	 *            the context to fetch the constructor from
+	 * @param parameters
+	 *            the parameters to pass to the constructor
+	 * @return the newly created instance
+	 * @throws Exception
+	 *             any exception occurring during the instantiation.
+	 */
 	public Object newInstance(ClassLoader env, Object... parameters) throws Exception {
 
 		Constructor<?> constructor = findConstructor(env);
