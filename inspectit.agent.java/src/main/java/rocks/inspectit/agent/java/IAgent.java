@@ -35,6 +35,11 @@ public interface IAgent {
 	 */
 	IHookDispatcher getHookDispatcher();
 
+	/**
+	 * Returns the Servlet Instrumenter responsible for UEM script injection.
+	 *
+	 * @return the servlet instrumenter singleton.
+	 */
 	IServletInstrumenter getServletInstrumenter();
 
 	/**

@@ -18,15 +18,32 @@ import rocks.inspectit.agent.java.proxy.ProxyMethod;
 @ProxyFor(superClass = "javax.servlet.ServletOutputStream")
 public class TagInjectionOutputStream extends OutputStream implements IProxySubject {
 
-	private W_ServletOutputStream originalStream;
+	/**
+	 * The actual stream to which the data will be written.
+	 */
+	private WServletOutputStream originalStream;
 
+	/**
+	 * The parser used for inejcting the tag.
+	 */
 	private HTMLScriptInjector parser;
 
+	/**
+	 * The new-line character.
+	 */
 	private static final String NL = System.getProperty("line.separator");
 
 
+	/**
+	 * Creates a tag injecting stream.
+	 *
+	 * @param originalStream
+	 *            the wrapped stream, to which the data will be passed through.
+	 * @param tagToInject
+	 *            the tag to inject.
+	 */
 	public TagInjectionOutputStream(Object originalStream, String tagToInject) {
-		this.originalStream = W_ServletOutputStream.wrap(originalStream);
+		this.originalStream = WServletOutputStream.wrap(originalStream);
 		parser = new HTMLScriptInjector(tagToInject);
 	}
 
@@ -49,6 +66,7 @@ public class TagInjectionOutputStream extends OutputStream implements IProxySubj
 	public void setEncoding(String charsetName) {
 		parser.setEncoding(charsetName);
 	}
+
 
 	@ProxyMethod
 	public void print(boolean arg0) throws IOException {

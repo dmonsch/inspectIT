@@ -51,7 +51,7 @@ public class InvalidProxyDescriptionException extends Exception {
 					} else {
 						name = cl.getCanonicalName();
 					}
-					if (printed.equals("(")) {
+					if ("(".equals(printed)) {
 						printed += name;
 					} else {
 						printed += ", " + name;

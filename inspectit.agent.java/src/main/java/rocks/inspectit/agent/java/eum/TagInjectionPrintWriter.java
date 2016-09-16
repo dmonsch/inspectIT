@@ -4,19 +4,43 @@ package rocks.inspectit.agent.java.eum;
 import java.io.PrintWriter;
 import java.util.Locale;
 
-public class TagInjectionPrintWriter extends PrintWriter{
+/**
+ * A PrintWriter which injects the given tag on the fly into the head (or another appropriate)
+ * section of the document. Automatically detects non-html and then falls back to just piping the
+ * data through.
+ *
+ * @author Jonas Kunz
+ */
+public class TagInjectionPrintWriter extends PrintWriter {
 
+	/**
+	 * The HTML parser used ofr injecting the tag.
+	 */
 	private HTMLScriptInjector parser;
 
+	/**
+	 * The writer to pass the data to.
+	 */
 	private PrintWriter originalWriter;
 
+	/**
+	 * New-line character.
+	 */
 	private static final String NL = System.getProperty("line.separator");
 
 
 
+	/**
+	 * Creates a new print writer which performs the tag injection.
+	 *
+	 * @param originalWriter
+	 *            The writer which is wrapped.
+	 * @param tagToInject
+	 *            The tag(s) to insert.
+	 */
 	public TagInjectionPrintWriter(PrintWriter originalWriter, String tagToInject) {
 		super(originalWriter);
-		this.originalWriter= originalWriter;
+		this.originalWriter = originalWriter;
 		parser = new HTMLScriptInjector(tagToInject);
 
 	}
@@ -114,47 +138,47 @@ public class TagInjectionPrintWriter extends PrintWriter{
 
 	@Override
 	public void println(boolean x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x)+NL));
+		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
 	}
 
 	@Override
 	public void println(char x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x)+NL));
+		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
 	}
 
 	@Override
 	public void println(int x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x)+NL));
+		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
 	}
 
 	@Override
 	public void println(long x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x)+NL));
+		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
 	}
 
 	@Override
 	public void println(float x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x)+NL));
+		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
 	}
 
 	@Override
 	public void println(double x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x)+NL));
+		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
 	}
 
 	@Override
 	public void println(char[] x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x)+NL));
+		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
 	}
 
 	@Override
 	public void println(String x) {
-		originalWriter.write(parser.performInjection(x+NL));
+		originalWriter.write(parser.performInjection(x + NL));
 	}
 
 	@Override
 	public void println(Object x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x)+NL));
+		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
 	}
 
 	@Override
@@ -164,7 +188,7 @@ public class TagInjectionPrintWriter extends PrintWriter{
 
 	@Override
 	public PrintWriter printf(Locale l, String format, Object... args) {
-		return this.format(l,format, args);
+		return this.format(l, format, args);
 	}
 
 	@Override
@@ -175,7 +199,7 @@ public class TagInjectionPrintWriter extends PrintWriter{
 
 	@Override
 	public PrintWriter format(Locale l, String format, Object... args) {
-		originalWriter.write(parser.performInjection(String.format(l,format, args)));
+		originalWriter.write(parser.performInjection(String.format(l, format, args)));
 		return this;
 	}
 

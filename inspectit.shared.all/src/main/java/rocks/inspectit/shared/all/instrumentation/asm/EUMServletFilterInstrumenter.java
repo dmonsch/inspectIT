@@ -9,7 +9,8 @@ import info.novatec.inspectit.org.objectweb.asm.commons.AdviceAdapter;
 import info.novatec.inspectit.org.objectweb.asm.commons.Method;
 
 /**
- * Instrumenter that adds byte code for the interception of EUm reqeusts and for injecting scripts.
+ * Instrumenter that adds byte code for the interception of EUM requests and for injecting scripts.
+ * Redirects the control flow to the {@link rocks.inspectit.agent.java.eum.IServletInstrumenter}
  *
  * @author Jonas Kunz
  *
@@ -21,15 +22,24 @@ public class EUMServletFilterInstrumenter extends AdviceAdapter {
 	 */
 	private static final Type AGENT_TYPE = Type.getType("Lrocks/inspectit/agent/java/IAgent;");
 
-	private final Type OBJECT_TYPE = Type.getType(Object.class);
+	/**
+	 * The object type.
+	 */
+	private static final Type OBJECT_TYPE = Type.getType(Object.class);
 
-	private static final Type AGENT_OWNER = Type.getType("Lrocks/inspectit/agent/java/Agent;");
+	/**
+	 * The owner of the servlet instrumenter.
+	 */
+	private static final Type SERVLET_INSTRUMENTER_OWNER = Type.getType("Lrocks/inspectit/agent/java/Agent;");
 
 	/**
 	 * Class name where our IAgent exists as a field.
 	 */
 	private static final Type SERVLET_INSTRUMENTER_TYPE = Type.getType("Lrocks/inspectit/agent/java/eum/IServletInstrumenter;");
 
+	/**
+	 * local variable for storing our started try block.
+	 */
 	private final Label tryBlockStart;
 
 	/**
@@ -90,7 +100,7 @@ public class EUMServletFilterInstrumenter extends AdviceAdapter {
 	 *
 	 */
 	private void loadServletInstrumenter() {
-		getStatic(AGENT_OWNER, "agent", AGENT_TYPE);
+		getStatic(SERVLET_INSTRUMENTER_OWNER, "agent", AGENT_TYPE);
 		invokeInterface(AGENT_TYPE, new Method("getServletInstrumenter", SERVLET_INSTRUMENTER_TYPE, new Type[] {}));
 	}
 
@@ -134,6 +144,9 @@ public class EUMServletFilterInstrumenter extends AdviceAdapter {
 		super.visitMaxs(maxStack, maxLocals);
 	}
 
+	/**
+	 * notifies the servlet instrumenter thath the servlet or filter has finished.
+	 */
 	private void servletOrFilterExit() {
 		Method servletOrFilterExitMethod = new Method("servletOrFilterExit", Type.VOID_TYPE, new Type[] { OBJECT_TYPE });
 

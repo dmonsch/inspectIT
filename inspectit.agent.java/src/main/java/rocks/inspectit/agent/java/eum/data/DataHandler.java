@@ -10,6 +10,8 @@ import java.util.Map;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import rocks.inspectit.agent.java.core.ICoreService;
 import rocks.inspectit.shared.all.communication.data.EUMData;
@@ -30,7 +32,8 @@ import rocks.inspectit.shared.all.communication.data.eum.UserSession;
  */
 
 // TODO if data not in our format don't accept it
-public class DataHandler {
+@Component
+public class DataHandler implements IDataHandler {
 
 	// JSON OBJ CONFIG CONSTANTS (STRUCTURE OF THE JSON OBJ)
 	/**
@@ -84,17 +87,15 @@ public class DataHandler {
 	/**
 	 * Core service for sending eum data.
 	 */
+	@Autowired
 	private ICoreService coreService;
 
 	/**
 	 * Creates a new instance which handles sessions and user actions.
 	 *
-	 * @param coreService
-	 *            CoreService which is needed to send data to the CMR.
 	 */
-	public DataHandler(ICoreService coreService) {
+	public DataHandler() {
 		this.sessionMap = new HashMap<String, UserSession>();
-		this.coreService = coreService;
 	}
 
 	/**

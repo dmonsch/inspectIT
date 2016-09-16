@@ -1,5 +1,6 @@
 package rocks.inspectit.agent.java.eum;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -11,10 +12,11 @@ import rocks.inspectit.agent.java.util.AutoboxingHelper;
 /**
  * @author Jonas Kunz
  *
- * A utility class for handling calls to a method via reflection.
- * Performs the caching on a per-classloader level
+ *         A utility class for handling calls to a method via reflection. Performs the caching on a
+ *         per-classloader level
  *
- * @param <R> the return type of the method
+ * @param <R>
+ *            the return type of the method
  */
 public class CachedMethod<R> {
 
@@ -32,12 +34,10 @@ public class CachedMethod<R> {
 	 */
 	private String className;
 
-
 	/**
 	 * The types of the parameters.
 	 */
 	private String[] parameterTypes;
-
 
 	/**
 	 * Caches methods on a per-classloader basis.
@@ -45,31 +45,29 @@ public class CachedMethod<R> {
 	private ConcurrentHashMap<ClassLoader, Method> cachedMethods;
 
 	/**
-	 * This will be the cache value if a given method does not exist.
-	 * It is necessary because null-values are used to show thaht the method has not been fetched yet.
+	 * This will be the cache value if a given method does not exist. It is necessary because
+	 * null-values are used to show thaht the method has not been fetched yet.
 	 */
 	private static final Method NOT_FOUND_MARKER;
 
 	static {
 		try {
-			//build a dummy method which is accessible from no-where with a method to be used as not-found marker
-			Class<?> dummyClazz = new Object() {
-				@SuppressWarnings("unused")
-				public void dummyMethod() { }
-			}.getClass();
-			NOT_FOUND_MARKER = dummyClazz.getMethod("dummyMethod");
+			NOT_FOUND_MARKER = CachedMethod.class.getDeclaredMethod("findMethod", ClassLoader.class);
 		} catch (Exception e) {
-			//should never happen
+			// should never happen
 			throw new RuntimeException(e);
 		}
 	}
 
 	/**
 	 *
-	 * Creates a method cache based on the given names.
-	 * Expects that the method does not need any parameters.
-	 * @param className the full qualified name of the class declaring the method
-	 * @param methodName the name of the method
+	 * Creates a method cache based on the given names. Expects that the method does not need any
+	 * parameters.
+	 *
+	 * @param className
+	 *            the full qualified name of the class declaring the method
+	 * @param methodName
+	 *            the name of the method
 	 */
 	public CachedMethod(String className, String methodName) {
 		this.className = className;
@@ -81,9 +79,13 @@ public class CachedMethod<R> {
 	/**
 	 *
 	 * Creates a method cache based on the given names.
-	 * @param className the full qualified name of the class declaring the method
-	 * @param methodName the name of the method
-	 * @param parameterTypes the types of the methods parameters
+	 *
+	 * @param className
+	 *            the full qualified name of the class declaring the method
+	 * @param methodName
+	 *            the name of the method
+	 * @param parameterTypes
+	 *            the types of the methods parameters
 	 */
 	public CachedMethod(String className, String methodName, Class<?>... parameterTypes) {
 		this.className = className;
@@ -98,9 +100,13 @@ public class CachedMethod<R> {
 	/**
 	 *
 	 * Creates a method cache based on the given names.
-	 * @param className the full qualified name of the class declaring the method
-	 * @param methodName the name of the method
-	 * @param parameterTypes the names of the types of the methods parameters
+	 *
+	 * @param className
+	 *            the full qualified name of the class declaring the method
+	 * @param methodName
+	 *            the name of the method
+	 * @param parameterTypes
+	 *            the names of the types of the methods parameters
 	 */
 	public CachedMethod(String className, String methodName, String... parameterTypes) {
 		this.className = className;
@@ -109,13 +115,16 @@ public class CachedMethod<R> {
 		this.cachedMethods = new ConcurrentHashMap<ClassLoader, Method>();
 	}
 
-
 	/**
 	 * Calls the target method, but don't catch any exceptions.
-	 * @param instance the instance this method should be called on
-	 * @param parameters the parameters to be passed to the method
+	 *
+	 * @param instance
+	 *            the instance this method should be called on
+	 * @param parameters
+	 *            the parameters to be passed to the method
 	 * @return the return value of the method call
-	 * @throws Exception any exception which occured when calling the method
+	 * @throws Exception
+	 *             any exception which occured when calling the method
 	 */
 	@SuppressWarnings("unchecked")
 	public R call(Object instance, Object... parameters) throws Exception {
@@ -125,20 +134,32 @@ public class CachedMethod<R> {
 		if (methodToCall == null) {
 			throw new RuntimeException("Method " + methodName + " not found on " + instance.getClass().getName());
 		} else {
-			return (R) methodToCall.invoke(instance, parameters);
+			try {
+				return (R) methodToCall.invoke(instance, parameters);
+			} catch (InvocationTargetException exc) {
+				Throwable cause = exc.getCause();
+				if (cause instanceof Exception) {
+					throw (Exception) cause;
+				} else {
+					throw exc;
+				}
+			}
 		}
 
 	}
 
 	/**
 	 * Performs the cache lookup or fetches the mtod if it hasn't been cached yet.
-	 * @param cl the classloader to use for the lookup
+	 *
+	 * @param cl
+	 *            the classloader to use for the lookup
 	 * @return the found method, or null if it wasn't found
-	 * @throws SecurityException delegated
+	 * @throws SecurityException
+	 *             delegated
 	 */
 	private Method findMethod(ClassLoader cl) throws SecurityException {
 		if (!(cachedMethods.containsKey(cl))) {
-			//no need for synchronization, assignment is atomic
+			// no need for synchronization, assignment is atomic
 			Method meth;
 			try {
 				Class<?>[] paramTypes = new Class<?>[parameterTypes.length];
@@ -157,7 +178,7 @@ public class CachedMethod<R> {
 
 		}
 		Object method = cachedMethods.get(cl);
-		if (method == NOT_FOUND_MARKER) {
+		if (NOT_FOUND_MARKER.equals(method)) {
 			return null;
 		} else {
 			return (Method) method;
@@ -166,8 +187,11 @@ public class CachedMethod<R> {
 
 	/**
 	 * Calls the method and catches any occuring exception.
-	 * @param instance the instance to call the method on
-	 * @param parameters the paramters to pass to the method
+	 *
+	 * @param instance
+	 *            the instance to call the method on
+	 * @param parameters
+	 *            the paramters to pass to the method
 	 * @return the balue returned by the call, or null if an exception occured
 	 */
 	public R callSafe(Object instance, Object... parameters) {
@@ -177,6 +201,58 @@ public class CachedMethod<R> {
 			LOG.error("Exception calling " + methodName + " on " + instance + ": " + e.getClass());
 			return null;
 		}
+	}
+
+	/**
+	 * Calls the method and catches any occuring exception.
+	 *
+	 * @param exceptionToRethrow
+	 *            exception of this type will not be caught. Ca nevben be checked exceptions!
+	 * @param instance
+	 *            the instance to call the method on
+	 * @param parameters
+	 *            the paramters to pass to the method
+	 * @return the balue returned by the call, or null if an exception occured
+	 */
+	public R callSafeExceptions(Class<? extends Exception> exceptionToRethrow, Object instance, Object... parameters) {
+		try {
+			return call(instance, parameters);
+		} catch (Exception e) {
+			if (exceptionToRethrow.isInstance(e)) {
+				throwCheckedException(e);
+				return null; // unreachable
+			} else {
+				LOG.error("Exception calling " + methodName + " on " + instance + ": " + e.getClass());
+				return null;
+			}
+		}
+	}
+
+	/**
+	 * Utiltiy method for throwing checked exceptions without having to declare them. Taken from
+	 *
+	 * @param exc
+	 *            the exceptioSn to throw
+	 */
+	static void throwCheckedException(Exception exc) {
+		/**
+		 * @author Jonas Kunz
+		 *
+		 * @param <E>
+		 */
+		class UncheckException<E extends Exception> {
+			/**
+			 * @param exc
+			 *            the exception to uncheck
+			 * @throws E
+			 *             exception class
+			 */
+			@SuppressWarnings("unchecked")
+			private void uncheck(Exception exc) throws E {
+				throw (E) exc;
+			}
+		}
+		new UncheckException<RuntimeException>().uncheck(exc);
 	}
 
 }

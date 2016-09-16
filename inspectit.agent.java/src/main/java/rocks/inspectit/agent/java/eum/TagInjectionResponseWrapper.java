@@ -18,69 +18,119 @@ import javax.servlet.http.HttpServletResponseWrapper;
 
 /**
  *
- * Detects html content and injects a script tag at the correct point on-the-fly
+ * Detects html content and injects a script tag at the correct point on-the-fly.
  *
  * @author Jonas Kunz
  *
  */
-@ProxyFor(superClass = "javax.servlet.http.HttpServletResponseWrapper", constructorParameterTypes={"javax.servlet.http.HttpServletResponse"})
-public class TagInjectionResponseWrapper implements IProxySubject{
+@ProxyFor(superClass = "javax.servlet.http.HttpServletResponseWrapper", constructorParameterTypes = { "javax.servlet.http.HttpServletResponse" })
+public class TagInjectionResponseWrapper implements IProxySubject {
 
+	/**
+	 * if getOutputStream() was called on this class, this variable will hold the generated stream.
+	 */
 	private OutputStream wrappedStream;
 
+	/**
+	 * if getWriter() was called on this class, this variable will hold the generated writer.
+	 */
 	private PrintWriter wrappedWriter;
 
-	private Object linkedThis;
 
-	private W_HttpServletResponse wrappedResponse;
+	/**
+	 * The original, uninstrumented response object which is wrapped by this instance.
+	 */
+	private WHttpServletResponse wrappedResponse;
+
+	/**
+	 * The linker used for building this proxy instance.
+	 */
 	private IRuntimeLinker linker;
 
+	/**
+	 * The tag which will be injected into the HTML code.
+	 */
 	private String tagToInject;
 
+	/**
+	 * If non-null, a set-cookie header will be added with this cookie.
+	 */
 	private Object cookieToSet;
 
+	/**
+	 * Buffer for the set content length, if setContentLength was called. for HTML documents this
+	 * will not be passed to the original repsonse, as we need chunked encoding for our injection to
+	 * work.
+	 */
 	private Integer contentLengthSet = null;
 
+	/**
+	 * Constructor. After the Construction, a proxy has to be generated using a
+	 * {@link IRuntimeLinker}.
+	 *
+	 * @param responseObject
+	 *            the javax.servlet.http.HTTPServletResponse to wrap.
+	 * @param cookieToSet
+	 *            the javax.servlet.http.Cookie which shal lbe set (may be null)
+	 * @param tagToInject
+	 *            the tag to inject
+	 */
 	public TagInjectionResponseWrapper(Object responseObject, Object cookieToSet, String tagToInject) {
 		this.tagToInject = tagToInject;
 		this.cookieToSet = cookieToSet;
-		wrappedResponse = W_HttpServletResponse.wrap(responseObject);
+		wrappedResponse = WHttpServletResponse.wrap(responseObject);
 	}
 
 	public Object[] getProxyConstructorArguments() {
 		return new Object[]{wrappedResponse.getWrappedElement()};
 	}
 
-	public void proxyLinked(Object proxyObject,IRuntimeLinker linker) {
-		linkedThis = proxyObject;
+	/**
+	 * {@inheritDoc}
+	 */
+	public void proxyLinked(Object proxyObject, IRuntimeLinker linker) {
 		this.linker = linker;
 	}
 
 
 
+	/**
+	 * Proxy for {@link javax.servlet.ServletResponse#getWriter()}.
+	 *
+	 * @return the instrumented writer
+	 * @throws IOException
+	 *             if an exception getting the original writer occurs.
+	 */
 	@ProxyMethod
 	public PrintWriter getWriter() throws IOException {
-		if(wrappedWriter == null) {
+		if (wrappedWriter == null) {
 			commitHeaderData();
 			PrintWriter originalWriter = wrappedResponse.getWriter();
 			//avoid rewrapping or unnecessary wrapping
-			if(isNonHTMLContentTypeSet() || (originalWriter instanceof TagInjectionPrintWriter)) {
+			if (isNonHTMLContentTypeSet() || (originalWriter instanceof TagInjectionPrintWriter)) {
 				wrappedWriter =  originalWriter;
 			} else {
-				wrappedWriter = new TagInjectionPrintWriter(originalWriter,tagToInject);
+				wrappedWriter = new TagInjectionPrintWriter(originalWriter, tagToInject);
 			}
 		}
 		return wrappedWriter;
 	}
 
 
+	/**
+	 * Proxy for {@link javax.servlet.ServletResponse#getOutputStream()}.
+	 *
+	 * @return the instrumented stream
+	 * @throws IOException
+	 *             if an exception getting the original stream occurs.
+	 */
 	@ProxyMethod(returnType = "javax.servlet.ServletOutputStream")
 	public OutputStream getOutputStream() throws IOException {
 
 		if (wrappedStream == null) {
 			commitHeaderData();
 			OutputStream originalStream = wrappedResponse.getOutputStream();
-			//avoid rewrapping or unncessary wrapping
+			// avoid rewrapping or unnecessary wrapping
 			if (isNonHTMLContentTypeSet() || linker.isProxyInstance(originalStream, TagInjectionOutputStream.class)) {
 				wrappedStream = originalStream;
 			} else {
@@ -89,7 +139,7 @@ public class TagInjectionResponseWrapper implements IProxySubject{
 
 				ClassLoader cl = wrappedResponse.getWrappedElement().getClass().getClassLoader();
 				wrappedStream = (OutputStream) linker.createProxy(TagInjectionOutputStream.class, resultStr, cl);
-				if(wrappedStream == null) {
+				if (wrappedStream == null) {
 					//fallback to the normal stream if it can not be linked
 					wrappedStream = originalStream;
 				}
@@ -129,20 +179,14 @@ public class TagInjectionResponseWrapper implements IProxySubject{
 		}
 	}
 
+	/**
+	 * @return true, if the content header was set to a type which is not html.
+	 */
 	private boolean isNonHTMLContentTypeSet() {
 		String contentMime = wrappedResponse.getContentType();
-		if(contentMime != null) {
 
-			if(contentMime.startsWith("text/html")
-					|| contentMime.startsWith("application/xhtml+xml")) {
-				return false;
-			} else {
-				return true;
-			}
-		} else {
-			//unset content type, it could still be HTML
-			return false;
-		}
+		return !((contentMime == null) || contentMime.startsWith("text/html") || contentMime.startsWith("application/xhtml+xml"));
+
 	}
 
 

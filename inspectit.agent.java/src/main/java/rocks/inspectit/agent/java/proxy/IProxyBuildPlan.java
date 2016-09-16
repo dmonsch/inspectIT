@@ -53,7 +53,7 @@ public interface IProxyBuildPlan {
 	 *  Holds the information about a proxied method.
 	 * @author Jonas Kunz
 	 */
-	public interface IMethodBuildPlan {
+	interface IMethodBuildPlan {
 
 
 
@@ -72,11 +72,6 @@ public interface IProxyBuildPlan {
 		 */
 		List<Class<?>> getParameterTypes();
 
-		/**
-		 * @return the exceptions specifeid in the "throws" clause of the method declartion
-		 *
-		 */
-		List<Class<?>> getCheckedExceptions();
 
 		/**
 		 * @return The method to which the proxied method will delegate its calls.

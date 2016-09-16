@@ -186,8 +186,7 @@ public class ASMProxyBuilder implements IProxyBuilder {
 
 		Method meth = new Method(plan.getMethodName(), Type.getType(plan
 				.getReturnType()), getTypes(plan.getParameterTypes()));
-		GeneratorAdapter mg = new GeneratorAdapter(ACC_PUBLIC, meth, null,
-				getTypes(plan.getCheckedExceptions()), cv);
+		GeneratorAdapter mg = new GeneratorAdapter(ACC_PUBLIC, meth, null, new Type[] {}, cv);
 
 		// setup the catching of exceptions raised by Method.invoke
 		Label tryBegin = new Label();
@@ -270,13 +269,14 @@ public class ASMProxyBuilder implements IProxyBuilder {
 				Log.error("PROXY CREATION ERROR: class is already present in classloader!");
 			} catch (ClassNotFoundException e1) {
 				// should be the expected case
-			}
-			//b) something is wrong with the bytecode, let's verify it manually
-			StringWriter logWriter = new StringWriter();
-			CheckClassAdapter.verify(new ClassReader(b), loader, false, new PrintWriter(logWriter));
-			Log.error("BYTECODE checking result : \r\n" + logWriter.toString());
+				// b) something is wrong with the bytecode, let's verify it manually
+				StringWriter logWriter = new StringWriter();
+				CheckClassAdapter.verify(new ClassReader(b), loader, false, new PrintWriter(logWriter));
+				Log.error("BYTECODE checking result : \r\n" + logWriter.toString());
 
+			}
 			throw new RuntimeException(e);
+
 		}
 		return clazz;
 	}
@@ -323,9 +323,8 @@ public class ASMProxyBuilder implements IProxyBuilder {
 				Object[] superArgs = proxySubject.getProxyConstructorArguments();
 				Object[] args = new Object[superArgs.length + 1];
 				args[0] = proxySubject;
-				for (int i = 0; i < superArgs.length; i++) {
-					args[i + 1] = superArgs[i];
-				}
+				System.arraycopy(superArgs, 0, args, 1, superArgs.length);
+
 				Object proxy = constructor.newInstance(args);
 				return proxy;
 			} catch (Exception e) {

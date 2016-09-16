@@ -7,7 +7,7 @@ package rocks.inspectit.agent.java.eum;
  *
  * @author Jonas Kunz
  */
-public class Carret implements Cloneable {
+public class Carret {
 
 	/**
 	 * The text this carret opperates on.
@@ -55,7 +55,7 @@ public class Carret implements Cloneable {
 	 * Moves the carret n characters.
 	 * @param n the number of characters to move (negative values for walking backwards)
 	 */
-	public void go(int n) {
+	public void goN(int n) {
 		offset = Math.min(src.length(), Math.max(0, offset + n));
 
 	}
@@ -77,8 +77,11 @@ public class Carret implements Cloneable {
 		return src.length() - offset;
 	}
 
-	@Override
-	protected Carret clone() {
+
+	/**
+	 * @return an identical copy of this carret.
+	 */
+	protected Carret copy() {
 		return new Carret(this);
 	}
 
@@ -218,7 +221,7 @@ public class Carret implements Cloneable {
 	 * @param offset2 the offset from the beginning of the text
 	 */
 	public void goTo(int offset2) {
-		go(offset2 - offset);
+		goN(offset2 - offset);
 	}
 
 	@Override
