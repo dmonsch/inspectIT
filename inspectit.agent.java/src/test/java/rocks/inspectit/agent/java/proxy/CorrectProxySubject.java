@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
  */
 @ProxyFor(superClass = "rocks.inspectit.agent.java.proxy.ClassToProxy",
 implementedInterfaces = { "rocks.inspectit.agent.java.proxy.InterfaceToProxy" }, constructorParameterTypes = { "java.lang.String" })
+@SuppressWarnings({ "PMD" })
 public class CorrectProxySubject implements IProxySubject {
 
 	public Object proxy;
