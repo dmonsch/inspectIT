@@ -11,7 +11,7 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 /**
  * Represents a request. This is either an ajax request, a page load request or a resource load
  * request.
- * 
+ *
  * @author David Monschein
  */
 
@@ -74,4 +74,44 @@ public abstract class Request {
 	 * @return type of this request.
 	 */
 	public abstract RequestType getRequestType();
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = (prime * result) + (int) (this.invocationSeqId ^ (this.invocationSeqId >>> 32));
+		result = (prime * result) + ((this.url == null) ? 0 : this.url.hashCode());
+		return result;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		Request other = (Request) obj;
+		if (this.invocationSeqId != other.invocationSeqId) {
+			return false;
+		}
+		if (this.url == null) {
+			if (other.url != null) {
+				return false;
+			}
+		} else if (!this.url.equals(other.url)) {
+			return false;
+		}
+		return true;
+	}
 }

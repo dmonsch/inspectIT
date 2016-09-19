@@ -3,8 +3,6 @@
  */
 package rocks.inspectit.shared.all.communication.data.eum;
 
-import java.util.Objects;
-
 /**
  * Representing an AJAX request.
  *
@@ -129,24 +127,59 @@ public class AjaxRequest extends Request {
 		this.baseUrl = baseUrl;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public boolean equals(Object other) {
-		if (this == other) {
+	public boolean equals(Object obj) {
+		if (this == obj) {
 			return true;
 		}
-		if (other == null) {
+		if (!super.equals(obj)) {
 			return false;
 		}
-		if (other instanceof AjaxRequest) {
-			AjaxRequest compare = (AjaxRequest) other;
-			return compare.getUrl().equals(this.getUrl()) && (compare.startTime == startTime) && (compare.endTime == endTime) && compare.baseUrl.equals(baseUrl) && (compare.status == status)
-					&& compare.method.equals(method);
+		if (getClass() != obj.getClass()) {
+			return false;
 		}
-		return false;
+		AjaxRequest other = (AjaxRequest) obj;
+		if (this.baseUrl == null) {
+			if (other.baseUrl != null) {
+				return false;
+			}
+		} else if (!this.baseUrl.equals(other.baseUrl)) {
+			return false;
+		}
+		if (this.endTime != other.endTime) {
+			return false;
+		}
+		if (this.method == null) {
+			if (other.method != null) {
+				return false;
+			}
+		} else if (!this.method.equals(other.method)) {
+			return false;
+		}
+		if (this.startTime != other.startTime) {
+			return false;
+		}
+		if (this.status != other.status) {
+			return false;
+		}
+		return true;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(startTime, endTime, baseUrl, status, method, getUrl());
+		final int prime = 31;
+		int result = super.hashCode();
+		result = (prime * result) + ((this.baseUrl == null) ? 0 : this.baseUrl.hashCode());
+		result = (prime * result) + (int) (this.endTime ^ (this.endTime >>> 32));
+		result = (prime * result) + ((this.method == null) ? 0 : this.method.hashCode());
+		result = (prime * result) + (int) (this.startTime ^ (this.startTime >>> 32));
+		result = (prime * result) + this.status;
+		return result;
 	}
 }

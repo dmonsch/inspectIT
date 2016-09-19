@@ -3,8 +3,6 @@
  */
 package rocks.inspectit.shared.all.communication.data.eum;
 
-import java.util.Objects;
-
 /**
  * Request which contains informations about a single resource load. (e.g. CSS file)
  *
@@ -140,25 +138,60 @@ public class ResourceLoadRequest extends Request {
 		this.initiatorUrl = initiatorUrl;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public boolean equals(Object other) {
-		if (this == other) {
+	public boolean equals(Object obj) {
+		if (this == obj) {
 			return true;
 		}
-		if (other == null) {
+		if (!super.equals(obj)) {
 			return false;
 		}
-		if (other instanceof ResourceLoadRequest) {
-			ResourceLoadRequest cp = (ResourceLoadRequest) other;
-			return cp.getUrl().equals(getUrl()) && (cp.getStartTime() == startTime) && (cp.getEndTime() == endTime) && cp.getInitiatorType().equals(initiatorType)
-					&& cp.initiatorUrl.equals(initiatorUrl) && (cp.transferSize == transferSize);
+		if (getClass() != obj.getClass()) {
+			return false;
 		}
-		return false;
+		ResourceLoadRequest other = (ResourceLoadRequest) obj;
+		if (this.endTime != other.endTime) {
+			return false;
+		}
+		if (this.initiatorType == null) {
+			if (other.initiatorType != null) {
+				return false;
+			}
+		} else if (!this.initiatorType.equals(other.initiatorType)) {
+			return false;
+		}
+		if (this.initiatorUrl == null) {
+			if (other.initiatorUrl != null) {
+				return false;
+			}
+		} else if (!this.initiatorUrl.equals(other.initiatorUrl)) {
+			return false;
+		}
+		if (this.startTime != other.startTime) {
+			return false;
+		}
+		if (this.transferSize != other.transferSize) {
+			return false;
+		}
+		return true;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(getUrl(), this.endTime, this.startTime, this.initiatorType, this.initiatorUrl, this.transferSize);
+		final int prime = 31;
+		int result = super.hashCode();
+		result = (prime * result) + (int) (this.endTime ^ (this.endTime >>> 32));
+		result = (prime * result) + ((this.initiatorType == null) ? 0 : this.initiatorType.hashCode());
+		result = (prime * result) + ((this.initiatorUrl == null) ? 0 : this.initiatorUrl.hashCode());
+		result = (prime * result) + (int) (this.startTime ^ (this.startTime >>> 32));
+		result = (prime * result) + (int) (this.transferSize ^ (this.transferSize >>> 32));
+		return result;
 	}
 
 }
