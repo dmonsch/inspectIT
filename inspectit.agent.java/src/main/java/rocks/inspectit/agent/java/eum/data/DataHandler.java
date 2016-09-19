@@ -212,6 +212,7 @@ public class DataHandler implements IDataHandler {
 					rootAction.addRequest(childRequest);
 				}
 			} catch (IOException e) {
+				return null;
 			}
 		}
 		return rootAction;
@@ -241,6 +242,7 @@ public class DataHandler implements IDataHandler {
 						Request childRequest = jsonMapper.readValue(reqOrAction, Request.class);
 						rootAction.addRequest(childRequest);
 					} catch (IOException e) {
+						return null;
 					}
 				}
 			}

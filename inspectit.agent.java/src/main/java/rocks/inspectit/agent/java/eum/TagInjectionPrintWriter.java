@@ -138,37 +138,37 @@ public class TagInjectionPrintWriter extends PrintWriter {
 
 	@Override
 	public void println(boolean x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
+		originalWriter.write(parser.performInjection(x + NL));
 	}
 
 	@Override
 	public void println(char x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
+		originalWriter.write(parser.performInjection(x + NL));
 	}
 
 	@Override
 	public void println(int x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
+		originalWriter.write(parser.performInjection(x + NL));
 	}
 
 	@Override
 	public void println(long x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
+		originalWriter.write(parser.performInjection(x + NL));
 	}
 
 	@Override
 	public void println(float x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
+		originalWriter.write(parser.performInjection(x + NL));
 	}
 
 	@Override
 	public void println(double x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
+		originalWriter.write(parser.performInjection(x + NL));
 	}
 
 	@Override
 	public void println(char[] x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
+		originalWriter.write(parser.performInjection(x + NL));
 	}
 
 	@Override
@@ -178,7 +178,7 @@ public class TagInjectionPrintWriter extends PrintWriter {
 
 	@Override
 	public void println(Object x) {
-		originalWriter.write(parser.performInjection(String.valueOf(x) + NL));
+		originalWriter.write(parser.performInjection(x + NL));
 	}
 
 	@Override

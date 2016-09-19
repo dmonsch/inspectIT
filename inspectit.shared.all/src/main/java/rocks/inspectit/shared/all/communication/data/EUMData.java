@@ -22,16 +22,34 @@ public class EUMData extends DefaultData {
 	 */
 	private static final long serialVersionUID = 6706272659481517962L;
 
+	/**
+	 * User session which relates to the EUM data.
+	 */
 	private UserSession userSession;
 
+	/**
+	 * List of Page load requests.
+	 */
 	private List<PageLoadRequest> pageLoadRequests;
 
+	/**
+	 * List of resource load requests.
+	 */
 	private List<ResourceLoadRequest> resourceLoadRequests;
 
+	/**
+	 * List of AJAX requests.
+	 */
 	private List<AjaxRequest> ajaxRequests;
 
+	/**
+	 * The base url which caused the requests.
+	 */
 	private String baseUrl;
 
+	/**
+	 * Creates a new EUM data object with empty lists.
+	 */
 	public EUMData() {
 		this.pageLoadRequests = new ArrayList<PageLoadRequest>();
 		this.resourceLoadRequests = new ArrayList<ResourceLoadRequest>();
@@ -65,14 +83,32 @@ public class EUMData extends DefaultData {
 		return ajaxRequests;
 	}
 
+	/**
+	 * Adds a Page load request to the list.
+	 *
+	 * @param plReq
+	 *            page load request which should get inserted
+	 */
 	public void addPageLoadRequest(PageLoadRequest plReq) {
 		this.pageLoadRequests.add(plReq);
 	}
 
+	/**
+	 * Adds a Resource load request to the list.
+	 *
+	 * @param rlReq
+	 *            resource load request which should get added
+	 */
 	public void addResourceLoadRequest(ResourceLoadRequest rlReq) {
 		this.resourceLoadRequests.add(rlReq);
 	}
 
+	/**
+	 * Adds an AJAX request to the list of AJAX requests.
+	 * 
+	 * @param ajReq
+	 *            the AJAX request which should get added
+	 */
 	public void addAjaxRequest(AjaxRequest ajReq) {
 		this.ajaxRequests.add(ajReq);
 	}

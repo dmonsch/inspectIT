@@ -20,18 +20,19 @@ import java.lang.annotation.Target;
 public @interface ProxyFor {
 
 	/**
-	 * @return the full qualified name of the super class of the proxy class. Defaults to "java.lang.Object"
+	 * @return the full qualified name of the super class of the proxy class. Defaults to
+	 *         "java.lang.Object"
 	 */
 	String superClass() default "java.lang.Object";
 
 	/**
-	 * @return the full qualified name of all implemented interfaces of the
-	 *         proxy class.
+	 * @return the full qualified name of all implemented interfaces of the proxy class.
 	 */
 	String[] implementedInterfaces() default {};
 
 	/**
-	 * @return the signature of the superclass constructor to use. Default is the no-args constructor
+	 * @return the signature of the superclass constructor to use. Default is the no-args
+	 *         constructor
 	 */
 	String[] constructorParameterTypes() default {};
 

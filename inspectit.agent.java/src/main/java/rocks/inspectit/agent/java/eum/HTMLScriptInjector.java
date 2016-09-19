@@ -74,6 +74,7 @@ public class HTMLScriptInjector {
 	 */
 	// Warning an be ignored as we regularly clear the buffer.
 	// TODO: replace with ringbuffer for better performance
+	@SuppressWarnings({ "PMD", "stringbuffer" })
 	private StringBuffer src;
 
 

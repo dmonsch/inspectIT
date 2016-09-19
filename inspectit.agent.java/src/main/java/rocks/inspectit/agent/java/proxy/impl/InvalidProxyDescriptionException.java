@@ -9,9 +9,15 @@ package rocks.inspectit.agent.java.proxy.impl;
 public class InvalidProxyDescriptionException extends Exception {
 
 	/**
-	 *
+	 * UID.
 	 */
 	private static final long serialVersionUID = 1L;
+
+	/**
+	 * Private constructor for silencing PMD advice to make this class static.
+	 */
+	private InvalidProxyDescriptionException() {
+	}
 
 	/**
 	 * @param message the message
