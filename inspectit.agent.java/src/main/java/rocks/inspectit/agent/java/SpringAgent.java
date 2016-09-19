@@ -11,6 +11,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import rocks.inspectit.agent.java.analyzer.IByteCodeAnalyzer;
 import rocks.inspectit.agent.java.config.IConfigurationStorage;
+import rocks.inspectit.agent.java.eum.IServletInstrumenter;
 import rocks.inspectit.agent.java.hooking.IHookDispatcher;
 import rocks.inspectit.agent.java.logback.LogInitializer;
 import rocks.inspectit.agent.java.spring.SpringConfiguration;
@@ -78,7 +79,7 @@ public class SpringAgent implements IAgent {
 	 * Ignore classes patterns.
 	 */
 	private Collection<IMatchPattern> ignoreClassesPatterns;
-	
+
 	/**
 	 * The hook dispatcher used by the instrumented methods.
 	 */
@@ -186,6 +187,7 @@ public class SpringAgent implements IAgent {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public byte[] inspectByteCode(byte[] byteCode, String className, ClassLoader classLoader) {
 		// if an error in the init method was caught, we'll do nothing here.
 		// This prevents further errors.
@@ -212,6 +214,7 @@ public class SpringAgent implements IAgent {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public Class<?> loadClass(Object[] params) {
 		try {
 			if ((null != params) && (params.length == 1)) {
@@ -262,13 +265,15 @@ public class SpringAgent implements IAgent {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public IHookDispatcher getHookDispatcher() {
 		return hookDispatcher;
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public IServletInstrumenter getServletInstrumenter() {
 		return servletInstrumenter;
 	}
@@ -290,6 +295,7 @@ public class SpringAgent implements IAgent {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public boolean isThreadTransformDisabled() {
 		return transformDisabledThreadLocal.get();
 	}
@@ -297,6 +303,7 @@ public class SpringAgent implements IAgent {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void setThreadTransformDisabled(boolean disabled) {
 		transformDisabledThreadLocal.set(Boolean.valueOf(disabled));
 	}
