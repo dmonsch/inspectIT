@@ -3,8 +3,6 @@
  */
 package rocks.inspectit.shared.all.communication.data.eum;
 
-import java.util.Objects;
-
 /**
  * Representing a page load request.
  *
@@ -621,30 +619,126 @@ public class PageLoadRequest extends Request {
 		this.setNavigationStartW(0L);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
-	public boolean equals(Object other) {
-		if (this == other) {
+	public boolean equals(Object obj) {
+		if (this == obj) {
 			return true;
 		}
-		if (other == null) {
+		if (!super.equals(obj)) {
 			return false;
 		}
-		if (other instanceof PageLoadRequest) {
-			PageLoadRequest cp = (PageLoadRequest) other;
-			return (cp.connectEndW == connectEndW) && (cp.connectStartW == connectStartW) && (cp.domainLookupEndW == domainLookupEndW) && (cp.domainLookupStartW == domainLookupStartW)
-					&& (cp.domCompleteW == domCompleteW) && (cp.domContentLoadedEventEndW == domContentLoadedEventEndW) && (cp.domContentLoadedEventStartW == domContentLoadedEventStartW)
-					&& (cp.domInteractiveW == domInteractiveW) && (cp.domLoadingW == domLoadingW) && (cp.fetchStartW == fetchStartW) && (cp.firstpaint == firstpaint)
-					&& (cp.loadEventEndW == loadEventEndW) && (cp.loadEventStartW == loadEventStartW) && (cp.navigationStartW == navigationStartW) && (cp.redirectEndW == redirectEndW)
-					&& (cp.redirectStartW == redirectStartW) && (cp.requestStartW == requestStartW) && (cp.responseEndW == responseEndW) && (cp.responseStartW == responseStartW)
-					&& (cp.secureConnectionStartW == secureConnectionStartW) && (cp.speedindex == speedindex) && (cp.unloadEventEndW == unloadEventEndW) && (cp.unloadEventStartW == unloadEventStartW);
+		if (getClass() != obj.getClass()) {
+			return false;
 		}
-		return false;
+		PageLoadRequest other = (PageLoadRequest) obj;
+		if (this.connectEndW != other.connectEndW) {
+			return false;
+		}
+		if (this.connectStartW != other.connectStartW) {
+			return false;
+		}
+		if (this.domCompleteW != other.domCompleteW) {
+			return false;
+		}
+		if (this.domContentLoadedEventEndW != other.domContentLoadedEventEndW) {
+			return false;
+		}
+		if (this.domContentLoadedEventStartW != other.domContentLoadedEventStartW) {
+			return false;
+		}
+		if (this.domInteractiveW != other.domInteractiveW) {
+			return false;
+		}
+		if (this.domLoadingW != other.domLoadingW) {
+			return false;
+		}
+		if (this.domainLookupEndW != other.domainLookupEndW) {
+			return false;
+		}
+		if (this.domainLookupStartW != other.domainLookupStartW) {
+			return false;
+		}
+		if (this.fetchStartW != other.fetchStartW) {
+			return false;
+		}
+		if (Double.doubleToLongBits(this.firstpaint) != Double.doubleToLongBits(other.firstpaint)) {
+			return false;
+		}
+		if (this.loadEventEndW != other.loadEventEndW) {
+			return false;
+		}
+		if (this.loadEventStartW != other.loadEventStartW) {
+			return false;
+		}
+		if (this.navigationStartW != other.navigationStartW) {
+			return false;
+		}
+		if (this.redirectEndW != other.redirectEndW) {
+			return false;
+		}
+		if (this.redirectStartW != other.redirectStartW) {
+			return false;
+		}
+		if (this.requestStartW != other.requestStartW) {
+			return false;
+		}
+		if (this.responseEndW != other.responseEndW) {
+			return false;
+		}
+		if (this.responseStartW != other.responseStartW) {
+			return false;
+		}
+		if (this.secureConnectionStartW != other.secureConnectionStartW) {
+			return false;
+		}
+		if (Double.doubleToLongBits(this.speedindex) != Double.doubleToLongBits(other.speedindex)) {
+			return false;
+		}
+		if (this.unloadEventEndW != other.unloadEventEndW) {
+			return false;
+		}
+		if (this.unloadEventStartW != other.unloadEventStartW) {
+			return false;
+		}
+		return true;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.connectEndW, this.connectStartW, this.domainLookupEndW, this.domainLookupStartW, this.domCompleteW, this.domContentLoadedEventEndW, this.domContentLoadedEventStartW,
-				this.domInteractiveW, this.domLoadingW, this.fetchStartW, this.firstpaint, this.loadEventEndW, this.loadEventStartW, this.navigationStartW, this.redirectEndW, this.redirectStartW,
-				this.requestStartW, this.responseEndW, this.responseStartW, this.secureConnectionStartW, this.speedindex, this.unloadEventEndW, this.unloadEventStartW);
+		final int prime = 31;
+		int result = super.hashCode();
+		result = (prime * result) + (int) (this.connectEndW ^ (this.connectEndW >>> 32));
+		result = (prime * result) + (int) (this.connectStartW ^ (this.connectStartW >>> 32));
+		result = (prime * result) + (int) (this.domCompleteW ^ (this.domCompleteW >>> 32));
+		result = (prime * result) + (int) (this.domContentLoadedEventEndW ^ (this.domContentLoadedEventEndW >>> 32));
+		result = (prime * result) + (int) (this.domContentLoadedEventStartW ^ (this.domContentLoadedEventStartW >>> 32));
+		result = (prime * result) + (int) (this.domInteractiveW ^ (this.domInteractiveW >>> 32));
+		result = (prime * result) + (int) (this.domLoadingW ^ (this.domLoadingW >>> 32));
+		result = (prime * result) + (int) (this.domainLookupEndW ^ (this.domainLookupEndW >>> 32));
+		result = (prime * result) + (int) (this.domainLookupStartW ^ (this.domainLookupStartW >>> 32));
+		result = (prime * result) + (int) (this.fetchStartW ^ (this.fetchStartW >>> 32));
+		long temp;
+		temp = Double.doubleToLongBits(this.firstpaint);
+		result = (prime * result) + (int) (temp ^ (temp >>> 32));
+		result = (prime * result) + (int) (this.loadEventEndW ^ (this.loadEventEndW >>> 32));
+		result = (prime * result) + (int) (this.loadEventStartW ^ (this.loadEventStartW >>> 32));
+		result = (prime * result) + (int) (this.navigationStartW ^ (this.navigationStartW >>> 32));
+		result = (prime * result) + (int) (this.redirectEndW ^ (this.redirectEndW >>> 32));
+		result = (prime * result) + (int) (this.redirectStartW ^ (this.redirectStartW >>> 32));
+		result = (prime * result) + (int) (this.requestStartW ^ (this.requestStartW >>> 32));
+		result = (prime * result) + (int) (this.responseEndW ^ (this.responseEndW >>> 32));
+		result = (prime * result) + (int) (this.responseStartW ^ (this.responseStartW >>> 32));
+		result = (prime * result) + (int) (this.secureConnectionStartW ^ (this.secureConnectionStartW >>> 32));
+		temp = Double.doubleToLongBits(this.speedindex);
+		result = (prime * result) + (int) (temp ^ (temp >>> 32));
+		result = (prime * result) + (int) (this.unloadEventEndW ^ (this.unloadEventEndW >>> 32));
+		result = (prime * result) + (int) (this.unloadEventStartW ^ (this.unloadEventStartW >>> 32));
+		return result;
 	}
 }

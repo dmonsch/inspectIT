@@ -2,7 +2,6 @@ package rocks.inspectit.shared.all.communication.data;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import rocks.inspectit.shared.all.communication.DefaultData;
 import rocks.inspectit.shared.all.communication.data.eum.AjaxRequest;
@@ -134,7 +133,20 @@ public class EUMData extends DefaultData {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(baseUrl, userSession, ajaxRequests, resourceLoadRequests, pageLoadRequests);
+		final int prime = 31;
+		int result = super.hashCode();
+		result = (prime * result) + ((this.baseUrl == null) ? 0 : this.baseUrl.hashCode());
+		result = (prime * result) + (this.userSession.hashCode() ^ (this.userSession.hashCode() >>> 32));
+		for (AjaxRequest ar : ajaxRequests) {
+			result = (prime * result) + ((ar == null) ? 0 : ar.hashCode());
+		}
+		for (ResourceLoadRequest rq : resourceLoadRequests) {
+			result = (prime * result) + ((rq == null) ? 0 : rq.hashCode());
+		}
+		for (PageLoadRequest plr : pageLoadRequests) {
+			result = (prime * result) + ((plr == null) ? 0 : plr.hashCode());
+		}
+		return result;
 	}
 
 	/**
