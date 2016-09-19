@@ -10,6 +10,7 @@ import java.util.Map;
  * @author Jonas Kunz
  *
  */
+@SuppressWarnings({ "PMD", "short" })
 public final class AutoboxingHelper {
 
 	/**

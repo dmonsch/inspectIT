@@ -94,16 +94,14 @@ public final class JSAgentBuilder {
 	 * @return the core agent source code, either laoded from the resources or directly fetched form
 	 *         the cache.
 	 */
-	private static String getAgentCoreSource() {
+	private static synchronized String getAgentCoreSource() {
 		if (agentCoreSource == null) {
-			synchronized (JSAgentBuilder.class) {
-				if (agentCoreSource == null) {
-					try {
-						agentCoreSource = readResourceFile(JSBASE_RESOURCE);
-					} catch (Exception e) {
-						LOG.error("unable to read JS Agent core");
-						return "";
-					}
+			if (agentCoreSource == null) {
+				try {
+					agentCoreSource = readResourceFile(JSBASE_RESOURCE);
+				} catch (Exception e) {
+					LOG.error("unable to read JS Agent core");
+					return "";
 				}
 			}
 		}

@@ -67,87 +67,204 @@ public class TagInjectionOutputStream extends OutputStream implements IProxySubj
 		parser.setEncoding(charsetName);
 	}
 
-
+	/**
+	 * Proxy method for print method of the OutputStream.
+	 *
+	 * @param arg0
+	 *            value which should get printed
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void print(boolean arg0) throws IOException {
 		originalStream.print(parser.performInjection(String.valueOf(arg0)));
 	}
 
+	/**
+	 * Proxy method for print method of the OutputStream.
+	 *
+	 * @param c
+	 *            value which should get printed
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void print(char c) throws IOException {
 		originalStream.print(parser.performInjection(String.valueOf(c)));
 	}
 
+	/**
+	 * Proxy method for print method of the OutputStream.
+	 *
+	 * @param d
+	 *            value which should get printed
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void print(double d) throws IOException {
 		originalStream.print(parser.performInjection(String.valueOf(d)));
 	}
 
+	/**
+	 * Proxy method for print method of the OutputStream.
+	 *
+	 * @param f
+	 *            value which should get printed
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void print(float f) throws IOException {
 		originalStream.print(parser.performInjection(String.valueOf(f)));
 	}
 
+	/**
+	 * Proxy method for print method of the OutputStream.
+	 *
+	 * @param i
+	 *            value which should get printed
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void print(int i) throws IOException {
 		originalStream.print(parser.performInjection(String.valueOf(i)));
 	}
 
+	/**
+	 * Proxy method for print method of the OutputStream.
+	 *
+	 * @param l
+	 *            value which should get printed
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void print(long l) throws IOException {
 		originalStream.print(parser.performInjection(String.valueOf(l)));
 	}
 
+	/**
+	 * Proxy method for print method of the OutputStream.
+	 *
+	 * @param arg0
+	 *            value which should get printed
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void print(String arg0) throws IOException {
 		originalStream.print(parser.performInjection(arg0));
 	}
 
+	/**
+	 * Proxy method for println method of the OutputStream. Terminates the line.
+	 *
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void println() throws IOException {
 		originalStream.print(parser.performInjection(NL));
 	}
 
+	/**
+	 * Proxy method for println method of the OutputStream.
+	 *
+	 * @param b
+	 *            value which should get printed with an following line termination.
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void println(boolean b) throws IOException {
-		originalStream.print(parser.performInjection(String.valueOf(b)+NL));
+		originalStream.print(parser.performInjection(b + NL));
 	}
 
+	/**
+	 * Proxy method for println method of the OutputStream.
+	 *
+	 * @param c
+	 *            value which should get printed with an following line termination.
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void println(char c) throws IOException {
-		originalStream.print(parser.performInjection(String.valueOf(c)+NL));
+		originalStream.print(parser.performInjection(c + NL));
 	}
 
+	/**
+	 * Proxy method for println method of the OutputStream.
+	 *
+	 * @param d
+	 *            value which should get printed with an following line termination.
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void println(double d) throws IOException {
-		originalStream.print(parser.performInjection(String.valueOf(d)+NL));
+		originalStream.print(parser.performInjection(d + NL));
 	}
 
+	/**
+	 * Proxy method for println method of the OutputStream.
+	 *
+	 * @param f
+	 *            value which should get printed with an following line termination.
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void println(float f) throws IOException {
-		originalStream.print(parser.performInjection(String.valueOf(f)+NL));
+		originalStream.print(parser.performInjection(f + NL));
 	}
 
+	/**
+	 * Proxy method for println method of the OutputStream.
+	 *
+	 * @param i
+	 *            value which should get printed with an following line termination.
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void println(int i) throws IOException {
-		originalStream.print(parser.performInjection(String.valueOf(i)+NL));
+		originalStream.print(parser.performInjection(i + NL));
 	}
 
+	/**
+	 * Proxy method for println method of the OutputStream.
+	 *
+	 * @param l
+	 *            value which should get printed with an following line termination.
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void println(long l) throws IOException {
-		originalStream.print(parser.performInjection(String.valueOf(l)+NL));
+		originalStream.print(parser.performInjection(l + NL));
 	}
 
+	/**
+	 * Proxy method for println method of the OutputStream.
+	 *
+	 * @param s
+	 *            value which should get printed with an following line termination.
+	 * @throws IOException
+	 *             signals that an I/O exception in some sort happened
+	 */
 	@ProxyMethod
 	public void println(String s) throws IOException {
-		originalStream.print(parser.performInjection(String.valueOf(s)+NL));
+		originalStream.print(parser.performInjection(s + NL));
 	}
 
 
 	@Override
 	@ProxyMethod
 	public void write(int b) throws IOException {
-		originalStream.write(parser.performInjection(new byte[]{(byte)b}));
+		originalStream.write(parser.performInjection(new byte[] { (byte) b }));
 	}
 
 	@Override
@@ -182,7 +299,13 @@ public class TagInjectionOutputStream extends OutputStream implements IProxySubj
 		return originalStream.isReady();
 	}
 
-	@ProxyMethod(parameterTypes = {"javax.servlet.WriteListener"}, isOptional = true)
+	/**
+	 * Proxy method for setting the write listener.
+	 *
+	 * @param listener
+	 *            write listener which should get set.
+	 */
+	@ProxyMethod(parameterTypes = { "javax.servlet.WriteListener" }, isOptional = true)
 	public void setWriteListener(Object listener) {
 		originalStream.setWriteListener(listener);
 

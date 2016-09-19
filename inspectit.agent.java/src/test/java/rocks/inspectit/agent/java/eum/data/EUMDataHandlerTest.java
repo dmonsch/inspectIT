@@ -23,6 +23,7 @@ import rocks.inspectit.shared.all.communication.data.eum.ResourceLoadRequest;
 import rocks.inspectit.shared.all.communication.data.eum.UserSession;
 import rocks.inspectit.shared.all.testbase.TestBase;
 
+@SuppressWarnings({ "PMD" })
 public class EUMDataHandlerTest extends TestBase {
 
 	private static final String BASEURL_DEMOVALUE = "http://www.plain.abc";
@@ -108,11 +109,11 @@ public class EUMDataHandlerTest extends TestBase {
 	@InjectMocks
 	private CoreService coreService;
 
+	@Mock
 	private DataHandler dHandler;
 
 	@BeforeMethod
 	public void initTests() {
-		dHandler = new DataHandler(coreService);
 		mapper = new ObjectMapper();
 	}
 

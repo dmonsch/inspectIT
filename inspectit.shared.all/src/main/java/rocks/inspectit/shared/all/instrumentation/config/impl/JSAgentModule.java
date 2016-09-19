@@ -5,18 +5,48 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Configuration for JS Agent modules.
+ *
  * @author Jonas Kunz
  *
  */
 public enum JSAgentModule {
+	/**
+	 * Enum values for all existing JS modules.
+	 */
+	AJAX_MODULE('a', "plugins/ajax.js", "AJAX Capturing Module", "This module is responsible for capturing AJAX requests."),
+	/**
+	 * Module for instrumenting asynchronous JS functions.
+	 */
+	ASYNC_MODULE('b', "plugins/async.js", "Async Module", "This module instruments asynchronous Javascrpt functions like setTimeout. This helps the JS Agent to be more precise with bundling user actions. This module has no impact on other Scripts using such functions."),
+	/**
+	 * Module for instrumenting listener functions on HTML Elements.
+	 */
+	LISTENER_MODULE('l',
+			"plugins/listener.js",
+			"This module instruments the addListener functions for DOM elements and therefore is able to capture User actions like a Click or something similar. Like the asynchronous module this one also has no impact on your own Scripts.",
+			"Description Here"),
+	/**
+	 * Speedindex module.
+	 */
+	SPEEDINDEX_MODULE('r', "plugins/rum-speedindex.js", "Speed Index Module",
+			"This module handles the calculation of the RUM speed index. See: https://github.com/WPO-Foundation/RUM-SpeedIndex/"),
+	/**
+	 * Navigation timings API module.
+	 */
+	NAVTIMINGS_MODULE('1', "plugins/navtimings.js",
+			"Navigation Timings Module",
+			"This module deals with the collection of data captured by the Navigation Timings API. See: https://www.w3.org/TR/navigation-timing/ for further information."),
+	/**
+	 * Resource timings API module.
+	 */
+	RESTIMINGS_MODULE(
+			'2', "plugins/restimings.js", "Resource Timings Module",
+			"This module deals with collecting Resource timings provided by the Resource Timings API. See: https://www.w3.org/TR/resource-timing/ for further information.");
 
-	// TODO: @David add tooltip and update names todo menaingful texts
-
-	AJAX_MODULE('a', "plugins/ajax.js", "AJAX Capturing Module", "Description Here"), ASYNC_MODULE('b', "plugins/async.js", "Async Module", "Description Here"), LISTENER_MODULE('l',
-			"plugins/listener.js", "Listener Instrumentation Module",
-			"Description Here"), SPEEDINDEX_MODULE('r', "plugins/rum-speedindex.js", "Speed Index Module", "Description Here"), NAVTIMINGS_MODULE('1', "plugins/navtimings.js",
-					"Navigation Timings Module", "Description Here"), RESTIMINGS_MODULE('2', "plugins/restimings.js", "Resource Timings Module", "Description Here");
-
+	/**
+	 * Maps single characters to an JS Agent module.
+	 */
 	public static final Map<Character, JSAgentModule> IDENTIFIER_MAP;
 
 	/**
@@ -34,17 +64,39 @@ public enum JSAgentModule {
 		IDENTIFIER_MAP = Collections.unmodifiableMap(temp);
 	}
 
+	/**
+	 * The single char identifier.
+	 */
 	private char identifier;
+
+	/**
+	 * The whole module source file.
+	 */
 	private String moduleSourceFile;
+
+	/**
+	 * The name in the UI.
+	 */
 	private String uiName;
+
+	/**
+	 * The description in the UI.
+	 */
 	private String uiDescription;
 
 	/**
+	 * Creates a new configuration.
+	 *
 	 * @param identifier
-	 * @param uiName
+	 *            single char identifier
 	 * @param moduleSourceFile
+	 *            the whole module source file
+	 * @param uiName
+	 *            name in the UI
+	 * @param uiDescription
+	 *            description in the UI
 	 */
-	private JSAgentModule(char identifier, String moduleSourceFile, String uiName, String uiDescription) {
+	JSAgentModule(char identifier, String moduleSourceFile, String uiName, String uiDescription) {
 		this.identifier = identifier;
 		this.uiName = uiName;
 		this.uiDescription = uiDescription;
