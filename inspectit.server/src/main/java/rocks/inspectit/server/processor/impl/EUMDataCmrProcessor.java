@@ -10,8 +10,8 @@ import org.influxdb.dto.Point;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import rocks.inspectit.server.influx.dao.impl.InfluxDBDao;
 import rocks.inspectit.server.processor.AbstractCmrDataProcessor;
-import rocks.inspectit.server.tsdb.InfluxDBService;
 import rocks.inspectit.shared.all.communication.DefaultData;
 import rocks.inspectit.shared.all.communication.data.EUMData;
 import rocks.inspectit.shared.all.communication.data.eum.AjaxRequest;
@@ -35,7 +35,7 @@ public class EUMDataCmrProcessor extends AbstractCmrDataProcessor {
 	 * Instance of the {@link InfluxDBService}.
 	 */
 	@Autowired
-	InfluxDBService influxDb;
+	InfluxDBDao influxDb;
 
 	/**
 	 * {@inheritDoc}
