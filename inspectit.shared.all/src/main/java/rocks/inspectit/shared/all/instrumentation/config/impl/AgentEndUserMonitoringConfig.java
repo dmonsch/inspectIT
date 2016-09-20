@@ -9,7 +9,7 @@ public class AgentEndUserMonitoringConfig {
 	/**
 	 * switch to disable EUM entirely.
 	 */
-	private boolean isEnabled;
+	private boolean enabled;
 
 	/**
 	 * The base url under which we will locate the JS Agent script and we will receive the beacons.
@@ -26,7 +26,7 @@ public class AgentEndUserMonitoringConfig {
 	 * Default constructor.
 	 */
 	public AgentEndUserMonitoringConfig() {
-		isEnabled = false;
+		enabled = false;
 		scriptBaseUrl = "/";
 		activeModules = "";
 	}
@@ -41,7 +41,7 @@ public class AgentEndUserMonitoringConfig {
 	 */
 	public AgentEndUserMonitoringConfig(boolean isEnabled, String scriptBaseUrl, String activeModules) {
 		super();
-		this.isEnabled = isEnabled;
+		this.enabled = isEnabled;
 		this.scriptBaseUrl = scriptBaseUrl;
 		this.activeModules = activeModules;
 	}
@@ -52,7 +52,7 @@ public class AgentEndUserMonitoringConfig {
 	 * @return {@link #isEnabled}
 	 */
 	public boolean isEnabled() {
-		return isEnabled;
+		return enabled;
 	}
 
 	/**
@@ -62,7 +62,7 @@ public class AgentEndUserMonitoringConfig {
 	 *            New value for {@link #isEnabled}
 	 */
 	public void setEnabled(boolean isEnabled) {
-		this.isEnabled = isEnabled;
+		this.enabled = isEnabled;
 	}
 
 	/**

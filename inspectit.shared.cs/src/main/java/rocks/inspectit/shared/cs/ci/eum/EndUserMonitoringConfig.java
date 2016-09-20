@@ -5,17 +5,31 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/**
+ * Configuration class for setting up the End User Monitoring.
+ *
+ * @author David Monschein
+ *
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "end-user-monitoring-config")
 public class EndUserMonitoringConfig {
 
-
+	/**
+	 * Attribute whether displays whether the EUM is enabled or not.
+	 */
 	@XmlAttribute(name = "eum-enabled", required = true)
 	private boolean eumEnabled = false;
 
+	/**
+	 * The Base URL which gets instrumented to deliver the JS Agent.
+	 */
 	@XmlAttribute(name = "eum-script-base-url", required = true)
 	private String scriptBaseUrl = "/";
 
+	/**
+	 * Each character of this String maps to a single module which is activated.
+	 */
 	@XmlAttribute(name = "active-modules", required = true)
 	private String activeModules = "12";
 
@@ -59,7 +73,7 @@ public class EndUserMonitoringConfig {
 
 	/**
 	 * Gets {@link #activeModules}.
-	 * 
+	 *
 	 * @return {@link #activeModules}
 	 */
 	public String getActiveModules() {
@@ -68,7 +82,7 @@ public class EndUserMonitoringConfig {
 
 	/**
 	 * Sets {@link #activeModules}.
-	 * 
+	 *
 	 * @param activeModulesString
 	 *            New value for {@link #activeModules}
 	 */
