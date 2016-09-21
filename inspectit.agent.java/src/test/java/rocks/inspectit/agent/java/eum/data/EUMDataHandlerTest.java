@@ -1,6 +1,8 @@
 package rocks.inspectit.agent.java.eum.data;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doAnswer;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,8 +13,12 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import rocks.inspectit.agent.java.core.impl.CoreService;
@@ -37,6 +43,7 @@ public class EUMDataHandlerTest extends TestBase {
 	private static final Map<String, EUMData> expectedResultMapping;
 
 	private ObjectMapper mapper;
+	private EUMData current;
 
 	static {
 		expectedResultMapping = new HashMap<String, EUMData>();
@@ -106,34 +113,49 @@ public class EUMDataHandlerTest extends TestBase {
 	@Mock
 	private Logger log;
 
-	@InjectMocks
+	@Spy
 	private CoreService coreService;
 
-	@Mock
+	@InjectMocks
 	private DataHandler dHandler;
 
-	@BeforeMethod
+	@BeforeTest
 	public void initTests() {
 		mapper = new ObjectMapper();
+	}
+
+	@BeforeMethod
+	public void initMock() {
+		doAnswer(new Answer<Void>() {
+			@Override
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				Object[] args = invocation.getArguments();
+				if ((args.length > 0) && (args[0] instanceof EUMData)) {
+					current = (EUMData) args[0];
+				}
+				return null;
+			}
+		}).when(coreService).addEumData(any(EUMData.class));
 	}
 
 	@Test
 	public void invalidEUMData() {
 		coreService.addEumData(null);
-		assertThat("Testing with invalid data.", coreService.getEumData() == null);
+		assertThat("EUMData should be null.", current == null);
 	}
 
 	@Test
 	public void jsonTests() {
 		for (String key : expectedResultMapping.keySet()) {
 			dHandler.insertBeacon(key);
-			assertThat("Testing against expected results.", expectedResultMapping.get(key).equals(coreService.getEumData()));
-			assertThat("Testing expected results against random input.", !coreService.getEumData().equals(EMPTY_EUMDATA) && !expectedResultMapping.get(key).equals(EMPTY_EUMDATA));
+			assertThat("Testing against expected results.", expectedResultMapping.get(key).equals(current));
+			assertThat("Testing expected results against random input.", !current.equals(EMPTY_EUMDATA) && !expectedResultMapping.get(key).equals(EMPTY_EUMDATA));
 		}
 	}
 
 	@Test
 	public void sessionTest() throws JsonGenerationException, JsonMappingException, IOException {
+		// test user session
 		UserSession _new = new UserSession("Firefox", "iPhone", "de", "123456");
 		// create the session
 		dHandler.insertBeacon(createSessionInit(SESSION_DEMOVALUE));
@@ -141,16 +163,26 @@ public class EUMDataHandlerTest extends TestBase {
 		String testBeacon = createBasicJson(true, mapper.writeValueAsString(testAjax), _new.getSessionId(), "click");
 		dHandler.insertBeacon(testBeacon);
 		// check if session correct
-		assertThat("User session correct.", coreService.getEumData().getUserSession().equals(_new));
+		assertThat("User session correct.", current.getUserSession().equals(_new));
 		// send another beacon
 		dHandler.insertBeacon(testBeacon);
 		// check if session persists
-		assertThat("User session persists.", coreService.getEumData().getUserSession().equals(_new));
+		assertThat("User session persists.", current.getUserSession().equals(_new));
 	}
 
 	@Test
 	public void invalidDataTests() {
+		coreService.addEumData(null);
+
+		// after every call the current EUMData should stay null
 		dHandler.insertBeacon(null);
+		assertThat("EUMData should be null.", current == null);
+
+		dHandler.insertBeacon("{{{5532}");
+		assertThat("EUMData should be null.", current == null);
+
+		dHandler.insertBeacon("{empty}");
+		assertThat("EUMData should be null.", current == null);
 	}
 
 	private static String createBasicJson(boolean withOuter, String contentValue, String sessValue, String specType) {

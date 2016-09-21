@@ -105,7 +105,7 @@ public class EUMData extends DefaultData {
 
 	/**
 	 * Adds an AJAX request to the list of AJAX requests.
-	 * 
+	 *
 	 * @param ajReq
 	 *            the AJAX request which should get added
 	 */

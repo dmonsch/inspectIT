@@ -105,6 +105,7 @@ public class DataHandler implements IDataHandler {
 	 * @param data
 	 *            the beacon which should get parsed and processed
 	 */
+	@Override
 	public void insertBeacon(String data) {
 		if (data == null) {
 			return;
@@ -149,6 +150,8 @@ public class DataHandler implements IDataHandler {
 		try {
 			UserSession newSession = jsonMapper.readValue(obj, UserSession.class);
 			if (!sessionMap.containsKey(newSession.getSessionId())) {
+				sessionMap.put(newSession.getSessionId(), newSession);
+			} else if (!sessionMap.get(newSession).getSessionId().equals(newSession)) {
 				sessionMap.put(newSession.getSessionId(), newSession);
 			}
 		} catch (JsonParseException e) {
@@ -258,7 +261,6 @@ public class DataHandler implements IDataHandler {
 	 *            the id of the session which should get created
 	 */
 	private void createEmptySession(String id) {
-		// for creating a session when the client already has one but it disappeared on the server
 		UserSession r = new UserSession();
 		r.setSessionId(id);
 		r.setBrowser("unknown");
