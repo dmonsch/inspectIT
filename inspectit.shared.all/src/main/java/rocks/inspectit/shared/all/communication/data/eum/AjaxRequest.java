@@ -162,10 +162,7 @@ public class AjaxRequest extends Request {
 		if (this.startTime != other.startTime) {
 			return false;
 		}
-		if (this.status != other.status) {
-			return false;
-		}
-		return true;
+		return this.status == other.status;
 	}
 
 	/**

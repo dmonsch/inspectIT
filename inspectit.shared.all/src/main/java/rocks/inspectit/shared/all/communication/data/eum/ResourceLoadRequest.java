@@ -173,10 +173,7 @@ public class ResourceLoadRequest extends Request {
 		if (this.startTime != other.startTime) {
 			return false;
 		}
-		if (this.transferSize != other.transferSize) {
-			return false;
-		}
-		return true;
+		return this.transferSize == other.transferSize;
 	}
 
 	/**

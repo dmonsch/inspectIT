@@ -700,10 +700,7 @@ public class PageLoadRequest extends Request {
 		if (this.unloadEventEndW != other.unloadEventEndW) {
 			return false;
 		}
-		if (this.unloadEventStartW != other.unloadEventStartW) {
-			return false;
-		}
-		return true;
+		return this.unloadEventStartW == other.unloadEventStartW;
 	}
 
 	/**

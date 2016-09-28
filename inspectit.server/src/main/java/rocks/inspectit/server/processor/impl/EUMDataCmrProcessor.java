@@ -20,6 +20,8 @@ import rocks.inspectit.shared.all.communication.data.eum.ResourceLoadRequest;
 import rocks.inspectit.shared.all.spring.logger.Log;
 
 /**
+ * Processor for writing EUM Data, captured by the Javascript Agent, into the Influx DB.
+ *
  * @author David Monschein
  *
  */
@@ -42,13 +44,9 @@ public class EUMDataCmrProcessor extends AbstractCmrDataProcessor {
 	 */
 	@Override
 	protected void processData(DefaultData defaultData, EntityManager entityManager) {
-		// TODO: add useraction id as tag to all data
-		// -> needs id generation for useraction (maybe measurement for useraction)
 		EUMData data = (EUMData) defaultData;
 
 		String baseHost = getDomainName(data.getBaseUrl());
-
-		// TODO: add measurement for useraction
 
 		// write it into influxdb
 		for (PageLoadRequest plReq : data.getPageLoadRequests()) {
@@ -63,7 +61,7 @@ public class EUMDataCmrProcessor extends AbstractCmrDataProcessor {
 			String host = getDomainName(rlReq.getUrl());
 
 			Point point;
-			if (host.toLowerCase().equals(baseHost.toLowerCase())) {
+			if (host.equalsIgnoreCase(baseHost)) {
 				// 1st party
 				point = createRequestPoint(data, rlReq, "request_resourceload", true);
 			} else {
@@ -87,7 +85,7 @@ public class EUMDataCmrProcessor extends AbstractCmrDataProcessor {
 	 */
 	@Override
 	public boolean canBeProcessed(DefaultData defaultData) {
-		return defaultData instanceof EUMData;
+		return influxDb.isOnline() && (defaultData instanceof EUMData);
 	}
 
 	/**
@@ -155,7 +153,7 @@ public class EUMDataCmrProcessor extends AbstractCmrDataProcessor {
 	 * @return a point which can be inserted into the influxDB.
 	 */
 	private Point createPageloadPoint(EUMData data, PageLoadRequest plReq, String measurement) {
-		return Point.measurement("request_pageload").time(data.getTimeStamp().getTime(), TimeUnit.MILLISECONDS).tag("platform_ident", String.valueOf(data.getPlatformIdent()))
+		return Point.measurement(measurement).time(data.getTimeStamp().getTime(), TimeUnit.MILLISECONDS).tag("platform_ident", String.valueOf(data.getPlatformIdent()))
 				.tag("browser", data.getUserSession().getBrowser())
 				.tag("device", data.getUserSession().getDevice())
 				.tag("language", data.getUserSession().getLanguage())
@@ -202,7 +200,7 @@ public class EUMDataCmrProcessor extends AbstractCmrDataProcessor {
 	 * @return a point which represents an ajax request.
 	 */
 	private Point createAjaxPoint(EUMData data, AjaxRequest ajaxReq, String measurement) {
-		return Point.measurement("request_ajax").time(data.getTimeStamp().getTime(), TimeUnit.MILLISECONDS).tag("platform_ident", String.valueOf(data.getPlatformIdent()))
+		return Point.measurement(measurement).time(data.getTimeStamp().getTime(), TimeUnit.MILLISECONDS).tag("platform_ident", String.valueOf(data.getPlatformIdent()))
 				.tag("browser", data.getUserSession().getBrowser())
 				.tag("device", data.getUserSession().getDevice())
 				.tag("language", data.getUserSession().getLanguage())
