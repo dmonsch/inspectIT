@@ -1,7 +1,21 @@
-///<reference path="./data/DOMListenerExecutionRecord.ts"/>
+///<reference path="./data/DomEventRecord.ts"/>
 
 namespace DOMListenerInstrumentation {
+
+    let eventRecordsMap: IWeakMap<Event, DomEventRecord>;
+
+    const eventSelectors: IDictionary<EventSelector[]> = {};
+
+    let navigationStart = 0;
+
     export function init() {
+
+        eventRecordsMap = new WeakMapImpl<Event, DomEventRecord>();
+        if (("performance" in window) && ("timing" in window.performance)) {
+            navigationStart = window.performance.timing.navigationStart;
+        }
+
+        initElementSelectors();
         Instrumentation.addListenerInstrumentation({
             shouldInstrument(target, type) {
                 return (isDomElement(target) || target === window || target === document)
@@ -11,13 +25,10 @@ namespace DOMListenerInstrumentation {
                 // sanity check, do not instrument events which directly happened on window or document
                 if (isDomElement(event.target)) {
                     const target = event.target as HTMLElement;
-                    const record = new DOMListenerExecutionRecord();
+                    const record = new ListenerExecutionRecord();
                     record.functionName = Util.getFunctionName(originalCallback);
                     record.eventType = event.type;
-                    record.elementType = target.nodeName;
-                    if (target.id) {
-                        record.elementID = target.id;
-                    }
+                    record.setParent(getOrCreateEventRecord(event));
                     record.buildTrace(true, executeOriginalCallback);
                 } else {
                     executeOriginalCallback();
@@ -25,6 +36,78 @@ namespace DOMListenerInstrumentation {
             }
 
         });
+    }
+
+    function initElementSelectors() {
+        const relevantEvents: IDictionary<boolean> = {};
+        if (SETTINGS.domEventSelectors) {
+            for (const config of SETTINGS.domEventSelectors) {
+                const selector = new EventSelector(config);
+                for (const event of selector.events) {
+                    eventSelectors[event] = eventSelectors[event] || [];
+                    eventSelectors[event].push(selector);
+                    if (selector.markAlwaysAsRelevant) {
+                        relevantEvents[event] = true;
+                    }
+                }
+            }
+        }
+        Instrumentation.runWithout( () => {
+            for (const event in relevantEvents) {
+                document.addEventListener(event, (eventObj) => {
+                    if (isDomElement(eventObj.target)) {
+                        getOrCreateEventRecord(eventObj);
+                    }
+                }, true);
+            }
+        });
+    }
+
+    function getOrCreateEventRecord(event: Event): DomEventRecord {
+        let record = eventRecordsMap.get(event);
+        if (record) {
+            return record;
+        } else {
+            record = new DomEventRecord();
+            if (event.timeStamp) {
+                // event.tiemStamp is sometime relative to navigationStart and sometime to the epoche
+                // to differentiate we compare thetimestamp with the epoche time from january 1st, 2000
+                const epocheTimeStamp2000 = 946684800;
+                if (event.timeStamp < epocheTimeStamp2000) {
+                    record.enterTimestamp = event.timeStamp + navigationStart;
+                } else {
+                    record.enterTimestamp = event.timeStamp;
+                }
+            } else {
+                record.enterTimestamp = Util.timestampMS();
+            }
+            record.baseUrl = window.location.href;
+            record.setDuration(0);
+            record.setParent(TraceBuilder.getCurrentParent());
+            const eventName = event.type;
+            record.eventType = eventName;
+            eventRecordsMap.set(event, record);
+
+            let isRelevant: boolean = false;
+            for (const selector of (eventSelectors[eventName] || [])) {
+                if (selector.matchesElement(event.target as Element)) {
+                    selector.extractAttributes(event.target as Element, record.elementInfo);
+                    isRelevant = isRelevant || selector.markAlwaysAsRelevant;
+                }
+            }
+            for (const selector of (eventSelectors["*"] || [])) {
+                if (selector.matchesElement(event.target as Element)) {
+                    selector.extractAttributes(event.target as Element, record.elementInfo);
+                }
+            }
+            if (isRelevant) {
+                record.relevantThroughSelector = true;
+                record.markRelevant();
+            } else {
+                record.relevantThroughSelector = false;
+            }
+            return record;
+        }
     }
 
     /**

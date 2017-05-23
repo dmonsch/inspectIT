@@ -61,4 +61,11 @@ namespace Util {
         }
         return undefined;
     }
+
+    const matchesFunc = Element.prototype.matches || Element.prototype.msMatchesSelector ||
+        Element.prototype.webkitMatchesSelector || function () { return false; };
+
+    export function elementMatchesSelector(element: Element, selector: string): boolean {
+        return matchesFunc.call(element, selector);
+    }
 }
