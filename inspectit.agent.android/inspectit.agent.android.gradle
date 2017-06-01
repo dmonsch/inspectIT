@@ -1,4 +1,3 @@
-evaluationDependsOn(':inspectit.shared.all')
 defaultTasks 'releaseAndAnalyze'
 
 sourceCompatibility = '1.7'
@@ -14,15 +13,10 @@ buildscript {
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'java'
 
 repositories {
     jcenter()
-}
-
-jar {
-	into('libs') {
-		from project(':inspectit.shared.all').jar.outputs
-	}
 }
 
 sourceSets { 
@@ -45,28 +39,31 @@ configurations {
 }
 
 dependencies {
+    /** Agent dependencies. */
 	compile group: 'com.google.android', name: 'android', version: '4.1.1.4'
 
 	compile group: 'net.lingala.zip4j', name: 'zip4j', version: '1.3.2'
 	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
-	compile group: 'commons-io', name: 'commons-io', version: '2.5'
-	compile group: 'org.ow2.asm', name: 'asm-all', version: '5.0.4'
-	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.7'
 	compile group: 'org.influxdb', name: 'influxdb-java', version: '2.5'
+	compile group: 'commons-io', name: 'commons-io', version: '2.5'
+	compile group: 'org.smali', name: 'dexlib2', version: '2.2.0'
 	
-	shadow 'com.fasterxml.jackson.core:jackson-annotations:2.8.4'
-    shadow 'com.fasterxml.jackson.core:jackson-core:2.8.4'
-    shadow 'com.fasterxml.jackson.core:jackson-databind:2.8.4'
-	
-	compile (project(':inspectit.shared.all')) {
-		exclude group: 'org.codehaus.jackson'
-	}
+	compile 'com.fasterxml.jackson.core:jackson-annotations:2.8.4'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.4'
 	
     testCompile 'junit:junit:4.12'
 }
 
 shadowJar {
 	relocate 'com.fasterxml', 'rocks.com.fasterxml'
+	exclude 'META-INF/*'
+	
+	dependencies {
+		include(dependency('com.fasterxml.jackson.core:jackson-annotations:2.8.4'))
+		include(dependency('com.fasterxml.jackson.core:jackson-core:2.8.4'))
+		include(dependency('com.fasterxml.jackson.core:jackson-databind:2.8.4'))
+	}
 }
 
 task releaseAndAnalyze {
