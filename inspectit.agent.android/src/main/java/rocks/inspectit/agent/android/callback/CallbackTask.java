@@ -8,18 +8,18 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import android.os.AsyncTask;
 import android.util.Log;
-import rocks.inspectit.agent.android.core.ExternalConfiguration;
+import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.util.DependencyManager;
 import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationResponse;
 
 /**
  * Task which is responsible for sending data to the REST interface of the
  * server. This task runs asynchronously so it doesn't block the UI thread.
- * 
+ *
  * @author David Monschein
  *
  */
@@ -27,7 +27,7 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 	/**
 	 * Consistent log tag which is used by the agent.
 	 */
-	private static final String LOG_TAG = ExternalConfiguration.getLogTag();
+	private static final String LOG_TAG = AgentConfiguration.current.getLogTag();
 
 	/**
 	 * JSON object mapper for serializing and de-serializing JSON strings.
@@ -46,7 +46,7 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 
 	/**
 	 * Creates a new task with a specified url.
-	 * 
+	 *
 	 * @param url
 	 *            REST interface URL
 	 */
@@ -86,7 +86,7 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 
 	/**
 	 * Performs a post request to a given URL with given data.
-	 * 
+	 *
 	 * @param rawUrl
 	 *            the URL
 	 * @param data

@@ -2,10 +2,10 @@ package rocks.inspectit.agent.android.callback.strategies;
 
 import java.io.IOException;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import rocks.inspectit.agent.android.callback.CallbackTask;
-import rocks.inspectit.agent.android.core.ExternalConfiguration;
+import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileCallbackData;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
 
@@ -101,9 +101,9 @@ public abstract class AbstractCallbackStrategy {
 		if ((dat != null) && (dat.getChildData().size() > 0)) {
 			final String callbackUrl;
 			if (helloReq) {
-				callbackUrl = ExternalConfiguration.getHelloUrl();
+				callbackUrl = AgentConfiguration.current.getSessionUrl();
 			} else {
-				callbackUrl = ExternalConfiguration.getBeaconUrl();
+				callbackUrl = AgentConfiguration.current.getBeaconUrl();
 			}
 
 			try {

@@ -5,7 +5,7 @@ import java.util.List;
 
 import android.util.Log;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
-import rocks.inspectit.agent.android.core.ExternalConfiguration;
+import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.util.DependencyManager;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileCallbackData;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
@@ -22,7 +22,7 @@ public class CallbackManager {
 	/**
 	 * Consistent log tag for the agent.
 	 */
-	private static final String LOG_TAG = ExternalConfiguration.getLogTag();
+	private static final String LOG_TAG = AgentConfiguration.current.getLogTag();
 
 	/**
 	 * The callback strategy which is used to send data.
