@@ -24,6 +24,9 @@ import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationRespo
  *
  */
 public class CallbackTask extends AsyncTask<String, Void, String> {
+
+	private static final int READ_TIMEOUT = 30000;
+	private static final int CONNECT_TIMEOUT = 30000;
 	/**
 	 * Consistent log tag which is used by the agent.
 	 */
@@ -101,6 +104,8 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 			conn.setDoOutput(true);
 			conn.setRequestMethod("POST");
 			conn.setRequestProperty("Content-Type", "application/json");
+			conn.setReadTimeout(READ_TIMEOUT);
+			conn.setConnectTimeout(CONNECT_TIMEOUT);
 
 			final OutputStream os = conn.getOutputStream();
 			os.write(data.getBytes());
