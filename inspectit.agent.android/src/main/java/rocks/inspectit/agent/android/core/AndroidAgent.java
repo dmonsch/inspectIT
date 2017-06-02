@@ -50,6 +50,10 @@ public final class AndroidAgent {
 	 */
 	private static final int MAX_QUEUE = 500;
 
+	private static final int RECONNECT_INTERVAL = 60000;
+	private static final int RECONNECT_MAX_TRIES = 10;
+	private static int RECONNECT_TRIES = 0;
+
 	/**
 	 * Resolve consistent log tag for the agent.
 	 */
@@ -179,6 +183,9 @@ public final class AndroidAgent {
 		final SessionCreationRequest helloRequest = new SessionCreationRequest();
 		helloRequest.setAppName(androidDataCollector.resolveAppName());
 		helloRequest.setDeviceId(androidDataCollector.getDeviceId());
+
+		RECONNECT_TRIES = 0;
+		scheduleSessionCreationRequest(helloRequest);
 
 		callbackManager.pushHelloMessage(helloRequest);
 
@@ -453,6 +460,31 @@ public final class AndroidAgent {
 		}
 
 		defaultQueueInit.clear();
+	}
+
+	private static void scheduleSessionCreationRequest(final SessionCreationRequest req) {
+		final Runnable scheduleRunnable = new Runnable() {
+			@Override
+			public void run() {
+				if (callbackManager.isSessionActive()) {
+					return;
+				} else {
+					Log.w(LOG_TAG, "Couldn't create session. Retrying now.");
+					if (RECONNECT_TRIES < RECONNECT_MAX_TRIES) {
+						Log.i(LOG_TAG, "Trying to connect to the CMR.");
+						RECONNECT_TRIES++;
+
+						callbackManager.pushHelloMessage(req); // real work
+
+						mHandler.postDelayed(this, RECONNECT_INTERVAL);
+					} else {
+						shutdownAgent("Max reconnect tries reached.");
+					}
+				}
+			}
+		};
+
+		mHandler.postDelayed(scheduleRunnable, RECONNECT_INTERVAL);
 	}
 
 	/**

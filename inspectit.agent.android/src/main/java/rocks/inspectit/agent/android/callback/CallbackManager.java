@@ -82,6 +82,10 @@ public class CallbackManager {
 		strategy.sendImmediately(data, true);
 	}
 
+	public boolean isSessionActive() {
+		return sessActive;
+	}
+
 	/**
 	 * Shuts down the callback manager.
 	 */
