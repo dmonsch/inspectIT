@@ -306,11 +306,13 @@ public final class AndroidAgent {
 	 *            The class which owns the method which has been called
 	 * @return entry id for determine corresponding sensor at the exitBody call
 	 */
-	public static synchronized void enterBody(final long methodId, final String methodSignature, final String owner) {
+	public static synchronized void enterBody(final int methodId, final String methodSignature) {
 		RegisteredSensorConfig rsc = sensorMap.get(methodId);
 
-		for (ISensor sensor : rsc.getBelongingSensors()) {
-			sensor.beforeBody(methodId);
+		if (rsc != null) {
+			for (ISensor sensor : rsc.getBelongingSensors()) {
+				sensor.beforeBody(methodId);
+			}
 		}
 	}
 
@@ -323,12 +325,14 @@ public final class AndroidAgent {
 	 * @param enterId
 	 *            the entry id for getting the responsible sensor instance
 	 */
-	public static synchronized void exitErrorBody(final Throwable e, final long methodId) {
+	public static synchronized void exitErrorBody(final Throwable e, final int methodId) {
 		RegisteredSensorConfig rsc = sensorMap.get(methodId);
 
-		for (ISensor eSensor : rsc.getBelongingSensors()) {
-			// call methods
-			eSensor.exceptionThrown(methodId, e.getClass().getName());
+		if (rsc != null) {
+			for (ISensor eSensor : rsc.getBelongingSensors()) {
+				// call methods
+				eSensor.exceptionThrown(methodId, e.getClass().getName());
+			}
 		}
 	}
 
@@ -339,13 +343,16 @@ public final class AndroidAgent {
 	 * @param enterId
 	 *            the entry id for getting the responsible sensor instance
 	 */
-	public static synchronized void exitBody(final long methodId) {
+	public static synchronized void exitBody(final int methodId) {
+		Log.i("Android Agent", String.valueOf(methodId));
 		RegisteredSensorConfig rsc = sensorMap.get(methodId);
 
-		for (ISensor eSensor : rsc.getBelongingSensors()) {
-			// call methods
-			eSensor.firstAfterBody(methodId);
-			eSensor.secondAfterBody(methodId);
+		if (rsc != null) {
+			for (ISensor eSensor : rsc.getBelongingSensors()) {
+				// call methods
+				eSensor.firstAfterBody(methodId);
+				eSensor.secondAfterBody(methodId);
+			}
 		}
 	}
 

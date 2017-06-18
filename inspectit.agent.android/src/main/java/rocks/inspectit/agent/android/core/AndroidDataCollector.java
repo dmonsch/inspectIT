@@ -2,6 +2,7 @@ package rocks.inspectit.agent.android.core;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -18,7 +19,7 @@ import rocks.inspectit.agent.android.util.CacheValue;
 /**
  * This class is a proxy for accessing Android device informations, because we
  * don't want all modules to collect data on their own.
- * 
+ *
  * @author David Monschein
  */
 public class AndroidDataCollector {
@@ -86,7 +87,7 @@ public class AndroidDataCollector {
 
 	/**
 	 * Creates a data collector and needs a given context as parameter.
-	 * 
+	 *
 	 * @param ctx
 	 *            context of the application
 	 */
@@ -101,7 +102,7 @@ public class AndroidDataCollector {
 
 	/**
 	 * Gets the version name of the application.
-	 * 
+	 *
 	 * @return version name of the application or the value 'unknown' if the
 	 *         version isn't set
 	 */
@@ -117,7 +118,7 @@ public class AndroidDataCollector {
 
 	/**
 	 * Gets the name of the application.
-	 * 
+	 *
 	 * @return the name of the application
 	 */
 	public String resolveAppName() {
@@ -128,7 +129,7 @@ public class AndroidDataCollector {
 
 	/**
 	 * Gets the last known location (Needs permissions for accessing location).
-	 * 
+	 *
 	 * @return the location of the device
 	 */
 	public Location getLastKnownLocation() {
@@ -138,7 +139,7 @@ public class AndroidDataCollector {
 	/**
 	 * Gets the last known location and provides a parameter for forcing the
 	 * collector to reload the value.
-	 * 
+	 *
 	 * @param force
 	 *            if true, the current location will be reloaded and the value
 	 *            from the cache won'T be used
@@ -154,7 +155,7 @@ public class AndroidDataCollector {
 
 	/**
 	 * Gets network information of the device.
-	 * 
+	 *
 	 * @return network information of the device
 	 */
 	public NetworkInfo getNetworkInfo() {
@@ -164,7 +165,7 @@ public class AndroidDataCollector {
 	/**
 	 * Gets network information and provides a parameter for forcing the reload
 	 * of the info.
-	 * 
+	 *
 	 * @param force
 	 *            true if the collector should reload the network information
 	 * @return current network informations from the device
@@ -179,7 +180,7 @@ public class AndroidDataCollector {
 
 	/**
 	 * Gets informations about the wifi of the device.
-	 * 
+	 *
 	 * @return wifi informations from the device
 	 */
 	public WifiInfo getWifiInfo() {
@@ -189,7 +190,7 @@ public class AndroidDataCollector {
 	/**
 	 * Gets informations about the wifi of the device and provides a parameter
 	 * to force a reload of the current information.
-	 * 
+	 *
 	 * @param force
 	 *            true if you want the collector to force a reload of the wifi
 	 *            informations
@@ -206,7 +207,7 @@ public class AndroidDataCollector {
 	/**
 	 * Gets the wifi configuration for the wifi to which the device is
 	 * connected.
-	 * 
+	 *
 	 * @return wifi configuration for the current configured and connected wifi
 	 *         of the device
 	 */
@@ -216,7 +217,7 @@ public class AndroidDataCollector {
 
 	/**
 	 * Gets the wifi configuration for the connected wifi.
-	 * 
+	 *
 	 * @param preCheck
 	 *            previously check if we have a connection
 	 * @param force
@@ -246,7 +247,7 @@ public class AndroidDataCollector {
 
 	/**
 	 * Gets the name of the mobile network carrier.
-	 * 
+	 *
 	 * @return name of the mobile network carrier
 	 */
 	public String getNetworkCarrierName() {
@@ -260,7 +261,7 @@ public class AndroidDataCollector {
 	/**
 	 * Gets the id of the device. See {@link TelephonyManager} for detailed
 	 * information.
-	 * 
+	 *
 	 * @return id of the device with model of the device as prefix
 	 */
 	public String getDeviceId() {
@@ -275,7 +276,7 @@ public class AndroidDataCollector {
 	/**
 	 * Accesses the current location of the device when the application has the
 	 * permissions to do so.
-	 * 
+	 *
 	 * @return the location of the device and null if we don't have enough
 	 *         permissions
 	 */
@@ -289,7 +290,7 @@ public class AndroidDataCollector {
 	/**
 	 * Gets network informations and previously checks whether we have the
 	 * permission for that.
-	 * 
+	 *
 	 * @return current network information for the device and null if we don't
 	 *         have enough permissions
 	 */
@@ -302,7 +303,7 @@ public class AndroidDataCollector {
 
 	/**
 	 * Checks whether the application has a specific permission.
-	 * 
+	 *
 	 * @param perm
 	 *            name of the permission
 	 * @return true if the application has the requested permission - false

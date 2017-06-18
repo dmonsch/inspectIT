@@ -3,13 +3,12 @@ package rocks.inspectit.android.instrument;
 import java.io.File;
 import java.io.IOException;
 import java.util.AbstractSet;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jf.dexlib2.AccessFlags;
 import org.jf.dexlib2.DexFileFactory;
 import org.jf.dexlib2.Opcode;
@@ -28,7 +27,6 @@ import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.immutable.ImmutableClassDef;
 import org.jf.dexlib2.immutable.ImmutableMethod;
 import org.jf.dexlib2.immutable.ImmutableMethodParameter;
-import org.jf.dexlib2.immutable.reference.ImmutableMethodReference;
 import org.jf.dexlib2.util.MethodUtil;
 
 import com.google.common.collect.Lists;
@@ -45,7 +43,12 @@ import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
  */
 public class DexInstrumenter {
 
+	private DexSensorInstrumenter dexSensorInstrumenter;
+	private DexNetworkInstrumenter dexNetworkInstrumenter;
+
 	public DexInstrumenter(InstrumentationConfiguration config) {
+		this.dexSensorInstrumenter = new DexSensorInstrumenter();
+		this.dexNetworkInstrumenter = new DexNetworkInstrumenter();
 	}
 
 	public void instrument(File input, File output) throws IOException {
@@ -88,6 +91,27 @@ public class DexInstrumenter {
 					Method onCreateMethod = new ImmutableMethod(classDef.getType(), "onCreate", parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl);
 					methods.add(onCreateMethod);
 				}
+			} else {
+
+				// TODO is class with sensor?
+				for (Method method : classDef.getMethods()) {
+					boolean methodWithSensor = false; // TODO method with sensor?
+					if ((method.getImplementation() != null) && methodWithSensor) {
+						modifiedMethod = true;
+						methods.add(dexSensorInstrumenter.instrumentMethod(method));
+					} else {
+						methods.add(method);
+					}
+				}
+			}
+
+			for (int i = 0; i < methods.size(); i++) {
+				Pair<Boolean, ? extends Method> result = dexNetworkInstrumenter.instrumentMethod(methods.get(i));
+				if (result.getLeft()) {
+					// instrumented
+					modifiedMethod = true;
+					methods.set(i, result.getRight());
+				}
 			}
 
 			if (!modifiedMethod) {
@@ -124,13 +148,13 @@ public class DexInstrumenter {
 	private MethodImplementation generateOnCreateMethodImpl() {
 		MutableMethodImplementation impl = new MutableMethodImplementation(2);
 
-		int thisRegister = 0;
+		// 2 because there is 1 register parameter 1 this reference -> parameter count is this inclusive
+		int thisRegister = DexInstrumentationUtil.getThisRegister(impl.getRegisterCount(), 2);
 		int parameterRegister = 1; // in highest register
 
 		impl.addInstruction(0, new BuilderInstruction10x(Opcode.RETURN_VOID));
 
-		List<String> parameters = Lists.newArrayList(DexInstrumentationUtil.getType(Bundle.class));
-		MethodReference methRef = new ImmutableMethodReference(DexInstrumentationUtil.getType(Activity.class), "onCreate", parameters, "V");
+		MethodReference methRef = DexInstrumentationUtil.getMethodReference(Activity.class, "onCreate", "V", Bundle.class);
 
 		// first register is this register -> because 1 is parameter register
 		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 2, thisRegister, parameterRegister, 0, 0, 0, methRef);
@@ -145,7 +169,7 @@ public class DexInstrumenter {
 		MutableMethodImplementation impl = new MutableMethodImplementation(method.getImplementation());
 
 		int paramRegisters = MethodUtil.getParameterRegisterCount(method);
-		int thisRegister = method.getImplementation().getRegisterCount() - paramRegisters;
+		int thisRegister = DexInstrumentationUtil.getThisRegister(impl.getRegisterCount(), paramRegisters);
 
 		impl.addInstruction(0, createAgentInitInvocation(thisRegister));
 
@@ -153,30 +177,10 @@ public class DexInstrumenter {
 	}
 
 	private BuilderInstruction createAgentInitInvocation(int thisRegister) {
-
-		// BuilderInstruction21c loadStringInstruction = new BuilderInstruction21c(Opcode.CONST_STRING, 0, new ImmutableStringReference("Tag"));
-		// BuilderInstruction21c loadStringInstruction2 = new
-		// BuilderInstruction21c(Opcode.CONST_STRING, 1, new ImmutableStringReference("Message"));
-
-		// ImmutableInstruction22c loadInstruction = new ImmutableInstruction22c(opcode, registerA,
-		// registerB, reference);
-
-		List<String> parameterList = new ArrayList<String>();
-		parameterList.add(getType(Activity.class));
-
-		ImmutableMethodReference methodReference = new ImmutableMethodReference(getType(AndroidAgent.class), "initAgent", Collections.unmodifiableList(parameterList),
-				"V");
+		MethodReference methodReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "initAgent", "V", Activity.class);
 		BuilderInstruction35c invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, thisRegister, 0, 0, 0, 0, methodReference);
 
-		// l.add(loadStringInstruction2);
-		// l.add(invokeInstruction);
-
 		return invokeInstruction;
-	}
-
-	// UTILS
-	private String getType(Class<?> clz) {
-		return "L" + clz.getName().replaceAll("\\.", "/") + ";";
 	}
 
 }
