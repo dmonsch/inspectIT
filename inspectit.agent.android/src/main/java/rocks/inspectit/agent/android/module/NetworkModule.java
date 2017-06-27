@@ -17,7 +17,7 @@ import rocks.inspectit.shared.all.communication.data.mobile.NetRequestResponse;
 
 /**
  * Special module which handles the instrumented network requests.
- * 
+ *
  * @author David Monschein
  *
  */
@@ -42,7 +42,7 @@ public class NetworkModule extends AbstractMonitoringModule {
 
 	/**
 	 * Creates a new instance.
-	 * 
+	 *
 	 * @param collectionInterval
 	 *            Time after which the existing connections get collected and
 	 *            sent to the monitoring server.
@@ -54,7 +54,7 @@ public class NetworkModule extends AbstractMonitoringModule {
 	/**
 	 * Executed when a connection is opened. This creates a new entry in the
 	 * state map for the connection.
-	 * 
+	 *
 	 * @param conn
 	 *            the connection which has been created
 	 */
@@ -69,7 +69,7 @@ public class NetworkModule extends AbstractMonitoringModule {
 	/**
 	 * Executed when the response code of a connection is retrieved. This
 	 * updates the connection state for the belonging connection.
-	 * 
+	 *
 	 * @param conn
 	 *            the connection
 	 * @return the response code
@@ -90,7 +90,7 @@ public class NetworkModule extends AbstractMonitoringModule {
 	/**
 	 * Executed when the output stream of a connection is requested. This
 	 * updates the connection state for the belonging connection.
-	 * 
+	 *
 	 * @param conn
 	 *            the connection
 	 * @return the output stream for the connection
@@ -111,7 +111,7 @@ public class NetworkModule extends AbstractMonitoringModule {
 	/**
 	 * Executed when the original application wants a {@link WebView} to load a
 	 * specific URL.
-	 * 
+	 *
 	 * @param url
 	 *            the URL which is passed to the {@link WebView}
 	 * @param method

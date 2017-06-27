@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -391,17 +390,6 @@ public final class AndroidAgent {
 	 */
 	public static void webViewLoad(final String url, final Map<?, ?> params) {
 		networkModule.webViewLoad(url, "GET");
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application when the
-	 * application creates a {@link HttpURLConnection}.
-	 *
-	 * @param connection
-	 *            the connection
-	 */
-	public static void httpConnect(final URLConnection connection) {
-		networkModule.openConnection((HttpURLConnection) connection);
 	}
 
 	/**
