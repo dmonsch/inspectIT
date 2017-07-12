@@ -2,7 +2,7 @@ package rocks.inspectit.agent.android.callback.strategies;
 
 import java.io.IOException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import rocks.inspectit.agent.android.callback.CallbackTask;
 import rocks.inspectit.agent.android.config.AgentConfiguration;

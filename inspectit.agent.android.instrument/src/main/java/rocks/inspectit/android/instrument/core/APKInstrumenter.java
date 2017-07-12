@@ -17,10 +17,9 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.ObjectWriter;
+import org.codehaus.jackson.util.DefaultPrettyPrinter;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
@@ -46,7 +45,7 @@ public class APKInstrumenter {
 	// TEMPORARY USED FILES
 	private static final File INSTRUMENTED_DEX = new File("temp-new-instr.dex");
 
-	private static final File AGENT_BUILD_JAVA = new File("build/release/inspectit.agent.android-all.jar");
+	private static final File AGENT_BUILD_JAVA = new File("../inspectit.agent.android/build/release/inspectit.agent.android-all.jar");
 
 	/** Temporary file for building the current agent version. */
 	private static final File AGENT_BUILD = new File("dxbuild/agent.dex");
@@ -331,7 +330,7 @@ public class APKInstrumenter {
 		// delete all except of rocks folder
 		for (File toDel : temporaryFolder.listFiles()) {
 			if (toDel.isDirectory()) {
-				if (!toDel.getName().equals("rocks")) {
+				if (!toDel.getName().equals("rocks") && !toDel.getName().equals("io")) {
 					try {
 						FileUtils.deleteDirectory(toDel);
 					} catch (IOException e) {

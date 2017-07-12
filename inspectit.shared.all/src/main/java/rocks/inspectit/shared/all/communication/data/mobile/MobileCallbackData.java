@@ -23,7 +23,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 /**
  * Contains multiple monitoring records and the session id. This is the
  * data-type which is sent to the monitoring server.
- * 
+ *
  * @author David Monschein
  *
  */
@@ -57,7 +57,7 @@ public class MobileCallbackData {
 
 	/**
 	 * Gets the creation timestamp.
-	 * 
+	 *
 	 * @return creation timestmap
 	 */
 	public long getCreationTimestamp() {
@@ -66,7 +66,7 @@ public class MobileCallbackData {
 
 	/**
 	 * Gets the monitoring records in this container.
-	 * 
+	 *
 	 * @return monitoring records in this container
 	 */
 	public List<MobileDefaultData> getChildData() {
@@ -75,7 +75,7 @@ public class MobileCallbackData {
 
 	/**
 	 * Sets the monitoring records in this container.
-	 * 
+	 *
 	 * @param childData
 	 *            monitoring records to set
 	 */
@@ -85,7 +85,7 @@ public class MobileCallbackData {
 
 	/**
 	 * Adds a monitoring record to the container.
-	 * 
+	 *
 	 * @param data
 	 *            monitoring record to add
 	 */
@@ -103,7 +103,7 @@ public class MobileCallbackData {
 
 	/**
 	 * Gets the session id.
-	 * 
+	 *
 	 * @return session id
 	 */
 	public String getSessionId() {
@@ -112,7 +112,7 @@ public class MobileCallbackData {
 
 	/**
 	 * Sets the session id.
-	 * 
+	 *
 	 * @param sessionId
 	 *            session id to set
 	 */

@@ -21,48 +21,33 @@ package rocks.inspectit.shared.all.communication.data.mobile;
  * @author David Monschein
  *
  */
+@InfluxCompatibleAnnotation(measurement = "netrequests")
 public class NetRequestResponse extends MobileDefaultData {
-
-	/**
-	 * Id of the device.
-	 */
-	private String deviceId;
 	/**
 	 * URL which has been accessed.
 	 */
+	@InfluxCompatibleAnnotation(key = "url", tag = false)
 	private String url;
 	/**
 	 * Method which was used.
 	 */
+	@InfluxCompatibleAnnotation(key = "method", tag = false)
 	private String method;
 	/**
 	 * Duration of the request.
 	 */
+	@InfluxCompatibleAnnotation(key = "duration", tag = false)
 	private long duration;
 	/**
 	 * Response code of the request.
 	 */
+	@InfluxCompatibleAnnotation(key = "responsecode", tag = false)
 	private int responseCode;
 
 	/**
 	 * Creates an empty net request response with default values.
 	 */
 	public NetRequestResponse() {
-	}
-
-	/**
-	 * @return the deviceId
-	 */
-	public String getDeviceId() {
-		return deviceId;
-	}
-
-	/**
-	 * @param deviceId
-	 *            the deviceId to set
-	 */
-	public void setDeviceId(final String deviceId) {
-		this.deviceId = deviceId;
 	}
 
 	/**

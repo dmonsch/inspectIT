@@ -2,7 +2,7 @@
 <instrumenter-configuration>
 
 	<cmr-bridge>
-		<helloUrl>http://10.0.2.2:8182/rest/mobile/hello</helloUrl>
+		<helloUrl>http://10.0.2.2:8182/rest/mobile/session</helloUrl>
 		<beaconUrl>http://10.0.2.2:8182/rest/mobile/beacon</beaconUrl>
 	</cmr-bridge>
 
@@ -26,14 +26,7 @@
 	</agentBuild>
 	
 	<traceCollection>
-		<package>{application}.**</package>
+		<package>evaluation.**</package>
 	</traceCollection>
-	
-	<instrumentation>
-		<mapping>
-			<point type="onCreate">initAgent</point>
-			<point type="onDestroy">destroyAgent</point>
-		</mapping>
-	</instrumentation>
 
 </instrumenter-configuration>

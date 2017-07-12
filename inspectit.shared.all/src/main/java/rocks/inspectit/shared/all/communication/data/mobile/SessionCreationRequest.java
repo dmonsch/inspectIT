@@ -15,12 +15,15 @@
  ***************************************************************************/
 package rocks.inspectit.shared.all.communication.data.mobile;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Class holding information about a device which wants to connect to the
  * server.
- * 
+ *
  * @author David Monschein
- * 
+ *
  */
 public class SessionCreationRequest extends MobileDefaultData {
 
@@ -34,10 +37,13 @@ public class SessionCreationRequest extends MobileDefaultData {
 	 */
 	private String deviceId;
 
+	private Map<String, String> additionalInformation;
+
 	/**
 	 * Creates a new instance.
 	 */
 	public SessionCreationRequest() {
+		additionalInformation = new HashMap<String, String>();
 	}
 
 	/**
@@ -68,5 +74,18 @@ public class SessionCreationRequest extends MobileDefaultData {
 	 */
 	public void setDeviceId(final String deviceId) {
 		this.deviceId = deviceId;
+	}
+
+	/**
+	 * Gets {@link #additionalInformation}.
+	 *
+	 * @return {@link #additionalInformation}
+	 */
+	public Map<String, String> getAdditionalInformation() {
+		return this.additionalInformation;
+	}
+
+	public void putAdditionalInformation(String tag, String value) {
+		this.additionalInformation.put(tag, value);
 	}
 }
