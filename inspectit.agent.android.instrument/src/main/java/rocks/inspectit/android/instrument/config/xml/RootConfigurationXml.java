@@ -27,12 +27,6 @@ public class RootConfigurationXml {
 	private ManifestTransformerConfigXml manifestTransformerConfig;
 
 	/**
-	 * Instrumentation configuration.
-	 */
-	@XmlElement(name = "instrumentation")
-	private InstrumentationRootConfigurationXml instrumentationRootConfiguration;
-
-	/**
 	 * Agent build configuration.
 	 */
 	@XmlElement(name = "agentBuild")
@@ -62,13 +56,6 @@ public class RootConfigurationXml {
 	 */
 	public ManifestTransformerConfigXml getManifestTransformer() {
 		return manifestTransformerConfig;
-	}
-
-	/**
-	 * @return the instrumentationRootConfiguration
-	 */
-	public InstrumentationRootConfigurationXml getInstrumentationRootConfiguration() {
-		return instrumentationRootConfiguration;
 	}
 
 	/**

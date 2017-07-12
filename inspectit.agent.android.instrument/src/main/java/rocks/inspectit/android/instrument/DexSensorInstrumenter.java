@@ -1,12 +1,17 @@
 package rocks.inspectit.android.instrument;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jf.dexlib2.Opcode;
 import org.jf.dexlib2.builder.BuilderInstruction;
+import org.jf.dexlib2.builder.Label;
+import org.jf.dexlib2.builder.MethodLocation;
 import org.jf.dexlib2.builder.MutableMethodImplementation;
+import org.jf.dexlib2.builder.instruction.BuilderInstruction10x;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction11x;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction21c;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction31i;
@@ -63,27 +68,54 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 		List<Integer> positions_throw = new ArrayList<>();
 		for (int i = 0; i < instrList.size(); i++) {
 			Instruction instr = instrList.get(i);
-			if ((instr.getOpcode() == Opcode.RETURN_VOID) || (instr.getOpcode() == Opcode.RETURN_OBJECT) || (instr.getOpcode() == Opcode.RETURN_WIDE)) {
+
+			if ((instr.getOpcode() == Opcode.RETURN_VOID) || (instr.getOpcode() == Opcode.RETURN) || (instr.getOpcode() == Opcode.RETURN_OBJECT) || (instr.getOpcode() == Opcode.RETURN_WIDE)) {
 				positions_ret.add(i);
 			}
 		}
 
-		// TODO add exit instructions
+		// TODO add exit instructions -> throw
 		int offset = 0;
 		for (int retPos : positions_ret) {
+			// get moving labels
+			Instruction retInstr = nImpl.getInstructions().get(retPos + offset);
+			Set<Label> movingLabels;
+			MethodLocation retLocation;
+
+			if (retInstr instanceof BuilderInstruction10x) {
+				BuilderInstruction10x ri = (BuilderInstruction10x) retInstr;
+				movingLabels = new HashSet<>(ri.getLocation().getLabels());
+				retLocation = ri.getLocation();
+			} else if (retInstr instanceof BuilderInstruction11x) {
+				BuilderInstruction11x ri = (BuilderInstruction11x) retInstr;
+				movingLabels = new HashSet<>(ri.getLocation().getLabels());
+				retLocation = ri.getLocation();
+			} else {
+				continue;
+			}
+
 			// loads method signature
-			nImpl.addInstruction(retPos + offset, new BuilderInstruction31i(Opcode.CONST, dest + 0, signature.hashCode()));
+			BuilderInstruction31i loadIntInstruction = new BuilderInstruction31i(Opcode.CONST, dest + 0, signature.hashCode());
+
+			nImpl.addInstruction(retPos + offset, loadIntInstruction);
+
+			// move labels
+			for (Label movingLabel : movingLabels) {
+				retLocation.getLabels().remove(movingLabel);
+				loadIntInstruction.getLocation().getLabels().add(movingLabel);
+			}
 
 			MethodReference onExitReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "exitBody", "V", int.class);
 			if (DexInstrumentationUtil.numBits(dest + 1) == 4) {
 				BuilderInstruction35c invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, dest + 0, 0, 0, 0, 0, onExitReference);
 				nImpl.addInstruction(retPos + offset + 1, invokeInstruction);
 			} else {
-				BuilderInstruction3rc invokeInstruction = new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, dest + 0, 2, onEnterReference);
+				BuilderInstruction3rc invokeInstruction = new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, dest + 0, 1, onExitReference);
 				nImpl.addInstruction(retPos + offset + 1, invokeInstruction);
 			}
 
-			offset += 2; // we added two new instructions therefore we need to shift the instr position
+			offset += 2; // we added two new instructions therefore we need to shift the instr
+			// position
 		}
 
 		// after adding exit body statements because otherwise the offset is unknown
@@ -114,8 +146,11 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 					offset += 2;
 				} else {
 					// TODO instruction for copying throwable register -> 2 moves
-					//nImpl.addInstruction(throwPos + offset + 1, new BuilderInstruction31i(Opcode.CONST, dest + 1, signature.hashCode()));
-					// BuilderInstruction3rc invokeInstruction = new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, dest + 0, 2, onEnterReference);
+					// nImpl.addInstruction(throwPos + offset + 1, new
+					// BuilderInstruction31i(Opcode.CONST, dest + 1, signature.hashCode()));
+					// BuilderInstruction3rc invokeInstruction = new
+					// BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, dest + 0, 2,
+					// onEnterReference);
 					// nImpl.addInstruction(throwPos + offset + 2, invokeInstruction);
 				}
 			}

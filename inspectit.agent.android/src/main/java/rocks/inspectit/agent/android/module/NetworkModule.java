@@ -10,9 +10,12 @@ import java.util.Map;
 
 import android.content.Context;
 import android.webkit.WebView;
+import io.opentracing.SpanContext;
 import rocks.inspectit.agent.android.callback.CallbackManager;
+import rocks.inspectit.agent.android.core.TracerImplHandler;
 import rocks.inspectit.agent.android.module.util.ConnectionState;
 import rocks.inspectit.agent.android.module.util.ExecutionProperty;
+import rocks.inspectit.agent.android.util.DependencyManager;
 import rocks.inspectit.shared.all.communication.data.mobile.NetRequestResponse;
 
 /**
@@ -33,11 +36,14 @@ public class NetworkModule extends AbstractMonitoringModule {
 	 */
 	private Map<HttpURLConnection, ConnectionState> connectionStateMap;
 
+	private TracerImplHandler tracer;
+
 	/**
 	 * Creates a new default instance.
 	 */
 	public NetworkModule() {
 		this(30000L);
+		this.tracer = DependencyManager.getTracerImplHandler();
 	}
 
 	/**
@@ -63,6 +69,10 @@ public class NetworkModule extends AbstractMonitoringModule {
 			final ConnectionState connState = new ConnectionState();
 			connState.update(ConnectionState.ConnectionPoint.CONNECT);
 			this.connectionStateMap.put(conn, connState);
+
+			// set opentracing property
+			SpanContext currentContext = tracer.getCurrentContext();
+			conn.setRequestProperty("Span-Context", currentContext.toString());
 		}
 	}
 
@@ -120,7 +130,6 @@ public class NetworkModule extends AbstractMonitoringModule {
 	public void webViewLoad(final String url, final String method) {
 		final NetRequestResponse netRequest = new NetRequestResponse();
 
-		netRequest.setDeviceId(androidDataCollector.getDeviceId());
 		netRequest.setDuration(0);
 		netRequest.setMethod(method);
 		netRequest.setResponseCode(200);
@@ -170,7 +179,6 @@ public class NetworkModule extends AbstractMonitoringModule {
 						response.setMethod(method);
 						response.setUrl(url);
 						response.setResponseCode(responseCode);
-						response.setDeviceId(androidDataCollector.getDeviceId());
 
 						this.pushData(response);
 					} catch (IOException e) {

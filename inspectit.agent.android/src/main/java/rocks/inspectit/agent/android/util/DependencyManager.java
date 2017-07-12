@@ -3,10 +3,11 @@ package rocks.inspectit.agent.android.util;
 import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
+import rocks.inspectit.agent.android.core.TracerImplHandler;
 
 /**
  * Holds the main components of the agent.
- * 
+ *
  * @author David Monschein
  *
  */
@@ -25,6 +26,8 @@ public final class DependencyManager {
 	 * Reference to the {@link AbstractCallbackStrategy}.
 	 */
 	private static AbstractCallbackStrategy callbackStrategy;
+
+	private static TracerImplHandler tracerImplHandler;
 
 	/**
 	 * Helper class where no instance creation is allowed.
@@ -75,5 +78,24 @@ public final class DependencyManager {
 	 */
 	public static void setCallbackStrategy(final AbstractCallbackStrategy callbackStrategy) {
 		DependencyManager.callbackStrategy = callbackStrategy;
+	}
+
+	/**
+	 * Gets {@link #tracerImplHandler}.
+	 *   
+	 * @return {@link #tracerImplHandler}  
+	 */ 
+	public static TracerImplHandler getTracerImplHandler() {
+		return tracerImplHandler;
+	}
+
+	/**  
+	 * Sets {@link #tracerImplHandler}.  
+	 *   
+	 * @param tracerImplHandler  
+	 *            New value for {@link #tracerImplHandler}  
+	 */
+	public static void setTracerImplHandler(TracerImplHandler tracerImplHandler) {
+		DependencyManager.tracerImplHandler = tracerImplHandler;
 	}
 }

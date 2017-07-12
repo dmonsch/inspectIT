@@ -1,6 +1,6 @@
 package rocks.inspectit.agent.android.config;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
  * @author David Monschein

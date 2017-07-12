@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -20,19 +20,17 @@ import android.content.IntentFilter;
 import android.content.res.AssetManager;
 import android.os.Handler;
 import android.util.Log;
-import android.util.LongSparseArray;
-import android.webkit.WebView;
 import rocks.inspectit.agent.android.broadcast.AbstractBroadcastReceiver;
 import rocks.inspectit.agent.android.broadcast.NetworkBroadcastReceiver;
 import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
 import rocks.inspectit.agent.android.callback.strategies.IntervalStrategy;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
-import rocks.inspectit.agent.android.config.RegisteredSensorConfig;
 import rocks.inspectit.agent.android.module.AbstractMonitoringModule;
+import rocks.inspectit.agent.android.module.CrashModule;
 import rocks.inspectit.agent.android.module.NetworkModule;
+import rocks.inspectit.agent.android.module.SystemResourcesModule;
 import rocks.inspectit.agent.android.module.util.ExecutionProperty;
-import rocks.inspectit.agent.android.sensor.ISensor;
 import rocks.inspectit.agent.android.sensor.TraceSensor;
 import rocks.inspectit.agent.android.util.DependencyManager;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
@@ -66,19 +64,14 @@ public final class AndroidAgent {
 	/**
 	 * Modules which will be created when the agent is initialized.
 	 */
-	private static final Class<?>[] MODULES = new Class<?>[] { NetworkModule.class };
-
-	private static final Class<?>[] SENSORS = new Class<?>[] { TraceSensor.class };
+	private static final Class<?>[] MODULES = new Class<?>[] { NetworkModule.class, CrashModule.class, SystemResourcesModule.class };
 
 	/**
 	 * Maps a certain module class to an instantiated module object.
 	 */
 	private static Map<Class<?>, AbstractMonitoringModule> instantiatedModules = new HashMap<Class<?>, AbstractMonitoringModule>();
 
-	/**
-	 * Maps a entry id to a specific sensor.
-	 */
-	private static LongSparseArray<RegisteredSensorConfig> sensorMap = new LongSparseArray<>();
+	private static TraceSensor traceSensor;
 
 	/**
 	 * List of created broadcast receivers.
@@ -178,10 +171,14 @@ public final class AndroidAgent {
 		callbackManager = new CallbackManager();
 		DependencyManager.setCallbackManager(callbackManager);
 
+		TracerImplHandler tracerImplHandler = new TracerImplHandler();
+		DependencyManager.setTracerImplHandler(tracerImplHandler);
+
 		// OPEN COMMUNICATION WITH CMR
 		final SessionCreationRequest helloRequest = new SessionCreationRequest();
 		helloRequest.setAppName(androidDataCollector.resolveAppName());
 		helloRequest.setDeviceId(androidDataCollector.getDeviceId());
+		helloRequest.putAdditionalInformation("app_version", androidDataCollector.getVersionName());
 
 		RECONNECT_TRIES = 0;
 		scheduleSessionCreationRequest(helloRequest);
@@ -189,16 +186,7 @@ public final class AndroidAgent {
 		callbackManager.pushHelloMessage(helloRequest);
 
 		// INITING SENSORS
-		for (Class<?> sensor : SENSORS) {
-			try {
-				final ISensor sensorInstance = (ISensor) sensor.newInstance();
-				sensorInstance.setCallbackManager(callbackManager);
-			} catch (InstantiationException e) {
-				Log.e(LOG_TAG, "Failed to create sensor '" + sensor.getClass().getName() + "'");
-			} catch (IllegalAccessException e) {
-				Log.e(LOG_TAG, "Failed to create sensor '" + sensor.getClass().getName() + "'");
-			}
-		}
+		traceSensor = new TraceSensor();
 
 		// INITING MODULES
 		for (Class<?> exModule : MODULES) {
@@ -306,12 +294,8 @@ public final class AndroidAgent {
 	 * @return entry id for determine corresponding sensor at the exitBody call
 	 */
 	public static synchronized void enterBody(final int methodId, final String methodSignature) {
-		RegisteredSensorConfig rsc = sensorMap.get(methodId);
-
-		if (rsc != null) {
-			for (ISensor sensor : rsc.getBelongingSensors()) {
-				sensor.beforeBody(methodId);
-			}
+		if (traceSensor != null) {
+			traceSensor.beforeBody(methodId, methodSignature);
 		}
 	}
 
@@ -325,13 +309,8 @@ public final class AndroidAgent {
 	 *            the entry id for getting the responsible sensor instance
 	 */
 	public static synchronized void exitErrorBody(final Throwable e, final int methodId) {
-		RegisteredSensorConfig rsc = sensorMap.get(methodId);
-
-		if (rsc != null) {
-			for (ISensor eSensor : rsc.getBelongingSensors()) {
-				// call methods
-				eSensor.exceptionThrown(methodId, e.getClass().getName());
-			}
+		if (traceSensor != null) {
+			traceSensor.exceptionThrown(methodId, e.getClass().getName());
 		}
 	}
 
@@ -343,53 +322,9 @@ public final class AndroidAgent {
 	 *            the entry id for getting the responsible sensor instance
 	 */
 	public static synchronized void exitBody(final int methodId) {
-		Log.i("Android Agent", String.valueOf(methodId));
-		RegisteredSensorConfig rsc = sensorMap.get(methodId);
-
-		if (rsc != null) {
-			for (ISensor eSensor : rsc.getBelongingSensors()) {
-				// call methods
-				eSensor.firstAfterBody(methodId);
-				eSensor.secondAfterBody(methodId);
-			}
+		if (traceSensor != null) {
+			traceSensor.firstAfterBody(methodId);
 		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application when the
-	 * application uses a {@link WebView}.
-	 *
-	 * @param url
-	 *            the url which is loaded by the webview
-	 */
-	public static void webViewLoad(final String url) {
-		networkModule.webViewLoad(url, "GET");
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application when the
-	 * application uses a {@link WebView}.
-	 *
-	 * @param url
-	 *            the url which is loaded by the webview
-	 * @param data
-	 *            the data which is sent by the post request
-	 */
-	public static void webViewLoadPost(final String url, final byte[] data) {
-		networkModule.webViewLoad(url, "POST");
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application when the
-	 * application uses a {@link WebView}.
-	 *
-	 * @param url
-	 *            the url which is loaded by the webview
-	 * @param params
-	 *            the parameters for the get request
-	 */
-	public static void webViewLoad(final String url, final Map<?, ?> params) {
-		networkModule.webViewLoad(url, "GET");
 	}
 
 	/**
@@ -508,6 +443,7 @@ public final class AndroidAgent {
 						} catch (IllegalAccessException e) {
 							Log.e(LOG_TAG, "Failed to invoke interval method from module '" + className + "'");
 						} catch (InvocationTargetException e) {
+							e.printStackTrace();
 							Log.e(LOG_TAG, "Failed to invoke interval method from module '" + className + "'");
 						}
 					}

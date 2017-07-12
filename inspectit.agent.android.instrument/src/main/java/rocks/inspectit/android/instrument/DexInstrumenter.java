@@ -35,6 +35,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import rocks.inspectit.agent.android.core.AndroidAgent;
 import rocks.inspectit.android.instrument.config.InstrumentationConfiguration;
+import rocks.inspectit.android.instrument.config.xml.TraceCollectionConfiguration;
 import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
 
 /**
@@ -46,9 +47,13 @@ public class DexInstrumenter {
 	private DexSensorInstrumenter dexSensorInstrumenter;
 	private DexNetworkInstrumenter dexNetworkInstrumenter;
 
+	private TraceCollectionConfiguration traceConfiguration;
+
 	public DexInstrumenter(InstrumentationConfiguration config) {
 		this.dexSensorInstrumenter = new DexSensorInstrumenter();
 		this.dexNetworkInstrumenter = new DexNetworkInstrumenter();
+
+		this.traceConfiguration = config.getXmlConfiguration().getTraceCollectionList();
 	}
 
 	public void instrument(File input, File output) throws IOException {
@@ -92,10 +97,9 @@ public class DexInstrumenter {
 					methods.add(onCreateMethod);
 				}
 			} else {
-
-				// TODO is class with sensor?
 				for (Method method : classDef.getMethods()) {
-					boolean methodWithSensor = false; // TODO method with sensor?
+					boolean methodWithSensor = isTracedMethod(method.getDefiningClass(), method.getName(), method.getParameterTypes());
+
 					if ((method.getImplementation() != null) && methodWithSensor) {
 						modifiedMethod = true;
 						methods.add(dexSensorInstrumenter.instrumentMethod(method));
@@ -143,6 +147,37 @@ public class DexInstrumenter {
 				return Opcodes.getDefault();
 			}
 		});
+	}
+
+	private boolean isTracedMethod(String clazz, String method, List<? extends CharSequence> parameters) {
+		List<String> patterns = traceConfiguration.getPackages();
+
+		for (String pattern : patterns) {
+			String[] patternSplit = pattern.split("\\.");
+			String[] matchSplit = (clazz.replaceAll("/", ".").substring(1, clazz.length() - 1) + "." + method).split("\\.");
+
+			int k = 0;
+			for (String part : patternSplit) {
+
+				if (k >= matchSplit.length) {
+					break;
+				}
+
+				if (!part.equals("*")) {
+					if (part.equals("**")) {
+						return true;
+					} else {
+						if (!part.equals(matchSplit[k])) {
+							break;
+						}
+					}
+				}
+
+				++k;
+			}
+		}
+
+		return false;
 	}
 
 	private MethodImplementation generateOnCreateMethodImpl() {
