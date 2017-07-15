@@ -2,7 +2,6 @@ package rocks.inspectit.agent.android.core;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -178,68 +177,13 @@ public class AndroidDataCollector {
 		return networkInfoCache.set(getNetworkInfoInner());
 	}
 
-	/**
-	 * Gets informations about the wifi of the device.
-	 *
-	 * @return wifi informations from the device
-	 */
-	public WifiInfo getWifiInfo() {
-		return getWifiInfo(false);
-	}
-
-	/**
-	 * Gets informations about the wifi of the device and provides a parameter
-	 * to force a reload of the current information.
-	 *
-	 * @param force
-	 *            true if you want the collector to force a reload of the wifi
-	 *            informations
-	 * @return the wifi informations for the device
-	 */
-	public WifiInfo getWifiInfo(final boolean force) {
-		if ((wifiInfoCache != null) && wifiInfoCache.valid() && !force) {
-			return wifiInfoCache.value();
-		}
-
-		return wifiInfoCache.set(wifiManager.getConnectionInfo());
-	}
-
-	/**
-	 * Gets the wifi configuration for the wifi to which the device is
-	 * connected.
-	 *
-	 * @return wifi configuration for the current configured and connected wifi
-	 *         of the device
-	 */
-	public WifiConfiguration getWifiConfiguration() {
-		return getWifiConfiguration(true, false);
-	}
-
-	/**
-	 * Gets the wifi configuration for the connected wifi.
-	 *
-	 * @param preCheck
-	 *            previously check if we have a connection
-	 * @param force
-	 *            true if you want the collector to reload data about the
-	 *            configuration
-	 * @return wifi configuration for the current configured and connected wifi
-	 *         of the device
-	 */
-	public WifiConfiguration getWifiConfiguration(final boolean preCheck, final boolean force) {
-		if ((wifiConfigCache != null) && wifiConfigCache.valid() && !force) {
-			return wifiConfigCache.value();
-		}
-
-		if (preCheck) {
-			if (getWifiInfo(true) == null) {
-				return null;
-			}
-		}
-
-		for (WifiConfiguration conf : wifiManager.getConfiguredNetworks()) {
-			if (conf.status == WifiConfiguration.Status.CURRENT) {
-				return wifiConfigCache.set(conf);
+	public String getNetworkConnectionType() {
+		NetworkInfo info = this.getNetworkInfoInner();
+		if (info.isConnected()) {
+			if (info.getType() == ConnectivityManager.TYPE_WIFI) {
+				return "wifi";
+			} else if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
+				return info.getSubtypeName();
 			}
 		}
 		return null;
@@ -273,6 +217,45 @@ public class AndroidDataCollector {
 	}
 
 	// HELP FCTS
+	private String getProtocolName(final int subtype) {
+		switch (subtype) {
+		case TelephonyManager.NETWORK_TYPE_1xRTT:
+			return "1xrtt"; // ~ 50-100 kbps
+		case TelephonyManager.NETWORK_TYPE_CDMA:
+			return "cdma"; // ~ 14-64 kbps
+		case TelephonyManager.NETWORK_TYPE_EDGE:
+			return "edge"; // ~ 50-100 kbps
+		case TelephonyManager.NETWORK_TYPE_EVDO_0:
+			return "evdo0"; // ~ 400-1000 kbps
+		case TelephonyManager.NETWORK_TYPE_EVDO_A:
+			return "evdoa"; // ~ 600-1400 kbps
+		case TelephonyManager.NETWORK_TYPE_GPRS:
+			return "gprs"; // ~ 100 kbps
+		case TelephonyManager.NETWORK_TYPE_HSDPA:
+			return "hsdpa"; // ~ 2-14 Mbps
+		case TelephonyManager.NETWORK_TYPE_HSPA:
+			return "hspa"; // ~ 700-1700 kbps
+		case TelephonyManager.NETWORK_TYPE_HSUPA:
+			return "hsupa"; // ~ 1-23 Mbps
+		case TelephonyManager.NETWORK_TYPE_UMTS:
+			return "umts"; // ~ 400-7000 kbps
+		case TelephonyManager.NETWORK_TYPE_EHRPD: // API level 11
+			return "ehrpd"; // ~ 1-2 Mbps
+		case TelephonyManager.NETWORK_TYPE_EVDO_B: // API level 9
+			return "evdob"; // ~ 5 Mbps
+		case TelephonyManager.NETWORK_TYPE_HSPAP: // API level 13
+			return "hspap"; // ~ 10-20 Mbps
+		case TelephonyManager.NETWORK_TYPE_IDEN: // API level 8
+			return "iden"; // ~25 kbps
+		case TelephonyManager.NETWORK_TYPE_LTE: // API level 11
+			return "lte"; // ~ 10+ Mbps
+		case TelephonyManager.NETWORK_TYPE_UNKNOWN:
+			return "unknown";
+		default:
+			return "unknown";
+		}
+	}
+
 	/**
 	 * Accesses the current location of the device when the application has the
 	 * permissions to do so.

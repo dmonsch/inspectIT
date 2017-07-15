@@ -67,6 +67,7 @@ public class NetworkModule extends AbstractMonitoringModule {
 	public void openConnection(final HttpURLConnection conn) {
 		if (!this.connectionStateMap.containsKey(conn)) {
 			final ConnectionState connState = new ConnectionState();
+			connState.setNetworkConnectionType(this.androidDataCollector.getNetworkConnectionType());
 			connState.update(ConnectionState.ConnectionPoint.CONNECT);
 			this.connectionStateMap.put(conn, connState);
 
@@ -179,6 +180,7 @@ public class NetworkModule extends AbstractMonitoringModule {
 						response.setMethod(method);
 						response.setUrl(url);
 						response.setResponseCode(responseCode);
+						response.setConnectionType(state.getNetworkConnectionType());
 
 						this.pushData(response);
 					} catch (IOException e) {

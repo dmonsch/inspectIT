@@ -21,7 +21,7 @@ import android.content.res.AssetManager;
 import android.os.Handler;
 import android.util.Log;
 import rocks.inspectit.agent.android.broadcast.AbstractBroadcastReceiver;
-import rocks.inspectit.agent.android.broadcast.NetworkBroadcastReceiver;
+import rocks.inspectit.agent.android.broadcast.BatteryBroadcastReceiver;
 import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
 import rocks.inspectit.agent.android.callback.strategies.IntervalStrategy;
@@ -59,7 +59,7 @@ public final class AndroidAgent {
 	/**
 	 * Broadcast receiver classes which will be created when the agent is initialized.
 	 */
-	private static final Class<?>[] BROADCAST_RECVS = new Class<?>[] { NetworkBroadcastReceiver.class };
+	private static final Class<?>[] BROADCAST_RECVS = new Class<?>[] { BatteryBroadcastReceiver.class };
 
 	/**
 	 * Modules which will be created when the agent is initialized.
@@ -335,7 +335,9 @@ public final class AndroidAgent {
 	 *            a reference to the created connection
 	 */
 	public static void httpConnect(final HttpURLConnection connection) {
-		networkModule.openConnection(connection);
+		if (networkModule != null) {
+			networkModule.openConnection(connection);
+		}
 	}
 
 	/**
@@ -350,7 +352,11 @@ public final class AndroidAgent {
 	 *             fails
 	 */
 	public static OutputStream httpOutputStream(final HttpURLConnection connection) throws IOException {
-		return networkModule.getOutputStream(connection);
+		if (networkModule != null) {
+			return networkModule.getOutputStream(connection);
+		} else {
+			return connection.getOutputStream();
+		}
 	}
 
 	/**
@@ -365,7 +371,11 @@ public final class AndroidAgent {
 	 *             fails
 	 */
 	public static int httpResponseCode(final HttpURLConnection connection) throws IOException {
-		return networkModule.getResponseCode(connection);
+		if (networkModule != null) {
+			return networkModule.getResponseCode(connection);
+		} else {
+			return connection.getResponseCode();
+		}
 	}
 
 	/**
