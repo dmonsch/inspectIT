@@ -6,7 +6,7 @@ import java.util.Map;
 
 /**
  * Represents the state of a {@link HttpURLConnection}.
- * 
+ *
  * @author David Monschein
  *
  */
@@ -27,6 +27,8 @@ public class ConnectionState {
 	 */
 	private long lastUpdate;
 
+	private String networkConnectionType;
+
 	/**
 	 * Creates a new connection state. Therefore every connection point is
 	 * marked as not reached.
@@ -44,7 +46,7 @@ public class ConnectionState {
 
 	/**
 	 * Gets the timestamp when a certain point was reached.
-	 * 
+	 *
 	 * @param point
 	 *            connection point
 	 * @return timestamp when the point was reached
@@ -59,7 +61,7 @@ public class ConnectionState {
 
 	/**
 	 * Updates the connection state with a given point.
-	 * 
+	 *
 	 * @param point
 	 *            the point which has been reached.
 	 */
@@ -76,7 +78,7 @@ public class ConnectionState {
 
 	/**
 	 * Predicts whether it is possible that the connection is finished.
-	 * 
+	 *
 	 * @return true if the connection is probably finished - false otherwise
 	 */
 	public boolean probablyFinished() {
@@ -85,7 +87,7 @@ public class ConnectionState {
 
 	/**
 	 * Gets the time when the state was updated the last time.
-	 * 
+	 *
 	 * @return time when the state was updated the last time
 	 */
 	public long getLastUpdate() {
@@ -95,7 +97,7 @@ public class ConnectionState {
 	/**
 	 * Gets the time between now and the time when the state was updated the
 	 * last time.
-	 * 
+	 *
 	 * @return the time when the state was updated the last time
 	 */
 	public long getLastUpdatedDiff() {
@@ -103,8 +105,27 @@ public class ConnectionState {
 	}
 
 	/**
+	 * Gets {@link #networkConnectionType}.
+	 *   
+	 * @return {@link #networkConnectionType}  
+	 */ 
+	public String getNetworkConnectionType() {
+		return networkConnectionType;
+	}
+
+	/**  
+	 * Sets {@link #networkConnectionType}.  
+	 *   
+	 * @param networkConnectionType  
+	 *            New value for {@link #networkConnectionType}  
+	 */
+	public void setNetworkConnectionType(String networkConnectionType) {
+		this.networkConnectionType = networkConnectionType;
+	}
+
+	/**
 	 * Enum holding all specified connection points.
-	 * 
+	 *
 	 * @author David Monschein
 	 *
 	 */

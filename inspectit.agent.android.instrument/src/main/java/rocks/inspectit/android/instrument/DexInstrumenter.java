@@ -68,6 +68,8 @@ public class DexInstrumenter {
 			String superClass = classDef.getSuperclass();
 			if ((superClass != null) && (superClass.equals(DexInstrumentationUtil.getType(Activity.class)))) {
 				boolean foundOnCreate = false;
+				boolean foundOnDestroy = false;
+
 				for (Method method : classDef.getMethods()) {
 					String name = method.getName();
 					MethodImplementation implementation = method.getImplementation();
@@ -76,6 +78,18 @@ public class DexInstrumenter {
 						MethodImplementation newImplementation = null;
 						// if(!method.getName().equals("<init>"))
 						newImplementation = instrument(method);
+
+						if (newImplementation != null) {
+							modifiedMethod = true;
+							methods.add(new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(),
+									method.getAnnotations(), newImplementation));
+						} else {
+							methods.add(method);
+						}
+					} else if ((implementation != null) && name.equals("onDestroy")) {
+						foundOnDestroy = true;
+						MethodImplementation newImplementation = null;
+						newImplementation = instrumentDestroy(method);
 
 						if (newImplementation != null) {
 							modifiedMethod = true;
@@ -95,6 +109,14 @@ public class DexInstrumenter {
 					List<ImmutableMethodParameter> parameters = Lists.newArrayList(new ImmutableMethodParameter(DexInstrumentationUtil.getType(Bundle.class), new HashSet<Annotation>(), "bundle"));
 					Method onCreateMethod = new ImmutableMethod(classDef.getType(), "onCreate", parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl);
 					methods.add(onCreateMethod);
+				}
+
+				if (!foundOnDestroy) {
+					modifiedMethod = true;
+					MethodImplementation nImpl = generateOnDestroyMethodImpl();
+					List<ImmutableMethodParameter> parameters = Lists.newArrayList();
+					Method onDestroyMethod = new ImmutableMethod(classDef.getType(), "onDestroy", parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl);
+					methods.add(onDestroyMethod);
 				}
 			} else {
 				for (Method method : classDef.getMethods()) {
@@ -200,6 +222,21 @@ public class DexInstrumenter {
 		return impl;
 	}
 
+	private MethodImplementation generateOnDestroyMethodImpl() {
+		MutableMethodImplementation impl = new MutableMethodImplementation(1);
+
+		impl.addInstruction(0, new BuilderInstruction10x(Opcode.RETURN_VOID));
+
+		MethodReference methRef = DexInstrumentationUtil.getMethodReference(Activity.class, "onDestroy", "V");
+
+		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 1, 0, 0, 0, 0, 0, methRef);
+
+		impl.addInstruction(0, createAgentDestroyInvocation());
+		impl.addInstruction(0, superInvocation);
+
+		return impl;
+	}
+
 	private MethodImplementation instrument(Method method) {
 		MutableMethodImplementation impl = new MutableMethodImplementation(method.getImplementation());
 
@@ -211,9 +248,22 @@ public class DexInstrumenter {
 		return impl;
 	}
 
+	private MethodImplementation instrumentDestroy(Method method) {
+		MutableMethodImplementation impl = new MutableMethodImplementation(method.getImplementation());
+		impl.addInstruction(0, createAgentDestroyInvocation());
+		return impl;
+	}
+
 	private BuilderInstruction createAgentInitInvocation(int thisRegister) {
 		MethodReference methodReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "initAgent", "V", Activity.class);
 		BuilderInstruction35c invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, thisRegister, 0, 0, 0, 0, methodReference);
+
+		return invokeInstruction;
+	}
+
+	private BuilderInstruction createAgentDestroyInvocation() {
+		MethodReference methodReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "destroyAgent", "V");
+		BuilderInstruction35c invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 0, 0, 0, 0, 0, 0, methodReference);
 
 		return invokeInstruction;
 	}

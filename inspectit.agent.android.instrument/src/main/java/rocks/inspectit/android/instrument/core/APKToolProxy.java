@@ -53,9 +53,6 @@ public class APKToolProxy {
 	/** Name of the folder to where the application can be unzipped. */
 	private String folderName;
 
-	/** Name of the package provided by the application. */
-	private String packageName;
-
 	/**
 	 * Creates a proxy for the APKTool.
 	 *
@@ -65,7 +62,6 @@ public class APKToolProxy {
 	public APKToolProxy(final File inputAPK) {
 		this.input = inputAPK;
 		this.folderName = null;
-		this.packageName = null;
 	}
 
 	/**
@@ -127,7 +123,7 @@ public class APKToolProxy {
 		}
 
 		final Node manifestNode = dom.getElementsByTagName("manifest").item(0);
-		this.packageName = manifestNode.getAttributes().getNamedItem("package").getTextContent();
+		// this.packageName = manifestNode.getAttributes().getNamedItem("package").getTextContent();
 		final NodeList permissionNodes = manifestNode.getChildNodes();
 
 		for (int k = 0; k < permissionNodes.getLength(); k++) {
@@ -195,15 +191,6 @@ public class APKToolProxy {
 	 */
 	public void cleanup() throws IOException {
 		FileUtils.deleteDirectory(new File(folderName));
-	}
-
-	/**
-	 * Gets the package name for the application.
-	 *
-	 * @return the package name for the application.
-	 */
-	public String getPackageName() {
-		return packageName;
 	}
 
 }

@@ -1,7 +1,10 @@
 package rocks.inspectit.android.instrument.core;
+
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -10,7 +13,11 @@ import java.nio.file.StandardCopyOption;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
 
 import javax.xml.bind.JAXBException;
 
@@ -24,15 +31,14 @@ import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.io.ZipInputStream;
-import net.lingala.zip4j.model.FileHeader;
 import net.lingala.zip4j.model.ZipParameters;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.android.instrument.DexInstrumenter;
 import rocks.inspectit.android.instrument.config.InstrumentationConfiguration;
+import rocks.inspectit.shared.all.util.Pair;
 
 /**
- * Main class which schedules and performs the instrumentation of an Android
- * application.
+ * Main class which schedules and performs the instrumentation of an Android application.
  *
  * @author David Monschein
  *
@@ -40,10 +46,7 @@ import rocks.inspectit.android.instrument.config.InstrumentationConfiguration;
 public class APKInstrumenter {
 	// DOWNLOAD LINKS
 	private static final String DX_RELEASE = "https://github.com/pxb1988/dex2jar/releases/download/2.0/dex-tools-2.0.zip";
-	private static final String APKTOOL_RELEASE_2_2_2 = "https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.2.2.jar";
-
-	// TEMPORARY USED FILES
-	private static final File INSTRUMENTED_DEX = new File("temp-new-instr.dex");
+	private static final String APKTOOL_RELEASE_2_2_2 = "https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.2.3.jar";
 
 	private static final File AGENT_BUILD_JAVA = new File("../inspectit.agent.android/build/release/inspectit.agent.android-all.jar");
 
@@ -56,11 +59,9 @@ public class APKInstrumenter {
 	/** Temporary output folder for unzipping the application. */
 	private static final File OUTPUT_TEMPO = new File("tempo");
 
-	/** New created dex file. */
-	private static final File TEMP_DEX_NEW = new File("temp-new.dex");
+	private static final File DEX_FILES_PATH = new File("temp-dexs");
 
-	/** Temporary extracted dex file. */
-	private static final File TEMP_DEX_OLD = new File("temp-dex.dex");
+	private static final int LIMIT_64K = 65536;
 
 	// _________________________________________________ //
 
@@ -142,8 +143,7 @@ public class APKInstrumenter {
 	 * @throws URISyntaxException
 	 *             URI syntax problem
 	 */
-	public boolean instrumentAPK(final File input, final File output) throws IOException, ZipException,
-	KeyStoreException, NoSuchAlgorithmException, CertificateException, URISyntaxException {
+	public boolean instrumentAPK(final File input, final File output) throws IOException, ZipException, KeyStoreException, NoSuchAlgorithmException, CertificateException, URISyntaxException {
 		// CHECK IF INPUT EXISTS AND OUTPUT DOESNT
 		if (!input.exists() || (output.exists() && !override)) {
 			return false;
@@ -158,7 +158,6 @@ public class APKInstrumenter {
 			LOG.error("Failed to load configuration.");
 			return false;
 		}
-		instrConfig.loadInstrumentationPoints();
 
 		LOG.info("Successfully loaded instrumentation config '" + instrConfigFile.getAbsolutePath() + "'.");
 
@@ -192,8 +191,6 @@ public class APKInstrumenter {
 
 			if (!b1 || !b2) {
 				adjustManifest = false;
-			} else {
-				instrConfig.setApplicationPackage(apkTool.getPackageName());
 			}
 			apkTool.cleanup();
 
@@ -212,12 +209,12 @@ public class APKInstrumenter {
 			if (!buildAgent) {
 				return false;
 			} else {
-				buildDexAgent();
+				buildDexAgent(instrConfig);
 			}
 		} else {
 			if (buildAgent) {
 				AGENT_BUILD.delete();
-				buildDexAgent();
+				buildDexAgent(instrConfig);
 			}
 		}
 
@@ -230,21 +227,53 @@ public class APKInstrumenter {
 		LOG.info("Created copy of original APK file.");
 
 		// TEMP WRITE DEX
-		final File tempDex = TEMP_DEX_OLD;
-		unzipDex(input, tempDex);
+		List<File> dexsToInstrument = unzipDexs(input, DEX_FILES_PATH);
 
 		LOG.info("Searched and extracted dex files.");
 
 		// INSTRUMENTATION OF DEX
 		LOG.info("Started instrumentation of dex files.");
 		DexInstrumenter dexInstrumenter = new DexInstrumenter(instrConfig);
-		dexInstrumenter.instrument(tempDex, INSTRUMENTED_DEX);
+		List<Pair<String, File>> instrumentedDexs = new ArrayList<>();
+		for (File tempDex : dexsToInstrument) {
+			File instrumentedTempDex = new File(tempDex.getAbsolutePath().substring(0, tempDex.getAbsolutePath().length() - 4) + "-instrumented.dex");
+			dexInstrumenter.instrument(tempDex, instrumentedTempDex);
+			instrumentedDexs.add(new Pair<>(tempDex.getName(), instrumentedTempDex));
+		}
 		LOG.info("Successfully instrumented dex files.");
 
 		// MERGE DEXS
 		LOG.info("Merging agent and app dex's.");
 		// merge agent with instrumented dex
-		dxProxy.mergeDexFiles(AGENT_BUILD, INSTRUMENTED_DEX, TEMP_DEX_NEW);
+		boolean injected = false;
+		int nCount = 1;
+
+		for (Pair<String, File> instrDex : instrumentedDexs) {
+			File tempFile = File.createTempFile("classes-and-agent", ".dex");
+			try {
+				dxProxy.mergeDexFiles(instrDex.getSecond(), AGENT_BUILD, tempFile);
+				Files.move(tempFile.toPath(), instrDex.getSecond().toPath(), StandardCopyOption.REPLACE_EXISTING);
+				injected = true;
+				break;
+			} catch (InvocationTargetException e) {
+				LOG.warn("Merging with agent failed (Multidex problem).");
+			} finally {
+				tempFile.delete();
+			}
+			nCount++;
+		}
+
+		if (!injected) {
+			// NOT TESTED YET
+			LOG.warn("Created an additional dex file. Please make sure that mutlidex is enabled.");
+			String fName = "classes" + nCount + ".dex";
+			File newDex = new File(DEX_FILES_PATH + File.separator + fName);
+			Files.move(AGENT_BUILD.toPath(), newDex.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+			instrumentedDexs.add(new Pair<>(fName, newDex));
+		}
+
+		// dxProxy.mergeDexFiles(AGENT_BUILD, INSTRUMENTED_DEX, TEMP_DEX_NEW);
 		LOG.info("Finished merging the dex's.");
 
 		// EDIT OLD classes.dex and remove META INF
@@ -252,9 +281,14 @@ public class APKInstrumenter {
 		FileUtils.deleteDirectory(new File(tempOutputFolder.getAbsolutePath() + File.separator + "META-INF"));
 
 		// MOVE NEW DEX TO FOLDER
-		File oldDex = new File(tempOutputFolder.getAbsolutePath() + File.separator + "classes.dex");
-		oldDex.delete();
-		Files.move(TEMP_DEX_NEW.toPath(), oldDex.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		String oldDexBasePath = tempOutputFolder.getAbsolutePath() + File.separator;
+
+		for (Pair<String, File> instrDex : instrumentedDexs) {
+			File oldDex = new File(oldDexBasePath + instrDex.getFirst());
+			oldDex.delete();
+
+			Files.move(instrDex.getSecond().toPath(), oldDex.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		}
 
 		// MODIFY MANIFEST
 		if (adjustManifest) {
@@ -305,7 +339,7 @@ public class APKInstrumenter {
 		return n;
 	}
 
-	private void buildDexAgent() {
+	private void buildDexAgent(InstrumentationConfiguration instrConfig) {
 		LOG.info("Building the agent.");
 
 		// compile the java files
@@ -328,9 +362,10 @@ public class APKInstrumenter {
 		}
 
 		// delete all except of rocks folder
+		List<String> agentFolders = instrConfig.getXmlConfiguration().getAgentBuildConfiguration().getLibraryFolders();
 		for (File toDel : temporaryFolder.listFiles()) {
 			if (toDel.isDirectory()) {
-				if (!toDel.getName().equals("rocks") && !toDel.getName().equals("io")) {
+				if (!agentFolders.contains(toDel.getName())) {
 					try {
 						FileUtils.deleteDirectory(toDel);
 					} catch (IOException e) {
@@ -494,14 +529,12 @@ public class APKInstrumenter {
 		try {
 			FileUtils.deleteDirectory(OUTPUT_TEMP);
 			FileUtils.deleteDirectory(OUTPUT_TEMPO);
+			FileUtils.deleteDirectory(DEX_FILES_PATH);
 		} catch (IOException e) {
 			LOG.error("Couldn't remove the temporary folders.");
 		}
 
-		TEMP_DEX_NEW.delete();
-		TEMP_DEX_OLD.delete();
 		MODIFIED_MANIFEST.delete();
-		INSTRUMENTED_DEX.delete();
 	}
 
 	private void downloadLibraries() {
@@ -525,39 +558,38 @@ public class APKInstrumenter {
 		}
 	}
 
-	/**
-	 * Extracts only a the classes.dex file from an Android application.
-	 *
-	 * @param apk
-	 *            the Android application
-	 * @param dex
-	 *            the path where the dex should be saved
-	 * @throws ZipException
-	 *             if zip4j fails
-	 * @throws IOException
-	 *             if there is an I/O problem
-	 */
-	private void unzipDex(final File apk, final File dex) throws ZipException, IOException {
-		if (apk.exists() && !dex.exists()) {
-			final ZipFile parent = new ZipFile(apk);
+	private List<File> unzipDexs(File apk, File baseDexPath) throws IOException {
+		baseDexPath.mkdirs();
 
-			@SuppressWarnings("unchecked")
-			final List<FileHeader> headerList = parent.getFileHeaders();
+		List<File> dexs = new ArrayList<>();
+		byte[] buffer = new byte[1024];
 
-			for (FileHeader header : headerList) {
-				if (header.getFileName().equals("classes.dex")) {
-					final ZipInputStream in = parent.getInputStream(header);
-					final FileOutputStream os = new FileOutputStream(dex);
-					int readLen = -1;
-					final byte[] buff = new byte[4096];
-					while ((readLen = in.read(buff)) != -1) {
-						os.write(buff, 0, readLen);
-					}
-					closeStreams(in, os);
-					break;
+		java.util.zip.ZipInputStream zip = new java.util.zip.ZipInputStream(new FileInputStream(apk));
+
+		Pattern dexPattern = Pattern.compile("^(classes[0-9]*?\\.dex)$");
+
+		ZipEntry entry;
+		while ((entry = zip.getNextEntry()) != null) {
+			Matcher matcher = dexPattern.matcher(entry.getName());
+			if (matcher.find()) {
+				File file = new File(baseDexPath.getAbsolutePath() + "/" + matcher.group(1));
+				file.createNewFile();
+				FileOutputStream fos = new FileOutputStream(file);
+
+				int len;
+				while ((len = zip.read(buffer)) > 0) {
+					fos.write(buffer, 0, len);
 				}
+
+				fos.close();
+
+				dexs.add(file);
 			}
 		}
+
+		zip.close();
+
+		return dexs;
 	}
 
 	/**

@@ -1,16 +1,21 @@
 package rocks.inspectit.android.instrument.util;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jf.dexlib2.DexFileFactory;
 import org.jf.dexlib2.Opcode;
+import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.builder.BuilderInstruction;
 import org.jf.dexlib2.builder.MutableMethodImplementation;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction12x;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction22x;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction32x;
+import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ExceptionHandler;
 import org.jf.dexlib2.iface.Method;
 import org.jf.dexlib2.iface.MethodImplementation;
@@ -27,6 +32,11 @@ import org.jf.dexlib2.util.MethodUtil;
  *
  */
 public class DexInstrumentationUtil {
+
+	public static int getMethodCount(File dexFile) throws IOException {
+		DexBackedDexFile dex = DexFileFactory.loadDexFile(dexFile, Opcodes.forApi(19));
+		return dex.getMethodCount();
+	}
 
 	// UTILS
 	public static String getType(Class<?> clz) {

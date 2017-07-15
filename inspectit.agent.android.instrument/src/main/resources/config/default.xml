@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<instrumenter-configuration>
+
+	<cmr-bridge>
+		<helloUrl>http://10.0.2.2:8182/rest/mobile/session</helloUrl>
+		<beaconUrl>http://10.0.2.2:8182/rest/mobile/beacon</beaconUrl>
+	</cmr-bridge>
+
+	<manifestTransformer>
+		<permissions>
+			<permission>android.permission.INTERNET</permission>
+			<permission>android.permission.ACCESS_NETWORK_STATE</permission>
+			<permission>android.permission.ACCESS_COARSE_LOCATION</permission>
+			<permission>android.permission.ACCESS_FINE_LOCATION</permission>
+			<permission>android.permission.ACCESS_WIFI_STATE</permission>
+			<permission>android.permission.READ_PHONE_STATE</permission>
+		</permissions>
+	</manifestTransformer>
+	
+	<agentBuild>
+		<libraryFolders>
+			<folder>rocks</folder>
+			<folder>io</folder>
+		</libraryFolders>
+	</agentBuild>
+	
+	<traceCollection>
+		<package>evaluation.**</package>
+	</traceCollection>
+
+</instrumenter-configuration>
