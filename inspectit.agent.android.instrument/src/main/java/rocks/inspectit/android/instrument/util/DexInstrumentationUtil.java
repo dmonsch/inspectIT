@@ -127,7 +127,6 @@ public class DexInstrumentationUtil {
 		MutableMethodImplementation ret = new MutableMethodImplementation(tempMock);
 
 		// create move statements
-		// TODO REVISIT AND UNDERSTAND WHY SO MUCH NEW REGISTERS
 		int addedInstructions = createMoveStatements(meth, ret, numNonParameterRegisters, newRegisters + numParameterRegisters);
 
 		return new ImmutablePair<Integer, MutableMethodImplementation>(addedInstructions, ret);

@@ -1,8 +1,5 @@
 defaultTasks 'releaseAndAnalyze'
 
-sourceCompatibility = '1.7'
-targetCompatibility = '1.7'
-
 buildscript {
     repositories {
         jcenter()
@@ -11,20 +8,10 @@ buildscript {
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
     }
 }
-
 apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'java'
 
 repositories {
     jcenter()
-}
-
-sourceSets { 
-   main { 
-      resources { 
-         srcDir new File('src/main/resources')
-      } 
-   }   
 }
 
 /** Setting compile configuration as plugin in Eclipse needs it */
@@ -53,7 +40,7 @@ dependencies {
 	compile 'io.opentracing:opentracing-api:0.20.9'
 	compile 'io.opentracing:opentracing-noop:0.20.9'
 	
-    testCompile 'junit:junit:4.12'
+    compile 'junit:junit:4.12'
 }
 
 shadowJar {

@@ -3,13 +3,9 @@ package rocks.inspectit.agent.android.core;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -22,19 +18,15 @@ import android.os.Handler;
 import android.util.Log;
 import rocks.inspectit.agent.android.broadcast.AbstractBroadcastReceiver;
 import rocks.inspectit.agent.android.broadcast.BatteryBroadcastReceiver;
+import rocks.inspectit.agent.android.callback.CMRConnectionManager;
 import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
 import rocks.inspectit.agent.android.callback.strategies.IntervalStrategy;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
-import rocks.inspectit.agent.android.module.AbstractMonitoringModule;
-import rocks.inspectit.agent.android.module.CrashModule;
-import rocks.inspectit.agent.android.module.NetworkModule;
-import rocks.inspectit.agent.android.module.SystemResourcesModule;
-import rocks.inspectit.agent.android.module.util.ExecutionProperty;
+import rocks.inspectit.agent.android.module.AndroidModuleManager;
 import rocks.inspectit.agent.android.sensor.TraceSensor;
 import rocks.inspectit.agent.android.util.DependencyManager;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
-import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationRequest;
 
 /**
  * The main Android Agent class which is responsible for managing and scheduling tasks.
@@ -47,10 +39,6 @@ public final class AndroidAgent {
 	 */
 	private static final int MAX_QUEUE = 500;
 
-	private static final int RECONNECT_INTERVAL = 60000;
-	private static final int RECONNECT_MAX_TRIES = 10;
-	private static int RECONNECT_TRIES = 0;
-
 	/**
 	 * Resolve consistent log tag for the agent.
 	 */
@@ -62,16 +50,12 @@ public final class AndroidAgent {
 	private static final Class<?>[] BROADCAST_RECVS = new Class<?>[] { BatteryBroadcastReceiver.class };
 
 	/**
-	 * Modules which will be created when the agent is initialized.
+	 * The sensor which is responsible for collecting traces of instrumented method executions.
 	 */
-	private static final Class<?>[] MODULES = new Class<?>[] { NetworkModule.class, CrashModule.class, SystemResourcesModule.class };
-
-	/**
-	 * Maps a certain module class to an instantiated module object.
-	 */
-	private static Map<Class<?>, AbstractMonitoringModule> instantiatedModules = new HashMap<Class<?>, AbstractMonitoringModule>();
-
 	private static TraceSensor traceSensor;
+
+	private static AndroidModuleManager moduleManager;
+	private static CMRConnectionManager connectionManager;
 
 	/**
 	 * List of created broadcast receivers.
@@ -93,11 +77,6 @@ public final class AndroidAgent {
 	 * monitoring data.
 	 */
 	private static CallbackManager callbackManager;
-
-	/**
-	 * Network module which is responsible for capturing network monitoring data.
-	 */
-	private static NetworkModule networkModule;
 
 	/**
 	 * Queue of monitoring records which couldn't be sent till now because there is no session. This
@@ -127,8 +106,7 @@ public final class AndroidAgent {
 	 * @param ctx
 	 *            context of the application
 	 */
-	public static synchronized void initAgent(final Activity ctx) {
-		// TODO write shutdown func
+	public static synchronized void initAgent(Activity ctx) {
 		if (inited) {
 			return;
 		}
@@ -139,85 +117,208 @@ public final class AndroidAgent {
 		// INITING VARS
 		initContext = ctx;
 
-		// LOADING CONFIGURATION
-		AgentConfiguration config = null;
-		AssetManager assetManager = ctx.getAssets();
-
-		ObjectMapper tempMapper = new ObjectMapper();
-		try {
-			InputStream configStream = assetManager.open("inspectit_agent_config.json");
-			config = tempMapper.readValue(configStream, AgentConfiguration.class);
-		} catch (IOException e1) {
+		if (!loadAgentConfiguration(ctx)) {
 			return;
 		}
-
-		if (config == null) {
-			return;
-		}
-
-		// APPLY CONFIG
-		applyConfiguration(config);
 
 		Log.i(LOG_TAG, "Initing mobile agent for Android.");
-		// INIT ANDROID DATA COLLECTOR
-		final AndroidDataCollector androidDataCollector = new AndroidDataCollector();
-		androidDataCollector.initDataCollector(ctx);
-		DependencyManager.setAndroidDataCollector(androidDataCollector);
-
-		// INITING CALLBACK
-		final AbstractCallbackStrategy callbackStrategy = new IntervalStrategy(5000L);
-		DependencyManager.setCallbackStrategy(callbackStrategy);
-
-		callbackManager = new CallbackManager();
-		DependencyManager.setCallbackManager(callbackManager);
-
-		TracerImplHandler tracerImplHandler = new TracerImplHandler();
-		DependencyManager.setTracerImplHandler(tracerImplHandler);
+		initDataCollector(ctx);
+		initCallbackManager(ctx);
 
 		// OPEN COMMUNICATION WITH CMR
-		final SessionCreationRequest helloRequest = new SessionCreationRequest();
-		helloRequest.setAppName(androidDataCollector.resolveAppName());
-		helloRequest.setDeviceId(androidDataCollector.getDeviceId());
-		helloRequest.putAdditionalInformation("app_version", androidDataCollector.getVersionName());
-
-		RECONNECT_TRIES = 0;
-		scheduleSessionCreationRequest(helloRequest);
-
-		callbackManager.pushHelloMessage(helloRequest);
+		connectionManager = new CMRConnectionManager(callbackManager, mHandler);
+		connectionManager.establishCommunication(ctx);
 
 		// INITING SENSORS
 		traceSensor = new TraceSensor();
 
 		// INITING MODULES
-		for (Class<?> exModule : MODULES) {
-			try {
-				final AbstractMonitoringModule createdModule = (AbstractMonitoringModule) exModule.newInstance();
-				instantiatedModules.put(exModule, createdModule);
-
-				injectDependencies(createdModule);
-
-				createdModule.initModule(ctx);
-			} catch (InstantiationException e) {
-				Log.e(LOG_TAG, "Failed to create module of class '" + exModule.getClass().getName() + "'");
-			} catch (IllegalAccessException e) {
-				Log.e(LOG_TAG, "Failed to create module of class '" + exModule.getClass().getName() + "'");
-			}
-		}
-
-		// INIT MODULE REOCCURING CALLS
-		Log.i(LOG_TAG, "Creating and initializing existing modules.");
-		for (Class<?> moduleEntry : MODULES) {
-			final AbstractMonitoringModule module = instantiatedModules.get(moduleEntry);
-
-			if (module instanceof NetworkModule) {
-				networkModule = (NetworkModule) module;
-			}
-
-			setupScheduledMethods(module);
-		}
+		moduleManager = new AndroidModuleManager(ctx, mHandler);
+		moduleManager.initModules();
 
 		// INIT BROADCASTS
 		Log.i(LOG_TAG, "Initializing broadcast receivers programmatically.");
+		initBroadcastReceivers(ctx);
+
+		// SET VALUES
+		inited = true;
+		closed = false;
+
+		swapInitQueues();
+
+		Log.i(LOG_TAG, "Finished initializing the Android Agent.");
+	}
+
+	/**
+	 * Shuts down the agent. This methods suspends all modules and broadcast receivers.
+	 */
+	public static synchronized void destroyAgent() {
+		if (closed || !inited) {
+			return;
+		}
+		Log.i(LOG_TAG, "Shutting down the Android Agent.");
+
+		// SHUTDOWN MODULES
+		mHandler.removeCallbacksAndMessages(null);
+		moduleManager.shutdownModules();
+
+		// SHUTDOWN BROADCASTS
+		for (BroadcastReceiver exReceiver : createdReceivers) {
+			if (exReceiver != null) {
+				initContext.unregisterReceiver(exReceiver);
+			}
+		}
+
+		// SHUTDOWN CALLBACK
+		callbackManager.shutdown();
+
+		// SET VALUES
+		inited = false;
+		closed = true;
+	}
+
+	public static void shutdownAgent(String message) {
+		Log.w(AgentConfiguration.current.getLogTag(), "The Android Agent encountered a problem (\"" + message + "\") and will shut down.");
+		destroyAgent();
+	}
+
+	/**
+	 * This method is called by code which is inserted into the original application.
+	 *
+	 * @param sensorClassName
+	 *            The name of the sensor which should handle this call
+	 * @param methodSignature
+	 *            The signature of the method which has been called
+	 * @param owner
+	 *            The class which owns the method which has been called
+	 * @return entry id for determine corresponding sensor at the exitBody call
+	 */
+	public static synchronized void enterBody(int methodId, String methodSignature) {
+		if (traceSensor != null) {
+			traceSensor.beforeBody(methodId, methodSignature);
+		}
+	}
+
+	/**
+	 * This method is called by code which is inserted into the original application and is executed
+	 * when a instrumented methods throws an exception.
+	 *
+	 * @param e
+	 *            the exception which has been thrown
+	 * @param enterId
+	 *            the entry id for getting the responsible sensor instance
+	 */
+	public static synchronized void exitErrorBody(Throwable e, int methodId) {
+		if (traceSensor != null) {
+			traceSensor.exceptionThrown(methodId, e.getClass().getName());
+		}
+	}
+
+	/**
+	 * This method is called by code which is inserted into the original application and is executed
+	 * when a instrumented methods returns.
+	 *
+	 * @param enterId
+	 *            the entry id for getting the responsible sensor instance
+	 */
+	public static synchronized void exitBody(int methodId) {
+		if (traceSensor != null) {
+			traceSensor.firstAfterBody(methodId);
+		}
+	}
+
+	/**
+	 * This method is called by code which is inserted into the original application when the
+	 * application creates a {@link HttpURLConnection}.
+	 *
+	 * @param connection
+	 *            a reference to the created connection
+	 */
+	public static void httpConnect(HttpURLConnection connection) {
+		if (moduleManager.getNetworkModule() != null) {
+			moduleManager.getNetworkModule().openConnection(connection);
+		}
+	}
+
+	/**
+	 * This method is called by code which is inserted into the original application when the
+	 * application accesses the output stream of a {@link HttpURLConnection}.
+	 *
+	 * @param connection
+	 *            a reference to the connection
+	 * @return the output stream for the connection
+	 * @throws IOException
+	 *             when the {@link HttpURLConnection#getOutputStream()} method of the connection
+	 *             fails
+	 */
+	public static OutputStream httpOutputStream(HttpURLConnection connection) throws IOException {
+		if (moduleManager.getNetworkModule() != null) {
+			return moduleManager.getNetworkModule().getOutputStream(connection);
+		} else {
+			return connection.getOutputStream();
+		}
+	}
+
+	/**
+	 * This method is called by code which is inserted into the original application when the
+	 * application accesses the response code of a {@link HttpURLConnection}.
+	 *
+	 * @param connection
+	 *            a reference to the connection
+	 * @return the response code of the connection
+	 * @throws IOException
+	 *             when the {@link HttpURLConnection#getResponseCode()} method of the connection
+	 *             fails
+	 */
+	public static int httpResponseCode(HttpURLConnection connection) throws IOException {
+		if (moduleManager.getNetworkModule() != null) {
+			return moduleManager.getNetworkModule().getResponseCode(connection);
+		} else {
+			return connection.getResponseCode();
+		}
+	}
+
+	/**
+	 * Queues a monitoring record which will be sent after session creation.
+	 *
+	 * @param data
+	 *            the record which should be queued
+	 */
+	public static void queueForInit(MobileDefaultData data) {
+		if (defaultQueueInit.size() < MAX_QUEUE) {
+			defaultQueueInit.add(data);
+		}
+	}
+
+	/**
+	 * Swaps queues for already collected records and passes them to the {@link CallbackManager}.
+	 */
+	private static void swapInitQueues() {
+		for (MobileDefaultData def : defaultQueueInit) {
+			callbackManager.pushData(def);
+		}
+
+		defaultQueueInit.clear();
+	}
+
+	private static void initDataCollector(Context ctx) {
+		// INIT ANDROID DATA COLLECTOR
+		final AndroidDataCollector androidDataCollector = new AndroidDataCollector();
+		androidDataCollector.initDataCollector(ctx);
+		DependencyManager.setAndroidDataCollector(androidDataCollector);
+	}
+
+	private static void initCallbackManager(Context ctx) {
+		// INITING CALLBACK
+		final AbstractCallbackStrategy callbackStrategy = new IntervalStrategy(5000L);
+		DependencyManager.setCallbackStrategy(callbackStrategy);
+		callbackManager = new CallbackManager();
+		DependencyManager.setCallbackManager(callbackManager);
+		TracerImplHandler tracerImplHandler = new TracerImplHandler();
+		DependencyManager.setTracerImplHandler(tracerImplHandler);
+	}
+
+	private static void initBroadcastReceivers(Context ctx) {
 		for (Class<?> bRecvEntry : BROADCAST_RECVS) {
 			try {
 				final AbstractBroadcastReceiver bRecv = (AbstractBroadcastReceiver) bRecvEntry.newInstance();
@@ -238,229 +339,6 @@ public final class AndroidAgent {
 				Log.e(LOG_TAG, "Failed to init broadcast receiver of class '" + bRecvEntry.getClass().getName() + "'");
 			}
 		}
-
-		// SET VALUES
-		inited = true;
-		closed = false;
-
-		swapInitQueues();
-
-		Log.i(LOG_TAG, "Finished initializing the Android Agent.");
-	}
-
-	/**
-	 * Shutsdown the agent. This methods suspends all modules and broadcast receivers.
-	 */
-	public static synchronized void destroyAgent() {
-		if (closed) {
-			return;
-		}
-		Log.i(LOG_TAG, "Shutting down the Android Agent.");
-
-		// SHUTDOWN MODULES
-		mHandler.removeCallbacksAndMessages(null);
-
-		for (Class<?> exModule : MODULES) {
-			final AbstractMonitoringModule module = instantiatedModules.get(exModule);
-			if (module != null) {
-				module.shutdownModule();
-			}
-		}
-
-		// SHUTDOWN BROADCASTS
-		for (BroadcastReceiver exReceiver : createdReceivers) {
-			if (exReceiver != null) {
-				initContext.unregisterReceiver(exReceiver);
-			}
-		}
-
-		// SHUTDOWN CALLBACK
-		callbackManager.shutdown();
-
-		// SET VALUES
-		inited = false;
-		closed = true;
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application.
-	 *
-	 * @param sensorClassName
-	 *            The name of the sensor which should handle this call
-	 * @param methodSignature
-	 *            The signature of the method which has been called
-	 * @param owner
-	 *            The class which owns the method which has been called
-	 * @return entry id for determine corresponding sensor at the exitBody call
-	 */
-	public static synchronized void enterBody(final int methodId, final String methodSignature) {
-		if (traceSensor != null) {
-			traceSensor.beforeBody(methodId, methodSignature);
-		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application and is executed
-	 * when a instrumented methods throws an exception.
-	 *
-	 * @param e
-	 *            the exception which has been thrown
-	 * @param enterId
-	 *            the entry id for getting the responsible sensor instance
-	 */
-	public static synchronized void exitErrorBody(final Throwable e, final int methodId) {
-		if (traceSensor != null) {
-			traceSensor.exceptionThrown(methodId, e.getClass().getName());
-		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application and is executed
-	 * when a instrumented methods returns.
-	 *
-	 * @param enterId
-	 *            the entry id for getting the responsible sensor instance
-	 */
-	public static synchronized void exitBody(final int methodId) {
-		if (traceSensor != null) {
-			traceSensor.firstAfterBody(methodId);
-		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application when the
-	 * application creates a {@link HttpURLConnection}.
-	 *
-	 * @param connection
-	 *            a reference to the created connection
-	 */
-	public static void httpConnect(final HttpURLConnection connection) {
-		if (networkModule != null) {
-			networkModule.openConnection(connection);
-		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application when the
-	 * application accesses the output stream of a {@link HttpURLConnection}.
-	 *
-	 * @param connection
-	 *            a reference to the connection
-	 * @return the output stream for the connection
-	 * @throws IOException
-	 *             when the {@link HttpURLConnection#getOutputStream()} method of the connection
-	 *             fails
-	 */
-	public static OutputStream httpOutputStream(final HttpURLConnection connection) throws IOException {
-		if (networkModule != null) {
-			return networkModule.getOutputStream(connection);
-		} else {
-			return connection.getOutputStream();
-		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application when the
-	 * application accesses the response code of a {@link HttpURLConnection}.
-	 *
-	 * @param connection
-	 *            a reference to the connection
-	 * @return the response code of the connection
-	 * @throws IOException
-	 *             when the {@link HttpURLConnection#getResponseCode()} method of the connection
-	 *             fails
-	 */
-	public static int httpResponseCode(final HttpURLConnection connection) throws IOException {
-		if (networkModule != null) {
-			return networkModule.getResponseCode(connection);
-		} else {
-			return connection.getResponseCode();
-		}
-	}
-
-	/**
-	 * Queues a monitoring record which will be sent after session creation.
-	 *
-	 * @param data
-	 *            the record which should be queued
-	 */
-	public static void queueForInit(final MobileDefaultData data) {
-		if (defaultQueueInit.size() < MAX_QUEUE) {
-			defaultQueueInit.add(data);
-		}
-	}
-
-	/**
-	 * Swaps queues for Kieker records and common monitoring records and passes them to the
-	 * {@link CallbackManager}.
-	 */
-	private static void swapInitQueues() {
-		for (MobileDefaultData def : defaultQueueInit) {
-			callbackManager.pushData(def);
-		}
-
-		defaultQueueInit.clear();
-	}
-
-	private static void scheduleSessionCreationRequest(final SessionCreationRequest req) {
-		final Runnable scheduleRunnable = new Runnable() {
-			@Override
-			public void run() {
-				if (callbackManager.isSessionActive()) {
-					return;
-				} else {
-					Log.w(LOG_TAG, "Couldn't create session. Retrying now.");
-					if (RECONNECT_TRIES < RECONNECT_MAX_TRIES) {
-						Log.i(LOG_TAG, "Trying to connect to the CMR.");
-						RECONNECT_TRIES++;
-
-						callbackManager.pushHelloMessage(req); // real work
-
-						mHandler.postDelayed(this, RECONNECT_INTERVAL);
-					} else {
-						shutdownAgent("Max reconnect tries reached.");
-					}
-				}
-			}
-		};
-
-		mHandler.postDelayed(scheduleRunnable, RECONNECT_INTERVAL);
-	}
-
-	/**
-	 * Schedules all operations for a module which should be executed periodically.
-	 *
-	 * @param module
-	 *            a reference to the module which contains methods to schedule
-	 */
-	private static void setupScheduledMethods(final AbstractMonitoringModule module) {
-		for (Method method : module.getClass().getMethods()) {
-			if (method.isAnnotationPresent(ExecutionProperty.class)) {
-				final ExecutionProperty exProp = method.getAnnotation(ExecutionProperty.class);
-
-				// CREATE FINALS
-				final long iVal = exProp.interval();
-				final Method invokedMethod = method;
-				final AbstractMonitoringModule receiver = module;
-				final String className = module.getClass().getName();
-
-				final Runnable loopRunnable = new Runnable() {
-					@Override
-					public void run() {
-						try {
-							invokedMethod.invoke(receiver);
-							mHandler.postDelayed(this, iVal);
-						} catch (IllegalAccessException e) {
-							Log.e(LOG_TAG, "Failed to invoke interval method from module '" + className + "'");
-						} catch (InvocationTargetException e) {
-							e.printStackTrace();
-							Log.e(LOG_TAG, "Failed to invoke interval method from module '" + className + "'");
-						}
-					}
-				};
-				mHandler.postDelayed(loopRunnable, exProp.interval());
-			}
-		}
 	}
 
 	/**
@@ -469,27 +347,47 @@ public final class AndroidAgent {
 	 * @param recv
 	 *            the broadcast receiver
 	 */
-	private static void injectDependencies(final AbstractBroadcastReceiver recv) {
+	private static void injectDependencies(AbstractBroadcastReceiver recv) {
 		recv.setCallbackManager(DependencyManager.getCallbackManager());
 		recv.setAndroidDataCollector(DependencyManager.getAndroidDataCollector());
 	}
 
 	/**
-	 * Passes references to important agent components to an android module.
+	 * Loads the configuration of the agent from the asset file created within the instrumentation
+	 * process.
 	 *
-	 * @param androidModule
-	 *            the module
+	 * @param ctx
+	 *            the application which is needed to access the asset file
+	 * @return true if the configuration has been loaded successfully, false otherwise
 	 */
-	private static void injectDependencies(final AbstractMonitoringModule androidModule) {
-		androidModule.setCallbackManager(DependencyManager.getCallbackManager());
-		androidModule.setAndroidDataCollector(DependencyManager.getAndroidDataCollector());
+	private static boolean loadAgentConfiguration(Context ctx) {
+		// LOADING CONFIGURATION
+		AgentConfiguration config = null;
+		AssetManager assetManager = ctx.getAssets();
+		ObjectMapper tempMapper = new ObjectMapper();
+		try {
+			InputStream configStream = assetManager.open("inspectit_agent_config.json");
+			config = tempMapper.readValue(configStream, AgentConfiguration.class);
+		} catch (IOException e1) {
+			shutdownAgent("Couldn't read agent configuration file.");
+			return false;
+		}
+		if (config == null) {
+			return false;
+		}
+		// APPLY CONFIG
+		applyConfiguration(config);
+		return true;
 	}
 
+	/**
+	 * Applies the given agent configuration.
+	 *
+	 * @param conf
+	 *            configuration for the agent
+	 */
 	private static void applyConfiguration(AgentConfiguration conf) {
 		LOG_TAG = conf.getLogTag();
 		AgentConfiguration.current = conf;
-	}
-
-	private static void shutdownAgent(String message) {
 	}
 }

@@ -12,8 +12,7 @@ import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
 import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationRequest;
 
 /**
- * Component which handles the connection to the server which persists the
- * monitoring data.
+ * Component which handles the connection to the CMR which persists the monitoring data.
  *
  * @author David Monschein
  *
@@ -22,7 +21,7 @@ public class CallbackManager {
 	/**
 	 * Consistent log tag for the agent.
 	 */
-	private static final String LOG_TAG = AgentConfiguration.current.getLogTag();
+	private final String LOG_TAG;
 
 	/**
 	 * The callback strategy which is used to send data.
@@ -46,6 +45,7 @@ public class CallbackManager {
 	public CallbackManager() {
 		this.sessActive = false;
 		this.sessQueue = new ArrayList<MobileDefaultData>();
+		this.LOG_TAG = AgentConfiguration.current.getLogTag();
 	}
 
 	/**
@@ -55,7 +55,7 @@ public class CallbackManager {
 	 * @param data
 	 *            data which should be transferred to the server
 	 */
-	public void pushData(final MobileDefaultData data) {
+	public void pushData(MobileDefaultData data) {
 		if (!sessActive) {
 			this.sessQueue.add(data);
 		} else {
@@ -69,7 +69,7 @@ public class CallbackManager {
 	 * @param response
 	 *            hello request which should be sent to the servers
 	 */
-	public void pushHelloMessage(final SessionCreationRequest response) {
+	public void pushHelloMessage(SessionCreationRequest response) {
 		final MobileCallbackData data = new MobileCallbackData();
 		data.setSessionId(null);
 
@@ -110,7 +110,7 @@ public class CallbackManager {
 	 * @param id
 	 *            session id
 	 */
-	public void applySessionId(final String id) {
+	public void applySessionId(String id) {
 		if (!sessActive) {
 			Log.i(LOG_TAG, "Created session with id '" + id + "' for communicating with the CMR.");
 

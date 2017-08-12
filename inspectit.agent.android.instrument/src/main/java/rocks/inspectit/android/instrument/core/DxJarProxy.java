@@ -41,7 +41,7 @@ public class DxJarProxy {
 	}
 
 	// TODO reformat
-	public File mergeDexFiles(File input1, File input2, File output) throws InvocationTargetException {
+	public boolean mergeDexFiles(File input1, File input2, File output) throws InvocationTargetException {
 		URLClassLoader loader = null;
 		try {
 			// DexMerger.main(new String[]{mergedDex.getAbsolutePath(), inputFile, ellaRuntime});
@@ -50,17 +50,16 @@ public class DxJarProxy {
 			java.lang.reflect.Method mainMethod = dexMergerClass.getDeclaredMethod("main", (new String[0]).getClass());
 
 			mainMethod.invoke(null, (Object) new String[] { output.getAbsolutePath(), input1.getAbsolutePath(), input2.getAbsolutePath() });
-			return output;
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			return false;
 		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
+			return false;
 		} catch (IllegalAccessException e) {
-			e.printStackTrace();
+			return false;
 		} catch (InvocationTargetException e) {
 			throw e;
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
+			return false;
 		} finally {
 			if (loader != null) {
 				try {
@@ -70,8 +69,7 @@ public class DxJarProxy {
 				}
 			}
 		}
-
-		return null;
+		return true;
 	}
 
 }

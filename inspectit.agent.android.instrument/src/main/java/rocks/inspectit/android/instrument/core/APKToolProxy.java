@@ -143,6 +143,20 @@ public class APKToolProxy {
 		}
 
 		// write content back to file
+		return writeBackToFile(dom, manifestFile, modifiedManifest);
+	}
+
+	/**
+	 * Cleans temporary files.
+	 *
+	 * @throws IOException
+	 *             if not all temp files could be deleted.
+	 */
+	public void cleanup() throws IOException {
+		FileUtils.deleteDirectory(new File(folderName));
+	}
+
+	private boolean writeBackToFile(Node dom, File manifestFile, File modifiedManifest) {
 		try {
 			final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			final Transformer transformer = transformerFactory.newTransformer();
@@ -181,16 +195,6 @@ public class APKToolProxy {
 		}
 
 		return true;
-	}
-
-	/**
-	 * Cleans temporary files.
-	 *
-	 * @throws IOException
-	 *             if not all temp files could be deleted.
-	 */
-	public void cleanup() throws IOException {
-		FileUtils.deleteDirectory(new File(folderName));
 	}
 
 }

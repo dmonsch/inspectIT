@@ -58,7 +58,7 @@ public abstract class AbstractCallbackStrategy {
 	 * @param izHello
 	 *            whether it is a session creation message or not
 	 */
-	public void sendImmediately(final MobileCallbackData dat, final boolean izHello) {
+	public void sendImmediately(MobileCallbackData dat, boolean izHello) {
 		this.sendBeacon(dat, izHello);
 		data.clear();
 	}
@@ -77,7 +77,7 @@ public abstract class AbstractCallbackStrategy {
 	 * @param id
 	 *            session id
 	 */
-	public void setSessId(final String id) {
+	public void setSessId(String id) {
 		this.data.setSessionId(id);
 	}
 
@@ -97,7 +97,7 @@ public abstract class AbstractCallbackStrategy {
 	 * @param helloReq
 	 *            whether it is a session creation message or not
 	 */
-	private void sendBeacon(final MobileCallbackData dat, final boolean helloReq) {
+	private void sendBeacon(MobileCallbackData dat, boolean helloReq) {
 		if ((dat != null) && (dat.getChildData().size() > 0)) {
 			final String callbackUrl;
 			if (helloReq) {

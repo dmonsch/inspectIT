@@ -19,6 +19,9 @@ public class AgentConfiguration {
 	@JsonProperty
 	private String logTag;
 
+	@JsonProperty
+	private boolean collectLocation;
+
 	/**
 	 * Gets {@link #sessionUrl}.
 	 *
@@ -74,5 +77,24 @@ public class AgentConfiguration {
 	 */
 	public void setLogTag(String logTag) {
 		this.logTag = logTag;
+	}
+
+	/**
+	 * Gets {@link #collectLocation}.
+	 * 
+	 * @return {@link #collectLocation}
+	 */
+	public boolean isCollectLocation() {
+		return collectLocation;
+	}
+
+	/**
+	 * Sets {@link #collectLocation}.
+	 * 
+	 * @param collectLocation
+	 *            New value for {@link #collectLocation}
+	 */
+	public void setCollectLocation(boolean collectLocation) {
+		this.collectLocation = collectLocation;
 	}
 }

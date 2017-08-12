@@ -15,7 +15,14 @@ import rocks.inspectit.shared.all.communication.data.mobile.SystemResourceUsageR
  */
 public class SystemResourcesModule extends AbstractMonitoringModule {
 
+	/**
+	 * Activity manager which is needed for memory and cpu statistics.
+	 */
 	private ActivityManager manager;
+
+	/**
+	 * The PID of the monitored application.
+	 */
 	private int pid;
 
 	/**
@@ -34,6 +41,9 @@ public class SystemResourcesModule extends AbstractMonitoringModule {
 	public void shutdownModule() {
 	}
 
+	/**
+	 * Collects the CPU and memory usage and sends them back to the CMR.
+	 */
 	@ExecutionProperty(interval = 30000L)
 	public void collectMeasurements() {
 		float cpu = collectCpuUsage();
@@ -47,7 +57,9 @@ public class SystemResourcesModule extends AbstractMonitoringModule {
 	}
 
 	/**
+	 * Reads the memory usage of the monitored application.
 	 *
+	 * @return memory usage in kB and -1 if we can't resolve it
 	 */
 	private float collectMemoryUsage() {
 		MemoryInfo[] info = manager.getProcessMemoryInfo(new int[] { pid });
@@ -59,12 +71,21 @@ public class SystemResourcesModule extends AbstractMonitoringModule {
 	}
 
 	/**
+	 * Gets the cpu usage of the current application.
 	 *
+	 * @return cpu usage in percent (0 - 100)
 	 */
 	private float collectCpuUsage() {
 		return readCpuUsage(pid);
 	}
 
+	/**
+	 * Calculation of the cpu usage of a specified PID.
+	 *
+	 * @param pid
+	 *            the process id
+	 * @return the cpu usage in percent (0 - 100)
+	 */
 	private float readCpuUsage(int pid) {
 		try {
 			RandomAccessFile reader = new RandomAccessFile("/proc/" + pid + "/stat", "r");
@@ -72,11 +93,6 @@ public class SystemResourcesModule extends AbstractMonitoringModule {
 
 			String load = reader.readLine();
 			String uptime = reader2.readLine();
-
-			// 1169 1169 0 0 -1 4219200 5546 0 0 0 62 238 0 0 20 0 12 0 378466 931201024 8592
-			// 4294967295 3077640192 3077645692 3220668688 3220665936 3076902886 0 4612 0 38136
-			// 4294967295 0 0 17 0 0 0 0 0 0 3077651968 3077652464 3083341824 3220675647 3220675723
-			// 3220675723 3220676580 0
 
 			String[] loadTokens = load.split(" ");
 			String[] uptimeTokens = uptime.split(" ");
