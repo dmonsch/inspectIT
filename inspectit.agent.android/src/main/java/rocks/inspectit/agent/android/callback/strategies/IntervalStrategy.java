@@ -7,7 +7,7 @@ import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
  * Callback strategy which collects data over a specified period of time and
  * afterwards sends a package which contains all data. This strategy is
  * recommended for production use.
- * 
+ *
  * @author David Monschein
  *
  */
@@ -35,7 +35,7 @@ public class IntervalStrategy extends AbstractCallbackStrategy {
 
 	/**
 	 * Creates a new interval callback strategy with a given interval length.
-	 * 
+	 *
 	 * @param intervalLength
 	 *            the length of the interval in milliseconds
 	 */
@@ -57,15 +57,10 @@ public class IntervalStrategy extends AbstractCallbackStrategy {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void addData(final MobileDefaultData data) {
+	public synchronized void addData(MobileDefaultData data) {
 		super.data.addChildData(data);
 		if (!alreadyRunning) {
-			mHandler.postDelayed(new Runnable() {
-				@Override
-				public void run() {
-					mHandlerTask.run();
-				}
-			}, 10000);
+			mHandler.postDelayed(mHandlerTask, 10000);
 			alreadyRunning = true;
 		}
 	}
@@ -89,7 +84,7 @@ public class IntervalStrategy extends AbstractCallbackStrategy {
 	 * @param intervalLength
 	 *            the intervalLength to set
 	 */
-	public void setIntervalLength(final long intervalLength) {
+	public void setIntervalLength(long intervalLength) {
 		this.intervalLength = intervalLength;
 	}
 

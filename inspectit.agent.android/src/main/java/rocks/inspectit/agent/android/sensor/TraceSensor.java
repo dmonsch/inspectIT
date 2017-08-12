@@ -20,8 +20,14 @@ public class TraceSensor implements ISensor {
 	 */
 	private CallbackManager callbackManager;
 
+	/**
+	 * Link to the tracer implementation.
+	 */
 	private TracerImplHandler tracerUtil;
 
+	/**
+	 * Thread local map which maps a method execution (method id) to the belonging span.
+	 */
 	private ThreadLocal<Map<Long, SpanImpl>> spanMapping = new ThreadLocal<>();
 
 	/**

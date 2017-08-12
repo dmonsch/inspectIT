@@ -6,11 +6,16 @@ import android.content.Context;
 import rocks.inspectit.shared.all.communication.data.mobile.CrashResponse;
 
 /**
+ * Module which captures crashes of the application and sends them back to the CMR.
+ *
  * @author David Monschein
  *
  */
 public class CrashModule extends AbstractMonitoringModule {
 
+	/**
+	 * Link to the default uncaught exception handler to be able to call it.
+	 */
 	private UncaughtExceptionHandler backup;
 
 	/**
@@ -33,8 +38,17 @@ public class CrashModule extends AbstractMonitoringModule {
 	 */
 	@Override
 	public void shutdownModule() {
+		Thread.setDefaultUncaughtExceptionHandler(backup); // set the old one
 	}
 
+	/**
+	 * Function which handles an uncaught exception and sends a message to the CMR.
+	 *
+	 * @param thread
+	 *            the thread which caused the exception
+	 * @param e
+	 *            the uncaught exception
+	 */
 	private void handleUncaughtException(Thread thread, Throwable e) {
 		// do our part
 		CrashResponse resp = new CrashResponse(e.getClass().getName(), e.getMessage());

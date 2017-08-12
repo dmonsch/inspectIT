@@ -43,7 +43,7 @@ public class CacheValue<T> {
 	 * @param validity
 	 *            amount of time how long the cache is valid
 	 */
-	public CacheValue(final T val, final long validity) {
+	public CacheValue(T val, long validity) {
 		this.set(val);
 		this.validity = validity;
 		this.ever = false;
@@ -56,7 +56,7 @@ public class CacheValue<T> {
 	 * @param val
 	 *            amount of time how long the cache is valid
 	 */
-	public CacheValue(final long val) {
+	public CacheValue(long val) {
 		this.timestamp = 0;
 		this.validity = val;
 		this.ever = false;
@@ -97,7 +97,7 @@ public class CacheValue<T> {
 	 *            the new value which should be set
 	 * @return the value of the input parameter
 	 */
-	public T set(final T val) {
+	public T set(T val) {
 		this.inited = true;
 		this.value = val;
 		this.timestamp = System.currentTimeMillis();

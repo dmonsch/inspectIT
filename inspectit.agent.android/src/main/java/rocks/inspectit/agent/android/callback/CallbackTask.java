@@ -25,8 +25,16 @@ import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationRespo
  */
 public class CallbackTask extends AsyncTask<String, Void, String> {
 
+	/**
+	 * Read timeout for the REST calls to the CMR.
+	 */
 	private static final int READ_TIMEOUT = 30000;
+
+	/**
+	 * Connect timeout for the REST calls to the CMR.
+	 */
 	private static final int CONNECT_TIMEOUT = 30000;
+
 	/**
 	 * Consistent log tag which is used by the agent.
 	 */
@@ -53,7 +61,7 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 	 * @param url
 	 *            REST interface URL
 	 */
-	public CallbackTask(final String url) {
+	public CallbackTask(String url) {
 		this.callbackUrl = url;
 	}
 
@@ -61,7 +69,7 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected String doInBackground(final String... params) {
+	protected String doInBackground(String... params) {
 		if (params.length == 1) {
 			return postRequest(callbackUrl, params[0]);
 		} else {
@@ -73,7 +81,7 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void onPostExecute(final String result) {
+	protected void onPostExecute(String result) {
 		if ((result != null) && !result.isEmpty()) {
 			try {
 				final SessionCreationResponse resp = OBJECTMAPPER.readValue(result, SessionCreationResponse.class);
@@ -96,7 +104,7 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 	 *            the data
 	 * @return the response from the server
 	 */
-	private String postRequest(final String rawUrl, final String data) {
+	private String postRequest(String rawUrl, String data) {
 		Log.i(LOG_TAG, "Sending back beacon to '" + rawUrl + "'.");
 		try {
 			final URL url = new URL(rawUrl);

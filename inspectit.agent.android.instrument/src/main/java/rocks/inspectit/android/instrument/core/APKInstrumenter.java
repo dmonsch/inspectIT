@@ -30,7 +30,6 @@ import org.codehaus.jackson.util.DefaultPrettyPrinter;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
-import net.lingala.zip4j.io.ZipInputStream;
 import net.lingala.zip4j.model.ZipParameters;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.android.instrument.DexInstrumenter;
@@ -44,10 +43,6 @@ import rocks.inspectit.shared.all.util.Pair;
  *
  */
 public class APKInstrumenter {
-	// DOWNLOAD LINKS
-	private static final String DX_RELEASE = "https://github.com/pxb1988/dex2jar/releases/download/2.0/dex-tools-2.0.zip";
-	private static final String APKTOOL_RELEASE_2_2_2 = "https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.2.3.jar";
-
 	private static final File AGENT_BUILD_JAVA = new File("../inspectit.agent.android/build/release/inspectit.agent.android-all.jar");
 
 	/** Temporary file for building the current agent version. */
@@ -94,8 +89,6 @@ public class APKInstrumenter {
 
 	/** Flags whether to adjust the manifest or not. (recommended) */
 	private boolean adjustManifest = true;
-
-	private boolean downloadLibs = true;
 
 	private boolean buildAgent = true;
 
@@ -160,18 +153,6 @@ public class APKInstrumenter {
 		}
 
 		LOG.info("Successfully loaded instrumentation config '" + instrConfigFile.getAbsolutePath() + "'.");
-
-		// DOWNLOAD LIBS
-		if (downloadLibs) {
-			final File DXTOOL = new File("lib/dx.jar");
-			final File APKTOOL = new File("lib/apktool.jar");
-
-			if (!DXTOOL.exists() || !APKTOOL.exists()) {
-				LOG.info("Downloading belonging libraries.");
-				downloadLibraries();
-				LOG.info("Finished downloading libraries.");
-			}
-		}
 
 		// INSERT RIGHTS NEEDED
 		this.neededRights = instrConfig.getXmlConfiguration().getManifestTransformer().getPermissions();
@@ -336,6 +317,7 @@ public class APKInstrumenter {
 		n.setBeaconUrl(config.getXmlConfiguration().getConnectionInfo().getBeaconUrl());
 		n.setSessionUrl(config.getXmlConfiguration().getConnectionInfo().getHelloUrl());
 		n.setLogTag("Android Agent");
+		n.setCollectLocation(false);
 		return n;
 	}
 
@@ -537,27 +519,6 @@ public class APKInstrumenter {
 		MODIFIED_MANIFEST.delete();
 	}
 
-	private void downloadLibraries() {
-		File apkToolDestination = new File("lib/apktool.jar");
-		File dxToolDestination = new File("lib/dx.jar");
-
-		apkToolDestination.getParentFile().mkdirs();
-		dxToolDestination.getParentFile().mkdirs();
-
-		try {
-			FileUtils.copyURLToFile(new URL(APKTOOL_RELEASE_2_2_2), apkToolDestination);
-			FileUtils.copyURLToFile(new URL(DX_RELEASE), dxToolDestination);
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-			LOG.warn("Couldn't download all libraries successfully.");
-			return;
-		} catch (IOException e) {
-			e.printStackTrace();
-			LOG.warn("Couldn't download all libraries successfully.");
-			return;
-		}
-	}
-
 	private List<File> unzipDexs(File apk, File baseDexPath) throws IOException {
 		baseDexPath.mkdirs();
 
@@ -590,25 +551,5 @@ public class APKInstrumenter {
 		zip.close();
 
 		return dexs;
-	}
-
-	/**
-	 * Closes two input streams.
-	 *
-	 * @param a
-	 *            a zip input stream
-	 * @param b
-	 *            a file output stream
-	 * @throws IOException
-	 *             if one of the streams can't be closed
-	 */
-	private void closeStreams(final ZipInputStream a, final FileOutputStream b) throws IOException {
-		if (a != null) {
-			a.close();
-		}
-
-		if (b != null) {
-			b.close();
-		}
 	}
 }

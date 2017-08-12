@@ -51,7 +51,7 @@ public class ConnectionState {
 	 *            connection point
 	 * @return timestamp when the point was reached
 	 */
-	public long getPointTimestamp(final ConnectionPoint point) {
+	public long getPointTimestamp(ConnectionPoint point) {
 		if (reachedPointsTimestamps.containsKey(point)) {
 			return reachedPointsTimestamps.get(point);
 		} else {
@@ -65,7 +65,7 @@ public class ConnectionState {
 	 * @param point
 	 *            the point which has been reached.
 	 */
-	public void update(final ConnectionPoint point) {
+	public void update(ConnectionPoint point) {
 		if ((point != null) && reachedPointsMap.containsKey(point)) {
 			if (!reachedPointsMap.get(point)) {
 				reachedPointsTimestamps.put(point, System.currentTimeMillis());
@@ -106,18 +106,18 @@ public class ConnectionState {
 
 	/**
 	 * Gets {@link #networkConnectionType}.
-	 *   
-	 * @return {@link #networkConnectionType}  
-	 */ 
+	 *
+	 * @return {@link #networkConnectionType}
+	 */
 	public String getNetworkConnectionType() {
 		return networkConnectionType;
 	}
 
-	/**  
-	 * Sets {@link #networkConnectionType}.  
-	 *   
-	 * @param networkConnectionType  
-	 *            New value for {@link #networkConnectionType}  
+	/**
+	 * Sets {@link #networkConnectionType}.
+	 *
+	 * @param networkConnectionType
+	 *            New value for {@link #networkConnectionType}
 	 */
 	public void setNetworkConnectionType(String networkConnectionType) {
 		this.networkConnectionType = networkConnectionType;

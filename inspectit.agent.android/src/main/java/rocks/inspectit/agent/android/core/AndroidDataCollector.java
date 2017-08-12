@@ -1,7 +1,13 @@
 package rocks.inspectit.agent.android.core;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -9,10 +15,10 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
+import android.os.BatteryManager;
 import android.telephony.TelephonyManager;
+import android.util.Pair;
+import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.util.CacheValue;
 
 /**
@@ -38,11 +44,6 @@ public class AndroidDataCollector {
 	private ConnectivityManager connectivityManager;
 
 	/**
-	 * {@link WifiManager} for retrieving information.
-	 */
-	private WifiManager wifiManager;
-
-	/**
 	 * Context of the application which is needed to create the managers above.
 	 */
 	private Context context;
@@ -57,16 +58,6 @@ public class AndroidDataCollector {
 	 * Cache value for the network information.
 	 */
 	private CacheValue<NetworkInfo> networkInfoCache = new CacheValue<NetworkInfo>(30000L);
-
-	/**
-	 * Cache value for the wifi information.
-	 */
-	private CacheValue<WifiInfo> wifiInfoCache = new CacheValue<WifiInfo>(30000L);
-
-	/**
-	 * Cache value for the wifi configuration.
-	 */
-	private CacheValue<WifiConfiguration> wifiConfigCache = new CacheValue<WifiConfiguration>(60000L);
 
 	/**
 	 * Cache value for the network carrier.
@@ -95,7 +86,6 @@ public class AndroidDataCollector {
 
 		locationManager = (LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE);
 		connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-		wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 		telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 	}
 
@@ -189,6 +179,18 @@ public class AndroidDataCollector {
 		return null;
 	}
 
+	public float getBatteryPct() {
+		IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+		Intent batteryStatus = context.registerReceiver(null, iFilter);
+
+		int level = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
+		int scale = batteryStatus != null ? batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
+
+		float batteryPct = level / (float) scale;
+
+		return (batteryPct * 100);
+	}
+
 	/**
 	 * Gets the name of the mobile network carrier.
 	 *
@@ -203,8 +205,7 @@ public class AndroidDataCollector {
 	}
 
 	/**
-	 * Gets the id of the device. See {@link TelephonyManager} for detailed
-	 * information.
+	 * Gets the id of the device. See {@link TelephonyManager} for detailed information.
 	 *
 	 * @return id of the device with model of the device as prefix
 	 */
@@ -216,44 +217,22 @@ public class AndroidDataCollector {
 		return deviceIdCache.set(android.os.Build.MODEL + "-" + telephonyManager.getDeviceId());
 	}
 
-	// HELP FCTS
-	private String getProtocolName(final int subtype) {
-		switch (subtype) {
-		case TelephonyManager.NETWORK_TYPE_1xRTT:
-			return "1xrtt"; // ~ 50-100 kbps
-		case TelephonyManager.NETWORK_TYPE_CDMA:
-			return "cdma"; // ~ 14-64 kbps
-		case TelephonyManager.NETWORK_TYPE_EDGE:
-			return "edge"; // ~ 50-100 kbps
-		case TelephonyManager.NETWORK_TYPE_EVDO_0:
-			return "evdo0"; // ~ 400-1000 kbps
-		case TelephonyManager.NETWORK_TYPE_EVDO_A:
-			return "evdoa"; // ~ 600-1400 kbps
-		case TelephonyManager.NETWORK_TYPE_GPRS:
-			return "gprs"; // ~ 100 kbps
-		case TelephonyManager.NETWORK_TYPE_HSDPA:
-			return "hsdpa"; // ~ 2-14 Mbps
-		case TelephonyManager.NETWORK_TYPE_HSPA:
-			return "hspa"; // ~ 700-1700 kbps
-		case TelephonyManager.NETWORK_TYPE_HSUPA:
-			return "hsupa"; // ~ 1-23 Mbps
-		case TelephonyManager.NETWORK_TYPE_UMTS:
-			return "umts"; // ~ 400-7000 kbps
-		case TelephonyManager.NETWORK_TYPE_EHRPD: // API level 11
-			return "ehrpd"; // ~ 1-2 Mbps
-		case TelephonyManager.NETWORK_TYPE_EVDO_B: // API level 9
-			return "evdob"; // ~ 5 Mbps
-		case TelephonyManager.NETWORK_TYPE_HSPAP: // API level 13
-			return "hspap"; // ~ 10-20 Mbps
-		case TelephonyManager.NETWORK_TYPE_IDEN: // API level 8
-			return "iden"; // ~25 kbps
-		case TelephonyManager.NETWORK_TYPE_LTE: // API level 11
-			return "lte"; // ~ 10+ Mbps
-		case TelephonyManager.NETWORK_TYPE_UNKNOWN:
-			return "unknown";
-		default:
-			return "unknown";
+	public List<Pair<String, String>> collectStaticTags(AgentConfiguration config) {
+		List<Pair<String, String>> list = new ArrayList<>();
+
+		list.add(Pair.create("app_version", this.getVersionName()));
+		list.add(Pair.create("android_version", android.os.Build.VERSION.RELEASE));
+		list.add(Pair.create("android_sdk", String.valueOf(android.os.Build.VERSION.SDK_INT)));
+		list.add(Pair.create("device_name", android.os.Build.MODEL));
+		list.add(Pair.create("device_lang", Locale.getDefault().getDisplayLanguage()));
+
+		if (config.isCollectLocation()) {
+			Location loc = this.getLastKnownLocation();
+			list.add(Pair.create("device_location_lat", String.valueOf(loc.getLatitude())));
+			list.add(Pair.create("device_location_lon", String.valueOf(loc.getLongitude())));
 		}
+
+		return list;
 	}
 
 	/**
