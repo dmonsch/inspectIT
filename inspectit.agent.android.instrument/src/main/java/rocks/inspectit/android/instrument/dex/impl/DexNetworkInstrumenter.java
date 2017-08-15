@@ -1,4 +1,4 @@
-package rocks.inspectit.android.instrument;
+package rocks.inspectit.android.instrument.dex.impl;
 
 import java.net.HttpURLConnection;
 import java.util.HashMap;
@@ -10,19 +10,19 @@ import org.jf.dexlib2.builder.MutableMethodImplementation;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction21c;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction35c;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction3rc;
-import org.jf.dexlib2.iface.Method;
+import org.jf.dexlib2.iface.MethodImplementation;
 import org.jf.dexlib2.iface.instruction.Instruction;
 import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.iface.reference.TypeReference;
-import org.jf.dexlib2.immutable.ImmutableMethod;
 
 import rocks.inspectit.agent.android.core.AndroidAgent;
+import rocks.inspectit.android.instrument.dex.IDexMethodImplementationInstrumenter;
 import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
 
 /**
  * @author David Monschein
  */
-public class DexNetworkInstrumenter {
+public class DexNetworkInstrumenter implements IDexMethodImplementationInstrumenter {
 
 	private static final String HTTPURLREQUEST_CLASS = DexInstrumentationUtil.getType(HttpURLConnection.class);
 
@@ -36,15 +36,9 @@ public class DexNetworkInstrumenter {
 		}
 	};
 
-	public Pair<Boolean, ? extends Method> instrumentMethod(Method meth) {
-		if (meth.getImplementation() != null) {
-			MutableMethodImplementation nImpl = new MutableMethodImplementation(meth.getImplementation());
-			Pair<Boolean, MutableMethodImplementation> instrResult = instrument(nImpl);
-			return Pair.of(instrResult.getLeft(),
-					new ImmutableMethod(meth.getDefiningClass(), meth.getName(), meth.getParameters(), meth.getReturnType(), meth.getAccessFlags(), meth.getAnnotations(), instrResult.getRight()));
-		} else {
-			return Pair.of(false, meth);
-		}
+	@Override
+	public Pair<Boolean, MutableMethodImplementation> instrument(MethodImplementation impl) {
+		return instrument(new MutableMethodImplementation(impl));
 	}
 
 	private Pair<Boolean, MutableMethodImplementation> instrument(MutableMethodImplementation impl) {

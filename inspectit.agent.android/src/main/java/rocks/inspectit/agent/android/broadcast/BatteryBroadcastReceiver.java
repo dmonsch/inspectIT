@@ -16,9 +16,11 @@ public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 	private long startTimestamp;
 	private float startPct;
 	private boolean charging;
+	private boolean running;
 
 	public BatteryBroadcastReceiver() {
 		charging = false;
+		running = true;
 	}
 
 	/**
@@ -44,7 +46,7 @@ public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 		float batteryPct = level / (float) scale;
 
 		if (!isCharging) {
-			if (!charging) {
+			if (!charging && running) {
 				// we have a valid data point
 				long endTimestamp = System.currentTimeMillis();
 				float consumption = batteryPct - startPct;
@@ -70,8 +72,8 @@ public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 	 */
 	@Override
 	public void onStart() {
-		// TODO Auto-generated method stub
-
+		onReceive(null, this.androidDataCollector.getBatteryIntent());
+		running = true;
 	}
 
 	/**
@@ -79,8 +81,8 @@ public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 	 */
 	@Override
 	public void onStop() {
-		// TODO Auto-generated method stub
-
+		onReceive(null, this.androidDataCollector.getBatteryIntent());
+		running = false;
 	}
 
 }

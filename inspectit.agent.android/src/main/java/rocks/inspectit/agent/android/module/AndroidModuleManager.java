@@ -2,8 +2,8 @@ package rocks.inspectit.agent.android.module;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.content.Context;
 import android.os.Handler;
@@ -27,7 +27,7 @@ public class AndroidModuleManager {
 	/**
 	 * Maps a certain module class to an instantiated module object.
 	 */
-	private static Map<Class<?>, AbstractMonitoringModule> instantiatedModules = new HashMap<Class<?>, AbstractMonitoringModule>();
+	private static List<AbstractMonitoringModule> instantiatedModules = new ArrayList<>();
 
 	private final String LOG_TAG;
 	private final Context applicationContext;
@@ -46,7 +46,7 @@ public class AndroidModuleManager {
 		for (Class<?> exModule : MODULES) {
 			try {
 				final AbstractMonitoringModule createdModule = (AbstractMonitoringModule) exModule.newInstance();
-				instantiatedModules.put(exModule, createdModule);
+				instantiatedModules.add(createdModule);
 				injectDependencies(createdModule);
 				createdModule.initModule(applicationContext);
 			} catch (InstantiationException e) {
@@ -58,8 +58,7 @@ public class AndroidModuleManager {
 
 		// INIT MODULE REOCCURING CALLS
 		Log.i(LOG_TAG, "Creating and initializing existing modules.");
-		for (Class<?> moduleEntry : MODULES) {
-			final AbstractMonitoringModule module = instantiatedModules.get(moduleEntry);
+		for (AbstractMonitoringModule module : instantiatedModules) {
 			if (module instanceof NetworkModule) {
 				setNetworkModule((NetworkModule) module);
 			}
@@ -68,8 +67,7 @@ public class AndroidModuleManager {
 	}
 
 	public void shutdownModules() {
-		for (Class<?> exModule : MODULES) {
-			final AbstractMonitoringModule module = instantiatedModules.get(exModule);
+		for (AbstractMonitoringModule module : instantiatedModules) {
 			if (module != null) {
 				module.shutdownModule();
 			}
@@ -83,6 +81,10 @@ public class AndroidModuleManager {
 	 */
 	public NetworkModule getNetworkModule() {
 		return networkModule;
+	}
+
+	public List<AbstractMonitoringModule> getModules() {
+		return instantiatedModules;
 	}
 
 	/**
