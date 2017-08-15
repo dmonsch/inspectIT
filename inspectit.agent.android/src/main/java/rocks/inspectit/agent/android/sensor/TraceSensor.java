@@ -14,6 +14,7 @@ import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanImpl;
  * @author David Monschein
  *
  */
+@SensorAnnotation(id = 2)
 public class TraceSensor implements ISensor {
 	/**
 	 * Reference to the {@link CallbackManager}.
@@ -42,25 +43,25 @@ public class TraceSensor implements ISensor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void beforeBody(long id, String signature) {
+	public void beforeBody(long methodId, String methoSignature, Object[] parameters) {
 		if (spanMapping.get() == null) {
 			spanMapping.set(new HashMap<Long, SpanImpl>());
 		}
 
-		spanMapping.get().put(id, tracerUtil.buildSpan(signature));
+		spanMapping.get().put(methodId, tracerUtil.buildSpan(methoSignature));
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void exceptionThrown(long id, final String caused) {
+	public void exceptionThrown(long methodId, String methodSignature, Object[] parameters, String clazz) {
 		if (spanMapping.get() != null) {
 			Map<Long, SpanImpl> implMapping = spanMapping.get();
-			if (implMapping.containsKey(id)) {
-				SpanImpl correspondingSpan = implMapping.get(id);
-				correspondingSpan.log(caused).finish();
-				implMapping.remove(id);
+			if (implMapping.containsKey(methodId)) {
+				SpanImpl correspondingSpan = implMapping.get(methodId);
+				correspondingSpan.log(clazz).finish();
+				implMapping.remove(methodId);
 			}
 		}
 	}
@@ -69,13 +70,13 @@ public class TraceSensor implements ISensor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void firstAfterBody(long id) {
+	public void firstAfterBody(long methodId, String methodSignature, Object[] parameters) {
 		if (spanMapping.get() != null) {
 			Map<Long, SpanImpl> implMapping = spanMapping.get();
-			if (implMapping.containsKey(id)) {
-				SpanImpl correspondingSpan = implMapping.get(id);
+			if (implMapping.containsKey(methodId)) {
+				SpanImpl correspondingSpan = implMapping.get(methodId);
 				correspondingSpan.finish();
-				implMapping.remove(id);
+				implMapping.remove(methodId);
 			}
 		}
 	}

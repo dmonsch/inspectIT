@@ -2,8 +2,6 @@ package rocks.inspectit.agent.android.core;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,10 +21,12 @@ import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
 import rocks.inspectit.agent.android.callback.strategies.IntervalStrategy;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
+import rocks.inspectit.agent.android.delegation.AndroidAgentDelegator;
 import rocks.inspectit.agent.android.module.AndroidModuleManager;
+import rocks.inspectit.agent.android.sensor.ISensor;
+import rocks.inspectit.agent.android.sensor.NetworkSensor;
 import rocks.inspectit.agent.android.sensor.TraceSensor;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
 
 /**
  * The main Android Agent class which is responsible for managing and scheduling tasks.
@@ -34,11 +34,6 @@ import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
  * @author David Monschein
  */
 public final class AndroidAgent {
-	/**
-	 * Max size for stored records when there is no connection.
-	 */
-	private static final int MAX_QUEUE = 500;
-
 	/**
 	 * Resolve consistent log tag for the agent.
 	 */
@@ -52,7 +47,7 @@ public final class AndroidAgent {
 	/**
 	 * The sensor which is responsible for collecting traces of instrumented method executions.
 	 */
-	private static TraceSensor traceSensor;
+	private static List<ISensor> sensorList;
 
 	private static AndroidModuleManager moduleManager;
 	private static CMRConnectionManager connectionManager;
@@ -60,7 +55,7 @@ public final class AndroidAgent {
 	/**
 	 * List of created broadcast receivers.
 	 */
-	private static List<BroadcastReceiver> createdReceivers = new ArrayList<BroadcastReceiver>();
+	private static List<AbstractBroadcastReceiver> createdReceivers = new ArrayList<>();
 
 	/**
 	 * Handler for scheduling timing tasks.
@@ -77,12 +72,6 @@ public final class AndroidAgent {
 	 * monitoring data.
 	 */
 	private static CallbackManager callbackManager;
-
-	/**
-	 * Queue of monitoring records which couldn't be sent till now because there is no session. This
-	 * queue will be sent when there is an active connection.
-	 */
-	private static List<MobileDefaultData> defaultQueueInit = new ArrayList<>();
 
 	/**
 	 * Specifies whether the agents init method has been already called or not.
@@ -130,7 +119,9 @@ public final class AndroidAgent {
 		connectionManager.establishCommunication(ctx);
 
 		// INITING SENSORS
-		traceSensor = new TraceSensor();
+		sensorList = new ArrayList<>();
+		sensorList.add(new TraceSensor());
+		sensorList.add(new NetworkSensor());
 
 		// INITING MODULES
 		moduleManager = new AndroidModuleManager(ctx, mHandler);
@@ -140,11 +131,13 @@ public final class AndroidAgent {
 		Log.i(LOG_TAG, "Initializing broadcast receivers programmatically.");
 		initBroadcastReceivers(ctx);
 
+		// INIT DELEGATOR
+		AndroidAgentDelegator delegator = new AndroidAgentDelegator();
+		delegator.initDelegator(createdReceivers, moduleManager.getModules(), sensorList);
+
 		// SET VALUES
 		inited = true;
 		closed = false;
-
-		swapInitQueues();
 
 		Log.i(LOG_TAG, "Finished initializing the Android Agent.");
 	}
@@ -180,125 +173,6 @@ public final class AndroidAgent {
 	public static void shutdownAgent(String message) {
 		Log.w(AgentConfiguration.current.getLogTag(), "The Android Agent encountered a problem (\"" + message + "\") and will shut down.");
 		destroyAgent();
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application.
-	 *
-	 * @param sensorClassName
-	 *            The name of the sensor which should handle this call
-	 * @param methodSignature
-	 *            The signature of the method which has been called
-	 * @param owner
-	 *            The class which owns the method which has been called
-	 * @return entry id for determine corresponding sensor at the exitBody call
-	 */
-	public static synchronized void enterBody(int methodId, String methodSignature) {
-		if (traceSensor != null) {
-			traceSensor.beforeBody(methodId, methodSignature);
-		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application and is executed
-	 * when a instrumented methods throws an exception.
-	 *
-	 * @param e
-	 *            the exception which has been thrown
-	 * @param enterId
-	 *            the entry id for getting the responsible sensor instance
-	 */
-	public static synchronized void exitErrorBody(Throwable e, int methodId) {
-		if (traceSensor != null) {
-			traceSensor.exceptionThrown(methodId, e.getClass().getName());
-		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application and is executed
-	 * when a instrumented methods returns.
-	 *
-	 * @param enterId
-	 *            the entry id for getting the responsible sensor instance
-	 */
-	public static synchronized void exitBody(int methodId) {
-		if (traceSensor != null) {
-			traceSensor.firstAfterBody(methodId);
-		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application when the
-	 * application creates a {@link HttpURLConnection}.
-	 *
-	 * @param connection
-	 *            a reference to the created connection
-	 */
-	public static void httpConnect(HttpURLConnection connection) {
-		if (moduleManager.getNetworkModule() != null) {
-			moduleManager.getNetworkModule().openConnection(connection);
-		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application when the
-	 * application accesses the output stream of a {@link HttpURLConnection}.
-	 *
-	 * @param connection
-	 *            a reference to the connection
-	 * @return the output stream for the connection
-	 * @throws IOException
-	 *             when the {@link HttpURLConnection#getOutputStream()} method of the connection
-	 *             fails
-	 */
-	public static OutputStream httpOutputStream(HttpURLConnection connection) throws IOException {
-		if (moduleManager.getNetworkModule() != null) {
-			return moduleManager.getNetworkModule().getOutputStream(connection);
-		} else {
-			return connection.getOutputStream();
-		}
-	}
-
-	/**
-	 * This method is called by code which is inserted into the original application when the
-	 * application accesses the response code of a {@link HttpURLConnection}.
-	 *
-	 * @param connection
-	 *            a reference to the connection
-	 * @return the response code of the connection
-	 * @throws IOException
-	 *             when the {@link HttpURLConnection#getResponseCode()} method of the connection
-	 *             fails
-	 */
-	public static int httpResponseCode(HttpURLConnection connection) throws IOException {
-		if (moduleManager.getNetworkModule() != null) {
-			return moduleManager.getNetworkModule().getResponseCode(connection);
-		} else {
-			return connection.getResponseCode();
-		}
-	}
-
-	/**
-	 * Queues a monitoring record which will be sent after session creation.
-	 *
-	 * @param data
-	 *            the record which should be queued
-	 */
-	public static void queueForInit(MobileDefaultData data) {
-		if (defaultQueueInit.size() < MAX_QUEUE) {
-			defaultQueueInit.add(data);
-		}
-	}
-
-	/**
-	 * Swaps queues for already collected records and passes them to the {@link CallbackManager}.
-	 */
-	private static void swapInitQueues() {
-		for (MobileDefaultData def : defaultQueueInit) {
-			callbackManager.pushData(def);
-		}
-
-		defaultQueueInit.clear();
 	}
 
 	private static void initDataCollector(Context ctx) {

@@ -1,4 +1,4 @@
-package rocks.inspectit.android.instrument;
+package rocks.inspectit.android.instrument.dex.impl;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,6 +24,8 @@ import org.jf.dexlib2.immutable.ImmutableMethod;
 import org.jf.dexlib2.immutable.reference.ImmutableStringReference;
 
 import rocks.inspectit.agent.android.core.AndroidAgent;
+import rocks.inspectit.android.instrument.config.xml.TraceCollectionConfiguration;
+import rocks.inspectit.android.instrument.dex.IDexMethodInstrumenter;
 import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
 
 /**
@@ -31,6 +33,20 @@ import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
  *
  */
 public class DexSensorInstrumenter implements IDexMethodInstrumenter {
+
+	private TraceCollectionConfiguration traceConfiguration;
+
+	public DexSensorInstrumenter(TraceCollectionConfiguration traceConfig) {
+		this.traceConfiguration = traceConfig;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isTargetMethod(Method method) {
+		return isTracedMethod(method.getDefiningClass(), method.getName(), method.getParameters());
+	}
 
 	@Override
 	public Method instrumentMethod(Method meth) {
@@ -157,6 +173,37 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 		}
 
 		return new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(), method.getAnnotations(), nImpl);
+	}
+
+	private boolean isTracedMethod(String clazz, String method, List<? extends CharSequence> parameters) {
+		List<String> patterns = traceConfiguration.getPackages();
+
+		for (String pattern : patterns) {
+			String[] patternSplit = pattern.split("\\.");
+			String[] matchSplit = (clazz.replaceAll("/", ".").substring(1, clazz.length() - 1) + "." + method).split("\\.");
+
+			int k = 0;
+			for (String part : patternSplit) {
+
+				if (k >= matchSplit.length) {
+					break;
+				}
+
+				if (!part.equals("*")) {
+					if (part.equals("**")) {
+						return true;
+					} else {
+						if (!part.equals(matchSplit[k])) {
+							break;
+						}
+					}
+				}
+
+				++k;
+			}
+		}
+
+		return false;
 	}
 
 }

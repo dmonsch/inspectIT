@@ -4,9 +4,13 @@ package rocks.inspectit.shared.all.communication.data.mobile;
  * @author David Monschein
  *
  */
+@InfluxCompatibleAnnotation(measurement = "battery_consumption")
 public class BatteryConsumptionResponse extends MobileDefaultData {
 
+	@InfluxCompatibleAnnotation(key = "consumption", tag = false)
 	private float consumptionPercent;
+
+	@InfluxCompatibleAnnotation(key = "interval", tag = false)
 	private long timeInterval;
 
 	/**

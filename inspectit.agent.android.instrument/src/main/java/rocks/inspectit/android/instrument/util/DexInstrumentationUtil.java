@@ -2,6 +2,7 @@ package rocks.inspectit.android.instrument.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,8 +14,11 @@ import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.builder.BuilderInstruction;
 import org.jf.dexlib2.builder.MutableMethodImplementation;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction12x;
+import org.jf.dexlib2.builder.instruction.BuilderInstruction21c;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction22x;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction32x;
+import org.jf.dexlib2.builder.instruction.BuilderInstruction35c;
+import org.jf.dexlib2.builder.instruction.BuilderInstruction3rc;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ExceptionHandler;
 import org.jf.dexlib2.iface.Method;
@@ -24,8 +28,12 @@ import org.jf.dexlib2.iface.TryBlock;
 import org.jf.dexlib2.iface.debug.DebugItem;
 import org.jf.dexlib2.iface.instruction.Instruction;
 import org.jf.dexlib2.iface.reference.MethodReference;
+import org.jf.dexlib2.iface.reference.TypeReference;
 import org.jf.dexlib2.immutable.reference.ImmutableMethodReference;
+import org.jf.dexlib2.immutable.reference.ImmutableTypeReference;
 import org.jf.dexlib2.util.MethodUtil;
+
+import rocks.inspectit.agent.android.delegation.event.IDelegationEvent;
 
 /**
  * @author David Monschein
@@ -62,6 +70,45 @@ public class DexInstrumentationUtil {
 		}
 
 		return "L" + clz.getName().replaceAll("\\.", "/") + ";";
+	}
+
+	public static <T extends IDelegationEvent> List<BuilderInstruction> generateDelegationEventCreation(Class<T> clazz, int destinationRegister, int[] registers) {
+		List<BuilderInstruction> instrs = new ArrayList<>();
+
+		if (clazz.getConstructors()[0].getParameterTypes().length != registers.length) {
+			return null; // -> parameter count is invalid
+		}
+
+		Constructor<?> constructor = clazz.getConstructors()[0];
+
+		TypeReference typeReference = new ImmutableTypeReference(clazz.getName().replaceAll("\\.", "/"));
+		BuilderInstruction21c newInstanceInstruction = new BuilderInstruction21c(Opcode.NEW_INSTANCE, destinationRegister, typeReference);
+
+		MethodReference constructorReference = getMethodReference(clazz, "<init>", "V", constructor.getParameterTypes());
+		boolean fourBits = true;
+		for (int i = 0; i < registers.length; i++) {
+			if (numBits(registers[i]) > 4) {
+				if (i > 0) {
+					// -> if one registers is more than 4 bits then all arguments need to be in
+					// consecutive registers
+					return null;
+				}
+				fourBits = false;
+			}
+		}
+
+		BuilderInstruction constructorCallInstruction;
+		if (fourBits) {
+			constructorCallInstruction = new BuilderInstruction35c(Opcode.INVOKE_DIRECT, registers.length, registers.length > 0 ? registers[0] : 0, registers.length > 1 ? registers[1] : 0,
+					registers.length > 2 ? registers[2] : 0, registers.length > 3 ? registers[3] : 0, registers.length > 4 ? registers[4] : 0, constructorReference);
+		} else {
+			constructorCallInstruction = new BuilderInstruction3rc(Opcode.INVOKE_DIRECT_RANGE, registers[0], registers.length, constructorReference);
+		}
+
+		instrs.add(newInstanceInstruction);
+		instrs.add(constructorCallInstruction);
+
+		return instrs;
 	}
 
 	public static String getMethodSignature(Method method) {
@@ -132,7 +179,6 @@ public class DexInstrumentationUtil {
 		return new ImmutablePair<Integer, MutableMethodImplementation>(addedInstructions, ret);
 	}
 
-	// TODO rebuild
 	private static int createMoveStatements(Method method, MutableMethodImplementation ret, int nonParameterRegs, int nreg) {
 		int dest = nonParameterRegs;
 		int instrs = 0;

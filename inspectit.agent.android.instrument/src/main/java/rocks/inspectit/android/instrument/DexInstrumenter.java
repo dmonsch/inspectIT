@@ -3,57 +3,49 @@ package rocks.inspectit.android.instrument;
 import java.io.File;
 import java.io.IOException;
 import java.util.AbstractSet;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.jf.dexlib2.AccessFlags;
 import org.jf.dexlib2.DexFileFactory;
-import org.jf.dexlib2.Opcode;
 import org.jf.dexlib2.Opcodes;
-import org.jf.dexlib2.builder.BuilderInstruction;
 import org.jf.dexlib2.builder.MutableMethodImplementation;
-import org.jf.dexlib2.builder.instruction.BuilderInstruction10x;
-import org.jf.dexlib2.builder.instruction.BuilderInstruction35c;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
-import org.jf.dexlib2.iface.Annotation;
 import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.DexFile;
 import org.jf.dexlib2.iface.Method;
-import org.jf.dexlib2.iface.MethodImplementation;
-import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.immutable.ImmutableClassDef;
 import org.jf.dexlib2.immutable.ImmutableMethod;
-import org.jf.dexlib2.immutable.ImmutableMethodParameter;
-import org.jf.dexlib2.util.MethodUtil;
 
 import com.google.common.collect.Lists;
 
-import android.app.Activity;
-import android.os.Bundle;
-import rocks.inspectit.agent.android.core.AndroidAgent;
 import rocks.inspectit.android.instrument.config.InstrumentationConfiguration;
 import rocks.inspectit.android.instrument.config.xml.TraceCollectionConfiguration;
-import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
+import rocks.inspectit.android.instrument.dex.IDexClassInstrumenter;
+import rocks.inspectit.android.instrument.dex.IDexMethodImplementationInstrumenter;
+import rocks.inspectit.android.instrument.dex.IDexMethodInstrumenter;
+import rocks.inspectit.android.instrument.dex.impl.DexActivityInstrumenter;
+import rocks.inspectit.android.instrument.dex.impl.DexNetworkInstrumenter;
+import rocks.inspectit.android.instrument.dex.impl.DexSensorInstrumenter;
 
 /**
  * @author David Monschein
  *
  */
 public class DexInstrumenter {
-
-	private DexSensorInstrumenter dexSensorInstrumenter;
-	private DexNetworkInstrumenter dexNetworkInstrumenter;
-
 	private TraceCollectionConfiguration traceConfiguration;
 
-	public DexInstrumenter(InstrumentationConfiguration config) {
-		this.dexSensorInstrumenter = new DexSensorInstrumenter();
-		this.dexNetworkInstrumenter = new DexNetworkInstrumenter();
+	private IDexClassInstrumenter[] classInstrumenters;
+	private IDexMethodInstrumenter[] methodInstrumenters;
+	private IDexMethodImplementationInstrumenter[] implementationInstrumenters;
 
+	public DexInstrumenter(InstrumentationConfiguration config) {
 		this.traceConfiguration = config.getXmlConfiguration().getTraceCollectionList();
+
+		this.classInstrumenters = new IDexClassInstrumenter[] { new DexActivityInstrumenter() };
+		this.methodInstrumenters = new IDexMethodInstrumenter[] { new DexSensorInstrumenter(traceConfiguration) };
+		this.implementationInstrumenters = new IDexMethodImplementationInstrumenter[] { new DexNetworkInstrumenter() };
 	}
 
 	public void instrument(File input, File output) throws IOException {
@@ -61,91 +53,48 @@ public class DexInstrumenter {
 
 		final List<ClassDef> classes = Lists.newArrayList();
 
-		// generate agent invocation statements
+		// apply all class instrumenters
 		for (ClassDef classDef : dex.getClasses()) {
-			boolean modifiedMethod = false;
+			for (IDexClassInstrumenter instrumenter : classInstrumenters) {
+				if (instrumenter.isTargetClass(classDef)) {
+					classDef = instrumenter.instrumentClass(classDef);
+				}
+			}
+			classes.add(classDef);
+		}
+
+		// apply all method instrumenters
+		int k = 0;
+		for (ClassDef classDef : classes) {
 			List<Method> methods = Lists.newArrayList();
-			String superClass = classDef.getSuperclass();
-			if ((superClass != null) && (superClass.equals(DexInstrumentationUtil.getType(Activity.class)))) {
-				boolean foundOnCreate = false;
-				boolean foundOnDestroy = false;
-
-				for (Method method : classDef.getMethods()) {
-					String name = method.getName();
-					MethodImplementation implementation = method.getImplementation();
-					if ((implementation != null) && name.equals("onCreate")) {
-						foundOnCreate = true;
-						MethodImplementation newImplementation = null;
-						// if(!method.getName().equals("<init>"))
-						newImplementation = instrument(method);
-
-						if (newImplementation != null) {
-							modifiedMethod = true;
-							methods.add(new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(),
-									method.getAnnotations(), newImplementation));
-						} else {
-							methods.add(method);
+			for (Method method : classDef.getMethods()) {
+				if (method.getImplementation() != null) {
+					for (IDexMethodInstrumenter instrumenter : methodInstrumenters) {
+						if (instrumenter.isTargetMethod(method)) {
+							method = instrumenter.instrumentMethod(method);
 						}
-					} else if ((implementation != null) && name.equals("onDestroy")) {
-						foundOnDestroy = true;
-						MethodImplementation newImplementation = null;
-						newImplementation = instrumentDestroy(method);
-
-						if (newImplementation != null) {
-							modifiedMethod = true;
-							methods.add(new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(),
-									method.getAnnotations(), newImplementation));
-						} else {
-							methods.add(method);
-						}
-					} else {
-						methods.add(method);
 					}
 				}
+				methods.add(method);
+			}
 
-				if (!foundOnCreate) {
-					modifiedMethod = true;
-					MethodImplementation nImpl = generateOnCreateMethodImpl();
-					List<ImmutableMethodParameter> parameters = Lists.newArrayList(new ImmutableMethodParameter(DexInstrumentationUtil.getType(Bundle.class), new HashSet<Annotation>(), "bundle"));
-					Method onCreateMethod = new ImmutableMethod(classDef.getType(), "onCreate", parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl);
-					methods.add(onCreateMethod);
-				}
-
-				if (!foundOnDestroy) {
-					modifiedMethod = true;
-					MethodImplementation nImpl = generateOnDestroyMethodImpl();
-					List<ImmutableMethodParameter> parameters = Lists.newArrayList();
-					Method onDestroyMethod = new ImmutableMethod(classDef.getType(), "onDestroy", parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl);
-					methods.add(onDestroyMethod);
-				}
-			} else {
-				for (Method method : classDef.getMethods()) {
-					boolean methodWithSensor = isTracedMethod(method.getDefiningClass(), method.getName(), method.getParameterTypes());
-
-					if ((method.getImplementation() != null) && methodWithSensor) {
-						modifiedMethod = true;
-						methods.add(dexSensorInstrumenter.instrumentMethod(method));
-					} else {
-						methods.add(method);
+			// apply method implementation instrumenters
+			int j = 0;
+			for (Method method : methods) {
+				if (method.getImplementation() != null) {
+					for (IDexMethodImplementationInstrumenter instrumenter : implementationInstrumenters) {
+						Pair<Boolean, MutableMethodImplementation> impl = instrumenter.instrument(method.getImplementation());
+						if (impl.getKey()) {
+							methods.set(j++, new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(),
+									method.getAnnotations(), impl.getValue()));
+						}
 					}
 				}
 			}
 
-			for (int i = 0; i < methods.size(); i++) {
-				Pair<Boolean, ? extends Method> result = dexNetworkInstrumenter.instrumentMethod(methods.get(i));
-				if (result.getLeft()) {
-					// instrumented
-					modifiedMethod = true;
-					methods.set(i, result.getRight());
-				}
-			}
-
-			if (!modifiedMethod) {
-				classes.add(classDef);
-			} else {
-				classes.add(new ImmutableClassDef(classDef.getType(), classDef.getAccessFlags(), classDef.getSuperclass(), classDef.getInterfaces(), classDef.getSourceFile(),
-						classDef.getAnnotations(), classDef.getFields(), methods));
-			}
+			classDef = new ImmutableClassDef(classDef.getType(), classDef.getAccessFlags(), classDef.getSuperclass(), classDef.getInterfaces(), classDef.getSourceFile(), classDef.getAnnotations(),
+					classDef.getFields(), methods);
+			classes.set(k++, classDef);
 		}
 
 		DexFileFactory.writeDexFile(output.getAbsolutePath(), new DexFile() {
@@ -169,103 +118,6 @@ public class DexInstrumenter {
 				return Opcodes.getDefault();
 			}
 		});
-	}
-
-	private boolean isTracedMethod(String clazz, String method, List<? extends CharSequence> parameters) {
-		List<String> patterns = traceConfiguration.getPackages();
-
-		for (String pattern : patterns) {
-			String[] patternSplit = pattern.split("\\.");
-			String[] matchSplit = (clazz.replaceAll("/", ".").substring(1, clazz.length() - 1) + "." + method).split("\\.");
-
-			int k = 0;
-			for (String part : patternSplit) {
-
-				if (k >= matchSplit.length) {
-					break;
-				}
-
-				if (!part.equals("*")) {
-					if (part.equals("**")) {
-						return true;
-					} else {
-						if (!part.equals(matchSplit[k])) {
-							break;
-						}
-					}
-				}
-
-				++k;
-			}
-		}
-
-		return false;
-	}
-
-	private MethodImplementation generateOnCreateMethodImpl() {
-		MutableMethodImplementation impl = new MutableMethodImplementation(2);
-
-		// 2 because there is 1 register parameter 1 this reference -> parameter count is this inclusive
-		int thisRegister = DexInstrumentationUtil.getThisRegister(impl.getRegisterCount(), 2);
-		int parameterRegister = 1; // in highest register
-
-		impl.addInstruction(0, new BuilderInstruction10x(Opcode.RETURN_VOID));
-
-		MethodReference methRef = DexInstrumentationUtil.getMethodReference(Activity.class, "onCreate", "V", Bundle.class);
-
-		// first register is this register -> because 1 is parameter register
-		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 2, thisRegister, parameterRegister, 0, 0, 0, methRef);
-
-		impl.addInstruction(0, createAgentInitInvocation(thisRegister));
-		impl.addInstruction(0, superInvocation);
-
-		return impl;
-	}
-
-	private MethodImplementation generateOnDestroyMethodImpl() {
-		MutableMethodImplementation impl = new MutableMethodImplementation(1);
-
-		impl.addInstruction(0, new BuilderInstruction10x(Opcode.RETURN_VOID));
-
-		MethodReference methRef = DexInstrumentationUtil.getMethodReference(Activity.class, "onDestroy", "V");
-
-		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 1, 0, 0, 0, 0, 0, methRef);
-
-		impl.addInstruction(0, createAgentDestroyInvocation());
-		impl.addInstruction(0, superInvocation);
-
-		return impl;
-	}
-
-	private MethodImplementation instrument(Method method) {
-		MutableMethodImplementation impl = new MutableMethodImplementation(method.getImplementation());
-
-		int paramRegisters = MethodUtil.getParameterRegisterCount(method);
-		int thisRegister = DexInstrumentationUtil.getThisRegister(impl.getRegisterCount(), paramRegisters);
-
-		impl.addInstruction(0, createAgentInitInvocation(thisRegister));
-
-		return impl;
-	}
-
-	private MethodImplementation instrumentDestroy(Method method) {
-		MutableMethodImplementation impl = new MutableMethodImplementation(method.getImplementation());
-		impl.addInstruction(0, createAgentDestroyInvocation());
-		return impl;
-	}
-
-	private BuilderInstruction createAgentInitInvocation(int thisRegister) {
-		MethodReference methodReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "initAgent", "V", Activity.class);
-		BuilderInstruction35c invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, thisRegister, 0, 0, 0, 0, methodReference);
-
-		return invokeInstruction;
-	}
-
-	private BuilderInstruction createAgentDestroyInvocation() {
-		MethodReference methodReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "destroyAgent", "V");
-		BuilderInstruction35c invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 0, 0, 0, 0, 0, 0, methodReference);
-
-		return invokeInstruction;
 	}
 
 }
