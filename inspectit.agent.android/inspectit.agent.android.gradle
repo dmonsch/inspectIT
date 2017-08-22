@@ -31,11 +31,7 @@ dependencies {
 	
 	compile project(":inspectit.shared.all")
 	compile project(":inspectit.agent.java.sdk")
-	
-	compile group: 'net.lingala.zip4j', name: 'zip4j', version: '1.3.2'
-	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
-	compile group: 'commons-io', name: 'commons-io', version: '2.5'
-	compile group: 'org.smali', name: 'dexlib2', version: '2.2.0'
+	compile project(":inspectit.shared.android")
 	
 	compile 'io.opentracing:opentracing-api:0.20.9'
 	compile 'io.opentracing:opentracing-noop:0.20.9'
@@ -47,8 +43,9 @@ shadowJar {
 	relocate 'org.codehaus', 'rocks.org.codehaus'
 	exclude 'META-INF/*'
 	
+	/** Only this dependencies are included in the build */
 	dependencies {
-		include(project(":inspectit.shared.all"))
+		include(project(":inspectit.shared.android"))
 		
 		include(project(":inspectit.agent.java.sdk"))
 		include(dependency('io.opentracing:opentracing-api:0.20.9'))

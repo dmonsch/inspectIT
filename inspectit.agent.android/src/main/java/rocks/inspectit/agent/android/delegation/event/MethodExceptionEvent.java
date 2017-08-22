@@ -19,8 +19,8 @@ public class MethodExceptionEvent extends AbstractMethodEvent {
 	 * @param methodSignature
 	 * @param parameters
 	 */
-	public MethodExceptionEvent(long sensorId, String methodSignature, Object[] parameters, String exceptionClass) {
-		super(sensorId, methodSignature, parameters);
+	public MethodExceptionEvent(int sensorId, long methodId, String methodSignature, Object object, String exceptionClass) {
+		super(sensorId, methodId, methodSignature, object);
 		this.exceptionClass = exceptionClass;
 	}
 
@@ -28,10 +28,10 @@ public class MethodExceptionEvent extends AbstractMethodEvent {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void process(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, Map<Long, ISensor> sensors) {
+	public void process(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, Map<Integer, ISensor> sensors) {
 		if (sensors.containsKey(sensorId)) {
 			ISensor belongingSensor = sensors.get(sensorId);
-			belongingSensor.exceptionThrown(methodSignature.hashCode(), methodSignature, parameters, exceptionClass);
+			belongingSensor.exceptionThrown(sensorId, methodId, methodSignature, object, exceptionClass);
 		}
 	}
 

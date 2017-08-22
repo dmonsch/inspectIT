@@ -13,17 +13,19 @@ import org.jf.dexlib2.builder.MethodLocation;
 import org.jf.dexlib2.builder.MutableMethodImplementation;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction10x;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction11x;
-import org.jf.dexlib2.builder.instruction.BuilderInstruction21c;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction31i;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction35c;
-import org.jf.dexlib2.builder.instruction.BuilderInstruction3rc;
 import org.jf.dexlib2.iface.Method;
 import org.jf.dexlib2.iface.instruction.Instruction;
 import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.immutable.ImmutableMethod;
-import org.jf.dexlib2.immutable.reference.ImmutableStringReference;
+import org.jf.dexlib2.util.MethodUtil;
 
 import rocks.inspectit.agent.android.core.AndroidAgent;
+import rocks.inspectit.agent.android.delegation.event.MethodEnterEvent;
+import rocks.inspectit.agent.android.delegation.event.MethodExitEvent;
+import rocks.inspectit.agent.android.sensor.SensorAnnotation;
+import rocks.inspectit.agent.android.sensor.TraceSensor;
 import rocks.inspectit.android.instrument.config.xml.TraceCollectionConfiguration;
 import rocks.inspectit.android.instrument.dex.IDexMethodInstrumenter;
 import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
@@ -35,9 +37,11 @@ import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
 public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 
 	private TraceCollectionConfiguration traceConfiguration;
+	private int traceSensorId;
 
 	public DexSensorInstrumenter(TraceCollectionConfiguration traceConfig) {
 		this.traceConfiguration = traceConfig;
+		this.traceSensorId = TraceSensor.class.getAnnotation(SensorAnnotation.class).id();
 	}
 
 	/**
@@ -54,7 +58,12 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 	}
 
 	private Method instrument(Method method) {
-		Pair<Integer, MutableMethodImplementation> extendedInstr = DexInstrumentationUtil.extendMethodRegisters(method, 2);
+		if (method.getImplementation() == null) {
+			return method;
+		}
+
+		int addedRegisters = 6;
+		Pair<Integer, MutableMethodImplementation> extendedInstr = DexInstrumentationUtil.extendMethodRegisters(method, addedRegisters);
 
 		MutableMethodImplementation nImpl = extendedInstr.getRight();
 		int instrOffset = extendedInstr.getLeft();
@@ -62,22 +71,34 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 		// create additional code
 		String signature = DexInstrumentationUtil.getMethodSignature(method);
 
-		int dest = nImpl.getRegisterCount() - 2; // free register offset
+		int thisRegister = method.getImplementation().getRegisterCount() - MethodUtil.getParameterRegisterCount(method);
+		int dest = nImpl.getRegisterCount() - addedRegisters; // free register offset
 
-		// loads method signature
-		nImpl.addInstruction(instrOffset, new BuilderInstruction31i(Opcode.CONST, dest + 0, signature.hashCode()));
-		nImpl.addInstruction(instrOffset + 1, new BuilderInstruction21c(Opcode.CONST_STRING, dest + 1, new ImmutableStringReference(signature)));
+		nImpl.addInstruction(instrOffset++, DexInstrumentationUtil.createIntegerConstant(dest + 0, traceSensorId));
+		nImpl.addInstruction(instrOffset++, DexInstrumentationUtil.createLongConstant(dest + 1, signature.hashCode()));
+		nImpl.addInstruction(instrOffset++, DexInstrumentationUtil.createStringConstant(dest + 3, signature));
 
-		// invoke agent
-		MethodReference onEnterReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "enterBody", "V", int.class, String.class);
-		if (DexInstrumentationUtil.numBits(dest + 1) == 4) {
-			BuilderInstruction35c invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 2, dest + 0, dest + 1, 0, 0, 0, onEnterReference);
-			nImpl.addInstruction(instrOffset + 2, invokeInstruction);
+		if (!MethodUtil.isStatic(method)) {
+			// create a move
+			nImpl.addInstruction(instrOffset++, DexInstrumentationUtil.moveRegister(dest + 4, thisRegister, Opcode.MOVE_OBJECT));
 		} else {
-			BuilderInstruction3rc invokeInstruction = new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, dest + 0, 2, onEnterReference);
-			nImpl.addInstruction(instrOffset + 2, invokeInstruction);
+			// push null
+			nImpl.addInstruction(instrOffset++, DexInstrumentationUtil.createIntegerConstant(dest + 4, 0));
 		}
 
+		// method id -> 0, method signature -> 2, object -> thisRegister, parameter array -> 3 ff.
+		List<BuilderInstruction> delegationEventCreation = DexInstrumentationUtil.generateDelegationEventCreation(MethodEnterEvent.class, dest + 5, new int[] { dest, dest + 1, dest + 3, dest + 4 });
+		BuilderInstruction delegationEventProcessing = DexInstrumentationUtil.generateDelegationEventProcessing(dest + 5);
+
+		DexInstrumentationUtil.addInstructions(nImpl, delegationEventCreation, instrOffset += delegationEventCreation.size());
+		nImpl.addInstruction(instrOffset++, delegationEventProcessing);
+
+		// add the move back instruction
+		if (!MethodUtil.isStatic(method)) {
+			nImpl.addInstruction(instrOffset++, DexInstrumentationUtil.moveRegister(thisRegister, dest + 4, Opcode.MOVE_OBJECT));
+		}
+
+		// search for exit points
 		List<BuilderInstruction> instrList = nImpl.getInstructions();
 
 		List<Integer> positions_ret = new ArrayList<>();
@@ -110,25 +131,32 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 				continue;
 			}
 
-			// loads method signature
-			BuilderInstruction31i loadIntInstruction = new BuilderInstruction31i(Opcode.CONST, dest + 0, signature.hashCode());
+			// create exit code
+			List<BuilderInstruction> exitDelegationEventCreation = DexInstrumentationUtil.generateDelegationEventCreation(MethodExitEvent.class, dest + 4,
+					new int[] { dest, dest + 1, dest + 3, dest + 4 });
+			BuilderInstruction exitDelegationEventProcessing = DexInstrumentationUtil.generateDelegationEventProcessing(dest + 4);
 
-			nImpl.addInstruction(retPos + offset, loadIntInstruction);
+			BuilderInstruction firstExitInstr;
+			if (!MethodUtil.isStatic(method)) {
+				// create a move
+				BuilderInstruction moveThisBack = DexInstrumentationUtil.moveRegister(dest + 4, thisRegister, Opcode.MOVE_OBJECT);
+				nImpl.addInstruction(instrOffset++, moveThisBack);
+
+				firstExitInstr = moveThisBack;
+			} else {
+				firstExitInstr = exitDelegationEventCreation.get(0);
+			}
+
+			DexInstrumentationUtil.addInstructions(nImpl, exitDelegationEventCreation, instrOffset += exitDelegationEventCreation.size());
+			nImpl.addInstruction(instrOffset++, exitDelegationEventProcessing);
 
 			// move labels
 			for (Label movingLabel : movingLabels) {
 				retLocation.getLabels().remove(movingLabel);
-				loadIntInstruction.getLocation().getLabels().add(movingLabel);
+				firstExitInstr.getLocation().getLabels().add(movingLabel);
 			}
 
-			MethodReference onExitReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "exitBody", "V", int.class);
-			if (DexInstrumentationUtil.numBits(dest + 1) == 4) {
-				BuilderInstruction35c invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, dest + 0, 0, 0, 0, 0, onExitReference);
-				nImpl.addInstruction(retPos + offset + 1, invokeInstruction);
-			} else {
-				BuilderInstruction3rc invokeInstruction = new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, dest + 0, 1, onExitReference);
-				nImpl.addInstruction(retPos + offset + 1, invokeInstruction);
-			}
+			// TODO EXIT THINGS
 
 			offset += 2; // we added two new instructions therefore we need to shift the instr
 			// position

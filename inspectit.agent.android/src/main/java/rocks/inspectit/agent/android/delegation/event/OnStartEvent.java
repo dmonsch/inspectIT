@@ -12,11 +12,14 @@ import rocks.inspectit.agent.android.sensor.ISensor;
  */
 public class OnStartEvent implements IDelegationEvent {
 
+	public OnStartEvent() {
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void process(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, Map<Long, ISensor> sensors) {
+	public void process(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, Map<Integer, ISensor> sensors) {
 		for (AbstractBroadcastReceiver recv : receivers) {
 			recv.onStart();
 		}

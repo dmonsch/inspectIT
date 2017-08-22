@@ -17,18 +17,18 @@ public class MethodExitEvent extends AbstractMethodEvent {
 	 * @param methodSignature
 	 * @param parameters
 	 */
-	public MethodExitEvent(long sensorId, String methodSignature, Object[] parameters) {
-		super(sensorId, methodSignature, parameters);
+	public MethodExitEvent(int sensorId, long methodId, String methodSignature, Object object) {
+		super(sensorId, methodId, methodSignature, object);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void process(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, Map<Long, ISensor> sensors) {
+	public void process(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, Map<Integer, ISensor> sensors) {
 		if (sensors.containsKey(sensorId)) {
 			ISensor belongingSensor = sensors.get(sensorId);
-			belongingSensor.firstAfterBody(methodSignature.hashCode(), methodSignature, parameters);
+			belongingSensor.firstAfterBody(sensorId, methodId, methodSignature, object);
 		}
 	}
 

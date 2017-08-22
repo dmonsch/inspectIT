@@ -6,20 +6,22 @@ package rocks.inspectit.agent.android.delegation.event;
  */
 abstract class AbstractMethodEvent implements IDelegationEvent {
 
-	protected long sensorId;
+	protected int sensorId;
+	protected long methodId;
 	protected String methodSignature;
-	protected Object[] parameters;
+	protected Object object;
 
 	/**
 	 * @param sensorId
 	 * @param methodSignature
 	 * @param parameters
 	 */
-	public AbstractMethodEvent(long sensorId, String methodSignature, Object[] parameters) {
+	public AbstractMethodEvent(int sensorId, long methodId, String methodSignature, Object object) {
 		super();
 		this.sensorId = sensorId;
 		this.methodSignature = methodSignature;
-		this.parameters = parameters;
+		this.object = object;
+		this.methodId = methodId;
 	}
 
 }

@@ -17,18 +17,18 @@ public class MethodEnterEvent extends AbstractMethodEvent {
 	 * @param methodSignature
 	 * @param parameters
 	 */
-	public MethodEnterEvent(long sensorId, String methodSignature, Object[] parameters) {
-		super(sensorId, methodSignature, parameters);
+	public MethodEnterEvent(int sensorId, long methodId, String methodSignature, Object object) {
+		super(sensorId, methodId, methodSignature, object);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void process(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, Map<Long, ISensor> sensors) {
+	public void process(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, Map<Integer, ISensor> sensors) {
 		if (sensors.containsKey(sensorId)) {
 			ISensor belongingSensor = sensors.get(sensorId);
-			belongingSensor.beforeBody(methodSignature.hashCode(), methodSignature, parameters);
+			belongingSensor.beforeBody(sensorId, methodId, methodSignature, object);
 		}
 	}
 
