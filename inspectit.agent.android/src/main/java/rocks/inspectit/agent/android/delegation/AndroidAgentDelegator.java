@@ -20,7 +20,7 @@ public class AndroidAgentDelegator {
 	private AbstractBroadcastReceiver[] broadcastReceivers;
 	private AbstractMonitoringModule[] monitoringModules;
 
-	private Map<Long, ISensor> classSensorMapping;
+	private Map<Integer, ISensor> classSensorMapping;
 
 	private static boolean inited;
 	private static Queue<IDelegationEvent> initingQueue;

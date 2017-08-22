@@ -3,6 +3,7 @@ package rocks.inspectit.android.instrument.dex.impl;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.jf.dexlib2.AccessFlags;
 import org.jf.dexlib2.Opcode;
 import org.jf.dexlib2.builder.BuilderInstruction;
@@ -23,6 +24,9 @@ import com.google.common.collect.Lists;
 import android.app.Activity;
 import android.os.Bundle;
 import rocks.inspectit.agent.android.core.AndroidAgent;
+import rocks.inspectit.agent.android.delegation.event.IDelegationEvent;
+import rocks.inspectit.agent.android.delegation.event.OnStartEvent;
+import rocks.inspectit.agent.android.delegation.event.OnStopEvent;
 import rocks.inspectit.android.instrument.dex.IDexClassInstrumenter;
 import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
 
@@ -34,6 +38,8 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 
 	private static final String METHOD_ONCREATE = "onCreate";
 	private static final String METHOD_ONDESTROY = "onDestroy";
+	private static final String METHOD_ONSTOP = "onStop";
+	private static final String METHOD_ONSTART = "onStart";
 
 	@Override
 	public boolean isTargetClass(ClassDef clazz) {
@@ -51,6 +57,8 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 
 		boolean foundOnCreate = false;
 		boolean foundOnDestroy = false;
+		boolean foundOnStop = false;
+		boolean foundOnStart = false;
 
 		for (Method meth : clazz.getMethods()) {
 			if (meth.getImplementation() != null) {
@@ -58,6 +66,10 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 					foundOnCreate = true;
 				} else if (METHOD_ONDESTROY.equals(meth.getName())) {
 					foundOnDestroy = true;
+				} else if (METHOD_ONSTOP.equals(meth.getName())) {
+					foundOnStop = true;
+				} else if (METHOD_ONSTART.equals(meth.getName())) {
+					foundOnStart = true;
 				}
 				methods.add(instrumentMethod(meth));
 			}
@@ -66,13 +78,25 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 		if (!foundOnCreate) {
 			MethodImplementation nImpl = generateOnCreateMethodImpl();
 			List<ImmutableMethodParameter> parameters = Lists.newArrayList(new ImmutableMethodParameter(DexInstrumentationUtil.getType(Bundle.class), new HashSet<Annotation>(), "bundle"));
-			methods.add(new ImmutableMethod(clazz.getType(), "onCreate", parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
+			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONCREATE, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
 		}
 
 		if (!foundOnDestroy) {
 			MethodImplementation nImpl = generateOnDestroyMethodImpl();
 			List<ImmutableMethodParameter> parameters = Lists.newArrayList();
-			methods.add(new ImmutableMethod(clazz.getType(), "onDestroy", parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
+			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONDESTROY, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
+		}
+
+		if (!foundOnStart) {
+			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTART, createDelegation(1, OnStartEvent.class));
+			List<ImmutableMethodParameter> parameters = Lists.newArrayList();
+			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONSTART, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
+		}
+
+		if (!foundOnStop) {
+			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTOP, createDelegation(1, OnStopEvent.class));
+			List<ImmutableMethodParameter> parameters = Lists.newArrayList();
+			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONSTOP, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
 		}
 
 		return clazz;
@@ -82,30 +106,34 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 	public Method instrumentMethod(Method method) {
 		String name = method.getName();
 		MethodImplementation implementation = method.getImplementation();
-		if ((implementation != null) && METHOD_ONCREATE.equals(name)) {
-			MethodImplementation newImplementation = null;
-			// if(!method.getName().equals("<init>"))
-			newImplementation = instrument(method);
-
-			if (newImplementation != null) {
-				return new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(), method.getAnnotations(),
-						newImplementation);
-			} else {
-				return method;
+		if ((implementation != null)) {
+			if (METHOD_ONCREATE.equals(name)) {
+				MethodImplementation newImplementation = instrumentCreate(method);
+				if (newImplementation != null) {
+					return new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(), method.getAnnotations(),
+							newImplementation);
+				}
+			} else if (METHOD_ONDESTROY.equals(name)) {
+				MethodImplementation newImplementation = instrumentDestroy(method);
+				if (newImplementation != null) {
+					return new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(), method.getAnnotations(),
+							newImplementation);
+				}
+			} else if (METHOD_ONSTART.equals(name)) {
+				MethodImplementation newImplementation = instrumentStartStop(method, OnStartEvent.class);
+				if (newImplementation != null) {
+					return new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(), method.getAnnotations(),
+							newImplementation);
+				}
+			} else if (METHOD_ONSTOP.equals(name)) {
+				MethodImplementation newImplementation = instrumentStartStop(method, OnStopEvent.class);
+				if (newImplementation != null) {
+					return new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(), method.getAnnotations(),
+							newImplementation);
+				}
 			}
-		} else if ((implementation != null) && METHOD_ONDESTROY.equals(name)) {
-			MethodImplementation newImplementation = null;
-			newImplementation = instrumentDestroy(method);
-
-			if (newImplementation != null) {
-				return new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(), method.getAnnotations(),
-						newImplementation);
-			} else {
-				return method;
-			}
-		} else {
-			return method;
 		}
+		return method;
 	}
 
 	/**
@@ -122,13 +150,41 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 		return impl;
 	}
 
-	private MethodImplementation instrument(Method method) {
+	private MethodImplementation instrumentCreate(Method method) {
 		MutableMethodImplementation impl = new MutableMethodImplementation(method.getImplementation());
 
 		int paramRegisters = MethodUtil.getParameterRegisterCount(method);
 		int thisRegister = DexInstrumentationUtil.getThisRegister(impl.getRegisterCount(), paramRegisters);
 
 		impl.addInstruction(0, createAgentInitInvocation(thisRegister));
+
+		return impl;
+	}
+
+	private MethodImplementation instrumentStartStop(Method method, Class<? extends IDelegationEvent> delegationClass) {
+		Pair<Integer, MutableMethodImplementation> impl = DexInstrumentationUtil.extendMethodRegisters(method, 1);
+
+		DexInstrumentationUtil.addInstructions(impl.getRight(), createDelegation(impl.getRight().getRegisterCount() - 1, delegationClass), 0);
+
+		return impl.getRight();
+	}
+
+	private List<BuilderInstruction> createDelegation(int dest, Class<? extends IDelegationEvent> clazz) {
+		List<BuilderInstruction> instrList = DexInstrumentationUtil.generateDelegationEventCreation(clazz, dest, new int[] {});
+		instrList.add(DexInstrumentationUtil.generateDelegationEventProcessing(dest));
+		return instrList;
+	}
+
+	private MethodImplementation generateOnStartStopMethodImpl(String superName, List<BuilderInstruction> delegation) {
+		MutableMethodImplementation impl = new MutableMethodImplementation(2);
+
+		impl.addInstruction(0, new BuilderInstruction10x(Opcode.RETURN_VOID));
+
+		MethodReference methRef = DexInstrumentationUtil.getMethodReference(Activity.class, superName, "V");
+		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 1, 0, 0, 0, 0, 0, methRef);
+
+		DexInstrumentationUtil.addInstructions(impl, delegation, 0);
+		impl.addInstruction(0, superInvocation);
 
 		return impl;
 	}

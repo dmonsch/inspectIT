@@ -13,12 +13,16 @@ import org.jf.dexlib2.Opcode;
 import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.builder.BuilderInstruction;
 import org.jf.dexlib2.builder.MutableMethodImplementation;
+import org.jf.dexlib2.builder.instruction.BuilderInstruction11n;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction12x;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction21c;
+import org.jf.dexlib2.builder.instruction.BuilderInstruction21s;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction22x;
+import org.jf.dexlib2.builder.instruction.BuilderInstruction31i;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction32x;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction35c;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction3rc;
+import org.jf.dexlib2.builder.instruction.BuilderInstruction51l;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ExceptionHandler;
 import org.jf.dexlib2.iface.Method;
@@ -30,9 +34,11 @@ import org.jf.dexlib2.iface.instruction.Instruction;
 import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.iface.reference.TypeReference;
 import org.jf.dexlib2.immutable.reference.ImmutableMethodReference;
+import org.jf.dexlib2.immutable.reference.ImmutableStringReference;
 import org.jf.dexlib2.immutable.reference.ImmutableTypeReference;
 import org.jf.dexlib2.util.MethodUtil;
 
+import rocks.inspectit.agent.android.delegation.AndroidAgentDelegator;
 import rocks.inspectit.agent.android.delegation.event.IDelegationEvent;
 
 /**
@@ -40,6 +46,8 @@ import rocks.inspectit.agent.android.delegation.event.IDelegationEvent;
  *
  */
 public class DexInstrumentationUtil {
+
+	private static final MethodReference DELEGATE_REFERENCE = DexInstrumentationUtil.getMethodReference(AndroidAgentDelegator.class, "delegateEvent", "V", IDelegationEvent.class);
 
 	public static int getMethodCount(File dexFile) throws IOException {
 		DexBackedDexFile dex = DexFileFactory.loadDexFile(dexFile, Opcodes.forApi(19));
@@ -70,6 +78,39 @@ public class DexInstrumentationUtil {
 		}
 
 		return "L" + clz.getName().replaceAll("\\.", "/") + ";";
+	}
+
+	public static BuilderInstruction createLongConstant(int firstDestReg, long val) {
+		return new BuilderInstruction51l(Opcode.CONST_WIDE, firstDestReg, val);
+	}
+
+	public static BuilderInstruction createStringConstant(int destinationRegister, String constant) {
+		return new BuilderInstruction21c(Opcode.CONST_STRING, destinationRegister, new ImmutableStringReference(constant));
+	}
+
+	public static BuilderInstruction createIntegerConstant(int register, int value) {
+		int numBitsReg = numBits(register);
+		int numBitsValue = numBits(value);
+
+		if ((numBitsReg == 4) && (numBitsValue == 4)) {
+			return new BuilderInstruction11n(Opcode.CONST_4, register, value);
+		} else if (numBitsReg == 8) {
+			if (numBitsValue <= 16) {
+				return new BuilderInstruction21s(Opcode.CONST_16, register, value);
+			} else {
+				return new BuilderInstruction31i(Opcode.CONST, register, value);
+			}
+		} else {
+			throw new RuntimeException("Didn't except this to happen.");
+		}
+	}
+
+	public static int addInstructions(MutableMethodImplementation impl, List<BuilderInstruction> instrs, int initialPos) {
+		int k = initialPos;
+		for (BuilderInstruction bi : instrs) {
+			impl.addInstruction(k++, bi);
+		}
+		return instrs.size();
 	}
 
 	public static <T extends IDelegationEvent> List<BuilderInstruction> generateDelegationEventCreation(Class<T> clazz, int destinationRegister, int[] registers) {
@@ -109,6 +150,14 @@ public class DexInstrumentationUtil {
 		instrs.add(constructorCallInstruction);
 
 		return instrs;
+	}
+
+	public static BuilderInstruction generateDelegationEventProcessing(int dest) {
+		if (DexInstrumentationUtil.numBits(dest) == 4) {
+			return new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, dest, 0, 0, 0, 0, DELEGATE_REFERENCE);
+		} else {
+			return new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, dest, 1, DELEGATE_REFERENCE);
+		}
 	}
 
 	public static String getMethodSignature(Method method) {
@@ -211,7 +260,7 @@ public class DexInstrumentationUtil {
 		return instrs;
 	}
 
-	private static BuilderInstruction moveRegister(int dest, int src, Opcode opcode) {
+	public static BuilderInstruction moveRegister(int dest, int src, Opcode opcode) {
 		int destNumBits = numBits(dest);
 		int srcNumBits = numBits(src);
 
@@ -264,8 +313,10 @@ public class DexInstrumentationUtil {
 			return 8;
 		} else if (reg < 0x0000FFFF) {
 			return 16;
+		} else if (reg < 0x00FFFFFF) {
+			return 32;
 		} else {
-			throw new RuntimeException("More than 16 bits is required to encode register " + reg);
+			return 64;
 		}
 	}
 }

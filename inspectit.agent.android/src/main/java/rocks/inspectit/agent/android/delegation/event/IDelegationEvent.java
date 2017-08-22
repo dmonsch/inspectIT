@@ -12,6 +12,6 @@ import rocks.inspectit.agent.android.sensor.ISensor;
  */
 public interface IDelegationEvent {
 
-	void process(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, Map<Long, ISensor> sensors);
+	void process(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, Map<Integer, ISensor> sensors);
 
 }
