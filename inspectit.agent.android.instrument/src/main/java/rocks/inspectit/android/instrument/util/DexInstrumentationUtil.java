@@ -94,7 +94,7 @@ public class DexInstrumentationUtil {
 
 		if ((numBitsReg == 4) && (numBitsValue == 4)) {
 			return new BuilderInstruction11n(Opcode.CONST_4, register, value);
-		} else if (numBitsReg == 8) {
+		} else if (numBitsReg <= 8) {
 			if (numBitsValue <= 16) {
 				return new BuilderInstruction21s(Opcode.CONST_16, register, value);
 			} else {
@@ -113,37 +113,68 @@ public class DexInstrumentationUtil {
 		return instrs.size();
 	}
 
+	public static BuilderInstruction generateDelegationInvocation(int[] registers, Class<?>... parameterClasses) {
+		boolean fourBits = registers.length < 6;
+
+		// check if all registers are 4 bits
+		if (fourBits) {
+			for (int reg : registers) {
+				if ((numBits(reg) == 8) || (numBits(reg) == 16)) {
+					fourBits = false;
+				}
+			}
+		}
+
+		// check if registers are valid
+		if (!fourBits) {
+			for (int k = 0; k < registers.length; k++) {
+				if (k != 0) {
+					if (registers[k] != registers[k - 1]) {
+						throw new RuntimeException("Failed to instrument: Registers are > 4 bits or more than 5 registers are needed and the registers are not in ascending order.");
+					}
+				}
+			}
+		}
+
+		// generate the invocation
+		MethodReference toCall = getMethodReference(AndroidAgentDelegator.class, "delegateEvent", "V", parameterClasses);
+		if (fourBits) {
+			return new BuilderInstruction35c(Opcode.INVOKE_STATIC, registers.length, registers.length >= 1 ? registers[0] : 0, registers.length >= 2 ? registers[1] : 0,
+					registers.length >= 3 ? registers[2] : 0, registers.length >= 4 ? registers[3] : 0, registers.length >= 5 ? registers[4] : 0, toCall);
+		} else {
+			return new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, registers[0], registers.length, toCall);
+		}
+	}
+
 	public static <T extends IDelegationEvent> List<BuilderInstruction> generateDelegationEventCreation(Class<T> clazz, int destinationRegister, int[] registers) {
 		List<BuilderInstruction> instrs = new ArrayList<>();
 
-		if (clazz.getConstructors()[0].getParameterTypes().length != registers.length) {
-			return null; // -> parameter count is invalid
-		}
+		// -> this isn't valid because of long parameters
+		/*
+		 * if (clazz.getConstructors()[0].getParameterTypes().length != registers.length) { return
+		 * null; // -> parameter count is invalid }
+		 */
 
 		Constructor<?> constructor = clazz.getConstructors()[0];
 
-		TypeReference typeReference = new ImmutableTypeReference(clazz.getName().replaceAll("\\.", "/"));
+		TypeReference typeReference = new ImmutableTypeReference(getType(clazz));
 		BuilderInstruction21c newInstanceInstruction = new BuilderInstruction21c(Opcode.NEW_INSTANCE, destinationRegister, typeReference);
 
 		MethodReference constructorReference = getMethodReference(clazz, "<init>", "V", constructor.getParameterTypes());
 		boolean fourBits = true;
-		for (int i = 0; i < registers.length; i++) {
-			if (numBits(registers[i]) > 4) {
-				if (i > 0) {
-					// -> if one registers is more than 4 bits then all arguments need to be in
-					// consecutive registers
-					return null;
-				}
+		for (int register : registers) {
+			if (numBits(register) > 4) {
 				fourBits = false;
+				break;
 			}
 		}
 
 		BuilderInstruction constructorCallInstruction;
-		if (fourBits) {
-			constructorCallInstruction = new BuilderInstruction35c(Opcode.INVOKE_DIRECT, registers.length, registers.length > 0 ? registers[0] : 0, registers.length > 1 ? registers[1] : 0,
-					registers.length > 2 ? registers[2] : 0, registers.length > 3 ? registers[3] : 0, registers.length > 4 ? registers[4] : 0, constructorReference);
+		if (fourBits && (registers.length < 5)) {
+			constructorCallInstruction = new BuilderInstruction35c(Opcode.INVOKE_DIRECT, registers.length + 1, destinationRegister, registers.length > 0 ? registers[0] : 0,
+					registers.length > 1 ? registers[1] : 0, registers.length > 2 ? registers[2] : 0, registers.length > 3 ? registers[3] : 0, constructorReference);
 		} else {
-			constructorCallInstruction = new BuilderInstruction3rc(Opcode.INVOKE_DIRECT_RANGE, registers[0], registers.length, constructorReference);
+			constructorCallInstruction = new BuilderInstruction3rc(Opcode.INVOKE_DIRECT_RANGE, destinationRegister, registers.length + 1, constructorReference);
 		}
 
 		instrs.add(newInstanceInstruction);
@@ -153,7 +184,7 @@ public class DexInstrumentationUtil {
 	}
 
 	public static BuilderInstruction generateDelegationEventProcessing(int dest) {
-		if (DexInstrumentationUtil.numBits(dest) == 4) {
+		if (numBits(dest) == 4) {
 			return new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, dest, 0, 0, 0, 0, DELEGATE_REFERENCE);
 		} else {
 			return new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, dest, 1, DELEGATE_REFERENCE);

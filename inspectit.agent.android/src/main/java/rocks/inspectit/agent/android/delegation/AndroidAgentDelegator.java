@@ -36,11 +36,10 @@ public class AndroidAgentDelegator {
 		classSensorMapping = new HashMap<>();
 	}
 
-	public static void delegateEvent(IDelegationEvent event) {
+	public static void delegateOnStartEvent() {
 		if (inited) {
-			instance.processEvent(event);
+			for()
 		} else {
-			initingQueue.add(event);
 		}
 	}
 
@@ -61,10 +60,6 @@ public class AndroidAgentDelegator {
 		instance = this;
 		inited = true;
 		swapQueue();
-	}
-
-	private void processEvent(IDelegationEvent delegEvent) {
-		delegEvent.process(broadcastReceivers, monitoringModules, classSensorMapping);
 	}
 
 	private void swapQueue() {

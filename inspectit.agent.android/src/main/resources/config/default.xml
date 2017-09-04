@@ -26,7 +26,7 @@
 	</agentBuild>
 	
 	<traceCollection>
-		<package>evaluation.**</package>
+		<package>com.unity3d.**</package>
 	</traceCollection>
 
 </instrumenter-configuration>

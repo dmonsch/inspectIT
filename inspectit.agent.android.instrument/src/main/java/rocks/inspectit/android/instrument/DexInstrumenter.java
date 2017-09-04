@@ -26,8 +26,8 @@ import rocks.inspectit.android.instrument.dex.IDexClassInstrumenter;
 import rocks.inspectit.android.instrument.dex.IDexMethodImplementationInstrumenter;
 import rocks.inspectit.android.instrument.dex.IDexMethodInstrumenter;
 import rocks.inspectit.android.instrument.dex.impl.DexActivityInstrumenter;
-import rocks.inspectit.android.instrument.dex.impl.DexNetworkInstrumenter;
 import rocks.inspectit.android.instrument.dex.impl.DexSensorInstrumenter;
+import rocks.inspectit.android.instrument.dex.impl.DexSensorMethodInstrumenter;
 
 /**
  * @author David Monschein
@@ -45,7 +45,9 @@ public class DexInstrumenter {
 
 		this.classInstrumenters = new IDexClassInstrumenter[] { new DexActivityInstrumenter() };
 		this.methodInstrumenters = new IDexMethodInstrumenter[] { new DexSensorInstrumenter(traceConfiguration) };
-		this.implementationInstrumenters = new IDexMethodImplementationInstrumenter[] { new DexNetworkInstrumenter() };
+		this.implementationInstrumenters = new IDexMethodImplementationInstrumenter[] { new DexSensorMethodInstrumenter(traceConfiguration) }; // new
+		// DexNetworkInstrumenter()
+		// };
 	}
 
 	public void instrument(File input, File output) throws IOException {
@@ -71,7 +73,7 @@ public class DexInstrumenter {
 				if (method.getImplementation() != null) {
 					for (IDexMethodInstrumenter instrumenter : methodInstrumenters) {
 						if (instrumenter.isTargetMethod(method)) {
-							method = instrumenter.instrumentMethod(method);
+							method = instrumenter.instrumentMethod(classDef, method);
 						}
 					}
 				}

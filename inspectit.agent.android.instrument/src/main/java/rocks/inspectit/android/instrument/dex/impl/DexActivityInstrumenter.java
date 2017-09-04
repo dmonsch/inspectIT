@@ -15,6 +15,7 @@ import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.Method;
 import org.jf.dexlib2.iface.MethodImplementation;
 import org.jf.dexlib2.iface.reference.MethodReference;
+import org.jf.dexlib2.immutable.ImmutableClassDef;
 import org.jf.dexlib2.immutable.ImmutableMethod;
 import org.jf.dexlib2.immutable.ImmutableMethodParameter;
 import org.jf.dexlib2.util.MethodUtil;
@@ -71,7 +72,7 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 				} else if (METHOD_ONSTART.equals(meth.getName())) {
 					foundOnStart = true;
 				}
-				methods.add(instrumentMethod(meth));
+				methods.add(instrumentMethod(clazz, meth));
 			}
 		}
 
@@ -88,22 +89,22 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 		}
 
 		if (!foundOnStart) {
-			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTART, createDelegation(1, OnStartEvent.class));
+			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTART, createDelegation(0, OnStartEvent.class));
 			List<ImmutableMethodParameter> parameters = Lists.newArrayList();
 			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONSTART, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
 		}
 
 		if (!foundOnStop) {
-			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTOP, createDelegation(1, OnStopEvent.class));
+			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTOP, createDelegation(0, OnStopEvent.class));
 			List<ImmutableMethodParameter> parameters = Lists.newArrayList();
 			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONSTOP, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
 		}
 
-		return clazz;
+		return new ImmutableClassDef(clazz.getType(), clazz.getAccessFlags(), clazz.getSuperclass(), clazz.getInterfaces(), clazz.getSourceFile(), clazz.getAnnotations(), clazz.getFields(), methods);
 	}
 
 	@Override
-	public Method instrumentMethod(Method method) {
+	public Method instrumentMethod(ClassDef parent, Method method) {
 		String name = method.getName();
 		MethodImplementation implementation = method.getImplementation();
 		if ((implementation != null)) {
@@ -164,7 +165,7 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 	private MethodImplementation instrumentStartStop(Method method, Class<? extends IDelegationEvent> delegationClass) {
 		Pair<Integer, MutableMethodImplementation> impl = DexInstrumentationUtil.extendMethodRegisters(method, 1);
 
-		DexInstrumentationUtil.addInstructions(impl.getRight(), createDelegation(impl.getRight().getRegisterCount() - 1, delegationClass), 0);
+		DexInstrumentationUtil.addInstructions(impl.getRight(), createDelegation(impl.getRight().getRegisterCount() - 1, delegationClass), impl.getLeft());
 
 		return impl.getRight();
 	}
@@ -181,7 +182,7 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 		impl.addInstruction(0, new BuilderInstruction10x(Opcode.RETURN_VOID));
 
 		MethodReference methRef = DexInstrumentationUtil.getMethodReference(Activity.class, superName, "V");
-		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 1, 0, 0, 0, 0, 0, methRef);
+		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 1, 1, 0, 0, 0, 0, methRef);
 
 		DexInstrumentationUtil.addInstructions(impl, delegation, 0);
 		impl.addInstruction(0, superInvocation);

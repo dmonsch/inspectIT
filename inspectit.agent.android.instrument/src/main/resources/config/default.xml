@@ -25,7 +25,7 @@
 	</agentBuild>
 	
 	<traceCollection>
-		<package>evaluation.**</package>
+		<package>net.hockeyapp.android.**</package>
 	</traceCollection>
 
 </instrumenter-configuration>
