@@ -1,5 +1,6 @@
 package rocks.inspectit.android.instrument.dex;
 
+import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.Method;
 
 /**
@@ -8,7 +9,7 @@ import org.jf.dexlib2.iface.Method;
  */
 public interface IDexMethodInstrumenter {
 
-	public Method instrumentMethod(Method meth);
+	public Method instrumentMethod(ClassDef parent, Method meth);
 
 	public boolean isTargetMethod(Method method);
 

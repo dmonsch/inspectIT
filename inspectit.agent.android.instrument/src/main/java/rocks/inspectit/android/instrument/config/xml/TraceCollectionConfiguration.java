@@ -42,4 +42,35 @@ public class TraceCollectionConfiguration {
 		this.packages = packages;
 	}
 
+	public boolean isTracedMethod(String clazz, String method, List<? extends CharSequence> parameters) {
+		List<String> patterns = this.getPackages();
+
+		for (String pattern : patterns) {
+			String[] patternSplit = pattern.split("\\.");
+			String[] matchSplit = (clazz.replaceAll("/", ".").substring(1, clazz.length() - 1) + "." + method).split("\\.");
+
+			int k = 0;
+			for (String part : patternSplit) {
+
+				if (k >= matchSplit.length) {
+					break;
+				}
+
+				if (!part.equals("*")) {
+					if (part.equals("**")) {
+						return true;
+					} else {
+						if (!part.equals(matchSplit[k])) {
+							break;
+						}
+					}
+				}
+
+				++k;
+			}
+		}
+
+		return false;
+	}
+
 }
