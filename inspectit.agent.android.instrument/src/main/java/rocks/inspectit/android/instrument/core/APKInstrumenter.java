@@ -30,8 +30,8 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.ZipParameters;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
-import rocks.inspectit.android.instrument.DexInstrumenter;
 import rocks.inspectit.android.instrument.config.InstrumentationConfiguration;
+import rocks.inspectit.android.instrument.dex.DexInstrumenter;
 import rocks.inspectit.shared.all.util.Pair;
 
 /**

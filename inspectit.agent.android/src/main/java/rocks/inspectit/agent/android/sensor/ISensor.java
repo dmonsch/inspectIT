@@ -12,18 +12,10 @@ public interface ISensor {
 	 *
 	 * @param methodSignature
 	 */
-	void beforeBody(int sensorId, long methodId, String methoSignature, Object object);
-
-	/**
-	 * Gets executed if the real method throws an exception.
-	 *
-	 * @param clazz
-	 *            the class of the exception
-	 */
-	void exceptionThrown(int sensorId, long methodId, String methodSignature, Object object, String clazz);
+	void beforeBody(long methodId, String methoSignature, Object object);
 
 	/**
 	 * Gets executed after the original method was executed.
 	 */
-	void firstAfterBody(int sensorId, long methodId, String methodSignature, Object object);
+	void firstAfterBody(long methodId, String methodSignature, Object object);
 }

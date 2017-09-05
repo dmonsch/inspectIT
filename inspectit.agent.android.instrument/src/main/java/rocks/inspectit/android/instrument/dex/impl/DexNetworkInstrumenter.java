@@ -10,7 +10,7 @@ import org.jf.dexlib2.builder.MutableMethodImplementation;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction21c;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction35c;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction3rc;
-import org.jf.dexlib2.iface.MethodImplementation;
+import org.jf.dexlib2.iface.Method;
 import org.jf.dexlib2.iface.instruction.Instruction;
 import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.iface.reference.TypeReference;
@@ -37,8 +37,8 @@ public class DexNetworkInstrumenter implements IDexMethodImplementationInstrumen
 	};
 
 	@Override
-	public Pair<Boolean, MutableMethodImplementation> instrument(MethodImplementation impl) {
-		return instrument(new MutableMethodImplementation(impl));
+	public Pair<Boolean, MutableMethodImplementation> instrument(Method ref) {
+		return instrument(new MutableMethodImplementation(ref.getImplementation()));
 	}
 
 	private Pair<Boolean, MutableMethodImplementation> instrument(MutableMethodImplementation impl) {

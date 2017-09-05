@@ -25,7 +25,10 @@
 	</agentBuild>
 	
 	<traceCollection>
-		<package>net.hockeyapp.android.**</package>
+		<rule>
+			<package>net.hockeyapp.android.**</package>
+			<sensor>rocks.inspectit.agent.android.sensor.TraceSensor</sensor>
+		</rule>
 	</traceCollection>
 
 </instrumenter-configuration>

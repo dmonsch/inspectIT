@@ -26,8 +26,6 @@ import org.jf.dexlib2.immutable.ImmutableMethod;
 import org.jf.dexlib2.util.MethodUtil;
 
 import rocks.inspectit.agent.android.core.AndroidAgent;
-import rocks.inspectit.agent.android.delegation.event.MethodEnterEvent;
-import rocks.inspectit.agent.android.delegation.event.MethodExitEvent;
 import rocks.inspectit.agent.android.sensor.SensorAnnotation;
 import rocks.inspectit.agent.android.sensor.TraceSensor;
 import rocks.inspectit.android.instrument.config.xml.TraceCollectionConfiguration;
@@ -55,7 +53,8 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 	 */
 	@Override
 	public boolean isTargetMethod(Method method) {
-		return traceConfiguration.isTracedMethod(method.getDefiningClass(), method.getName(), method.getParameters());
+		return false; // traceConfiguration.isTracedMethod(method.getDefiningClass(),
+						// method.getName(), method.getParameters());
 	}
 
 	@Override
@@ -96,9 +95,9 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 
 		// constructor is called with null as object instance
 		// method id -> 0, method signature -> 2, object -> thisRegister, parameter array -> 3 ff.
-		List<BuilderInstruction> delegationEventCreation = DexInstrumentationUtil.generateDelegationEventCreation(MethodEnterEvent.class, dest + 0,
-				new int[] { dest + 1, dest + 2, dest + 3, dest + 4, dest + 5 });
-		BuilderInstruction delegationEventProcessing = DexInstrumentationUtil.generateDelegationEventProcessing(dest);
+		//List<BuilderInstruction> delegationEventCreation = DexInstrumentationUtil.generateDelegationEventCreation(MethodEnterEvent.class, dest + 0,
+		//		new int[] { dest + 1, dest + 2, dest + 3, dest + 4, dest + 5 });
+		//BuilderInstruction delegationEventProcessing = DexInstrumentationUtil.generateDelegationEventProcessing(dest);
 
 		/*
 		 * if (method.getName().equals(CONSTRUCTOR_METHOD_NAME)) { // special handling for
@@ -108,8 +107,8 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 		 * System.out.println(instr.getClass()); } } }
 		 */
 
-		instrOffset += DexInstrumentationUtil.addInstructions(nImpl, delegationEventCreation, instrOffset);
-		nImpl.addInstruction(instrOffset++, delegationEventProcessing);
+		//instrOffset += DexInstrumentationUtil.addInstructions(nImpl, delegationEventCreation, instrOffset);
+		// nImpl.addInstruction(instrOffset++, delegationEventProcessing);
 
 		// add the move back instruction
 		if (!MethodUtil.isStatic(method) && !method.getName().equals(CONSTRUCTOR_METHOD_NAME)) {
@@ -153,9 +152,9 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 			int instrPos = retPos + offset;
 
 			// create exit code
-			List<BuilderInstruction> exitDelegationEventCreation = DexInstrumentationUtil.generateDelegationEventCreation(MethodExitEvent.class, dest,
-					new int[] { dest + 1, dest + 2, dest + 3, dest + 4, dest + 5 });
-			BuilderInstruction exitDelegationEventProcessing = DexInstrumentationUtil.generateDelegationEventProcessing(dest);
+			//List<BuilderInstruction> exitDelegationEventCreation = DexInstrumentationUtil.generateDelegationEventCreation(MethodExitEvent.class, dest,
+			//		new int[] { dest + 1, dest + 2, dest + 3, dest + 4, dest + 5 });
+			//BuilderInstruction exitDelegationEventProcessing = DexInstrumentationUtil.generateDelegationEventProcessing(dest);
 
 			BuilderInstruction firstExitInstr;
 			if (!MethodUtil.isStatic(method)) {
@@ -166,11 +165,11 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 
 				firstExitInstr = moveThisBack;
 			} else {
-				firstExitInstr = exitDelegationEventCreation.get(0);
+				//firstExitInstr = exitDelegationEventCreation.get(0);
 			}
 
-			instrPos += DexInstrumentationUtil.addInstructions(nImpl, exitDelegationEventCreation, instrPos);
-			nImpl.addInstruction(instrPos++, exitDelegationEventProcessing);
+			//instrPos += DexInstrumentationUtil.addInstructions(nImpl, exitDelegationEventCreation, instrPos);
+			//nImpl.addInstruction(instrPos++, exitDelegationEventProcessing);
 
 			offset += 3; // three new instructions we're added
 
@@ -183,7 +182,7 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 			// move labels
 			for (Label movingLabel : movingLabels) {
 				retLocation.getLabels().remove(movingLabel);
-				firstExitInstr.getLocation().getLabels().add(movingLabel);
+				// firstExitInstr.getLocation().getLabels().add(movingLabel);
 			}
 			movingLabelsSize += movingLabels.size();
 		}
