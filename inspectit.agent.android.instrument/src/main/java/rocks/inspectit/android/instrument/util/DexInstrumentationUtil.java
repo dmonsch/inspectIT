@@ -2,7 +2,6 @@ package rocks.inspectit.android.instrument.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,23 +31,15 @@ import org.jf.dexlib2.iface.TryBlock;
 import org.jf.dexlib2.iface.debug.DebugItem;
 import org.jf.dexlib2.iface.instruction.Instruction;
 import org.jf.dexlib2.iface.reference.MethodReference;
-import org.jf.dexlib2.iface.reference.TypeReference;
 import org.jf.dexlib2.immutable.reference.ImmutableMethodReference;
 import org.jf.dexlib2.immutable.reference.ImmutableStringReference;
-import org.jf.dexlib2.immutable.reference.ImmutableTypeReference;
 import org.jf.dexlib2.util.MethodUtil;
-
-import rocks.inspectit.agent.android.delegation.AndroidAgentDelegator;
-import rocks.inspectit.agent.android.delegation.event.IDelegationEvent;
 
 /**
  * @author David Monschein
  *
  */
 public class DexInstrumentationUtil {
-
-	private static final MethodReference DELEGATE_REFERENCE = DexInstrumentationUtil.getMethodReference(AndroidAgentDelegator.class, "delegateEvent", "V", IDelegationEvent.class);
-
 	public static int getMethodCount(File dexFile) throws IOException {
 		DexBackedDexFile dex = DexFileFactory.loadDexFile(dexFile, Opcodes.forApi(19));
 		return dex.getMethodCount();
@@ -113,7 +104,7 @@ public class DexInstrumentationUtil {
 		return instrs.size();
 	}
 
-	public static BuilderInstruction generateDelegationInvocation(int[] registers, Class<?>... parameterClasses) {
+	public static BuilderInstruction generateDelegationInvocation(int[] registers, MethodReference method) {
 		boolean fourBits = registers.length < 6;
 
 		// check if all registers are 4 bits
@@ -129,7 +120,7 @@ public class DexInstrumentationUtil {
 		if (!fourBits) {
 			for (int k = 0; k < registers.length; k++) {
 				if (k != 0) {
-					if (registers[k] != registers[k - 1]) {
+					if ((registers[k] - 1) != registers[k - 1]) {
 						throw new RuntimeException("Failed to instrument: Registers are > 4 bits or more than 5 registers are needed and the registers are not in ascending order.");
 					}
 				}
@@ -137,58 +128,28 @@ public class DexInstrumentationUtil {
 		}
 
 		// generate the invocation
-		MethodReference toCall = getMethodReference(AndroidAgentDelegator.class, "delegateEvent", "V", parameterClasses);
 		if (fourBits) {
 			return new BuilderInstruction35c(Opcode.INVOKE_STATIC, registers.length, registers.length >= 1 ? registers[0] : 0, registers.length >= 2 ? registers[1] : 0,
-					registers.length >= 3 ? registers[2] : 0, registers.length >= 4 ? registers[3] : 0, registers.length >= 5 ? registers[4] : 0, toCall);
+					registers.length >= 3 ? registers[2] : 0, registers.length >= 4 ? registers[3] : 0, registers.length >= 5 ? registers[4] : 0, method);
 		} else {
-			return new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, registers[0], registers.length, toCall);
+			return new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, registers[0], registers.length, method);
 		}
 	}
 
-	public static <T extends IDelegationEvent> List<BuilderInstruction> generateDelegationEventCreation(Class<T> clazz, int destinationRegister, int[] registers) {
-		List<BuilderInstruction> instrs = new ArrayList<>();
-
-		// -> this isn't valid because of long parameters
-		/*
-		 * if (clazz.getConstructors()[0].getParameterTypes().length != registers.length) { return
-		 * null; // -> parameter count is invalid }
-		 */
-
-		Constructor<?> constructor = clazz.getConstructors()[0];
-
-		TypeReference typeReference = new ImmutableTypeReference(getType(clazz));
-		BuilderInstruction21c newInstanceInstruction = new BuilderInstruction21c(Opcode.NEW_INSTANCE, destinationRegister, typeReference);
-
-		MethodReference constructorReference = getMethodReference(clazz, "<init>", "V", constructor.getParameterTypes());
-		boolean fourBits = true;
-		for (int register : registers) {
-			if (numBits(register) > 4) {
-				fourBits = false;
-				break;
-			}
+	public static String getMethodSignature(MethodReference ref) {
+		StringBuilder builder = new StringBuilder();
+		builder.append(ref.getDefiningClass().replaceAll("/", ".")).substring(1, ref.getDefiningClass().length() - 1);
+		builder.append(ref.getName());
+		builder.append("(");
+		String prefix = "";
+		for (CharSequence para : ref.getParameterTypes()) {
+			builder.append(para);
+			builder.append(prefix);
+			prefix = ",";
 		}
-
-		BuilderInstruction constructorCallInstruction;
-		if (fourBits && (registers.length < 5)) {
-			constructorCallInstruction = new BuilderInstruction35c(Opcode.INVOKE_DIRECT, registers.length + 1, destinationRegister, registers.length > 0 ? registers[0] : 0,
-					registers.length > 1 ? registers[1] : 0, registers.length > 2 ? registers[2] : 0, registers.length > 3 ? registers[3] : 0, constructorReference);
-		} else {
-			constructorCallInstruction = new BuilderInstruction3rc(Opcode.INVOKE_DIRECT_RANGE, destinationRegister, registers.length + 1, constructorReference);
-		}
-
-		instrs.add(newInstanceInstruction);
-		instrs.add(constructorCallInstruction);
-
-		return instrs;
-	}
-
-	public static BuilderInstruction generateDelegationEventProcessing(int dest) {
-		if (numBits(dest) == 4) {
-			return new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, dest, 0, 0, 0, 0, DELEGATE_REFERENCE);
-		} else {
-			return new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, dest, 1, DELEGATE_REFERENCE);
-		}
+		builder.append(")");
+		builder.append(ref.getReturnType());
+		return builder.toString();
 	}
 
 	public static String getMethodSignature(Method method) {

@@ -2,6 +2,7 @@ package rocks.inspectit.android.instrument.dex.impl;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jf.dexlib2.AccessFlags;
@@ -25,9 +26,7 @@ import com.google.common.collect.Lists;
 import android.app.Activity;
 import android.os.Bundle;
 import rocks.inspectit.agent.android.core.AndroidAgent;
-import rocks.inspectit.agent.android.delegation.event.IDelegationEvent;
-import rocks.inspectit.agent.android.delegation.event.OnStartEvent;
-import rocks.inspectit.agent.android.delegation.event.OnStopEvent;
+import rocks.inspectit.agent.android.delegation.DelegationPoint;
 import rocks.inspectit.android.instrument.dex.IDexClassInstrumenter;
 import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
 
@@ -41,6 +40,12 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 	private static final String METHOD_ONDESTROY = "onDestroy";
 	private static final String METHOD_ONSTOP = "onStop";
 	private static final String METHOD_ONSTART = "onStart";
+
+	private Map<DelegationPoint, MethodReference> delegationPointMapping;
+
+	public DexActivityInstrumenter(Map<DelegationPoint, MethodReference> delegationPointMapping) {
+		this.delegationPointMapping = delegationPointMapping;
+	}
 
 	@Override
 	public boolean isTargetClass(ClassDef clazz) {
@@ -89,13 +94,13 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 		}
 
 		if (!foundOnStart) {
-			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTART, createDelegation(0, OnStartEvent.class));
+			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTART, createDelegation(DelegationPoint.ON_START));
 			List<ImmutableMethodParameter> parameters = Lists.newArrayList();
 			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONSTART, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
 		}
 
 		if (!foundOnStop) {
-			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTOP, createDelegation(0, OnStopEvent.class));
+			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTOP, createDelegation(DelegationPoint.ON_STOP));
 			List<ImmutableMethodParameter> parameters = Lists.newArrayList();
 			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONSTOP, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
 		}
@@ -121,13 +126,13 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 							newImplementation);
 				}
 			} else if (METHOD_ONSTART.equals(name)) {
-				MethodImplementation newImplementation = instrumentStartStop(method, OnStartEvent.class);
+				MethodImplementation newImplementation = instrumentStartStop(method, DelegationPoint.ON_START);
 				if (newImplementation != null) {
 					return new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(), method.getAnnotations(),
 							newImplementation);
 				}
 			} else if (METHOD_ONSTOP.equals(name)) {
-				MethodImplementation newImplementation = instrumentStartStop(method, OnStopEvent.class);
+				MethodImplementation newImplementation = instrumentStartStop(method, DelegationPoint.ON_STOP);
 				if (newImplementation != null) {
 					return new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(), method.getAnnotations(),
 							newImplementation);
@@ -162,21 +167,19 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 		return impl;
 	}
 
-	private MethodImplementation instrumentStartStop(Method method, Class<? extends IDelegationEvent> delegationClass) {
+	private MethodImplementation instrumentStartStop(Method method, DelegationPoint point) {
 		Pair<Integer, MutableMethodImplementation> impl = DexInstrumentationUtil.extendMethodRegisters(method, 1);
 
-		DexInstrumentationUtil.addInstructions(impl.getRight(), createDelegation(impl.getRight().getRegisterCount() - 1, delegationClass), impl.getLeft());
+		impl.getRight().addInstruction(impl.getLeft(), createDelegation(point));
 
 		return impl.getRight();
 	}
 
-	private List<BuilderInstruction> createDelegation(int dest, Class<? extends IDelegationEvent> clazz) {
-		List<BuilderInstruction> instrList = DexInstrumentationUtil.generateDelegationEventCreation(clazz, dest, new int[] {});
-		instrList.add(DexInstrumentationUtil.generateDelegationEventProcessing(dest));
-		return instrList;
+	private BuilderInstruction createDelegation(DelegationPoint point) {
+		return DexInstrumentationUtil.generateDelegationInvocation(new int[] {}, delegationPointMapping.get(point));
 	}
 
-	private MethodImplementation generateOnStartStopMethodImpl(String superName, List<BuilderInstruction> delegation) {
+	private MethodImplementation generateOnStartStopMethodImpl(String superName, BuilderInstruction delegation) {
 		MutableMethodImplementation impl = new MutableMethodImplementation(2);
 
 		impl.addInstruction(0, new BuilderInstruction10x(Opcode.RETURN_VOID));
@@ -184,7 +187,7 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 		MethodReference methRef = DexInstrumentationUtil.getMethodReference(Activity.class, superName, "V");
 		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 1, 1, 0, 0, 0, 0, methRef);
 
-		DexInstrumentationUtil.addInstructions(impl, delegation, 0);
+		impl.addInstruction(0, delegation);
 		impl.addInstruction(0, superInvocation);
 
 		return impl;

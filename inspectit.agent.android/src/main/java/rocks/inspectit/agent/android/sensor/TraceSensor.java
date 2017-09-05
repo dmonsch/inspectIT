@@ -43,34 +43,19 @@ public class TraceSensor implements ISensor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void beforeBody(int sensorId, long methodId, String methoSignature, Object object) {
+	public void beforeBody(long methodId, String methodSignature, Object object) {
 		if (spanMapping.get() == null) {
 			spanMapping.set(new HashMap<Long, SpanImpl>());
 		}
 
-		spanMapping.get().put(methodId, tracerUtil.buildSpan(methoSignature));
+		spanMapping.get().put(methodId, tracerUtil.buildSpan(methodSignature));
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void exceptionThrown(int sensorId, long methodId, String methodSignature, Object object, String clazz) {
-		if (spanMapping.get() != null) {
-			Map<Long, SpanImpl> implMapping = spanMapping.get();
-			if (implMapping.containsKey(methodId)) {
-				SpanImpl correspondingSpan = implMapping.get(methodId);
-				correspondingSpan.log(clazz).finish();
-				implMapping.remove(methodId);
-			}
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void firstAfterBody(int sensorId, long methodId, String methodSignature, Object object) {
+	public void firstAfterBody(long methodId, String methodSignature, Object object) {
 		if (spanMapping.get() != null) {
 			Map<Long, SpanImpl> implMapping = spanMapping.get();
 			if (implMapping.containsKey(methodId)) {

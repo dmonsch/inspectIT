@@ -11,7 +11,7 @@ public class NetworkSensor implements ISensor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void beforeBody(int sensorId, long methodId, String methoSignature, Object object) {
+	public void beforeBody(long methodId, String methoSignature, Object object) {
 		// TODO Auto-generated method stub
 
 	}
@@ -20,16 +20,7 @@ public class NetworkSensor implements ISensor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void exceptionThrown(int sensorId, long methodId, String methodSignature, Object object, String clazz) {
-		// TODO Auto-generated method stub
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void firstAfterBody(int sensorId, long methodId, String methodSignature, Object object) {
+	public void firstAfterBody(long methodId, String methodSignature, Object object) {
 		// TODO Auto-generated method stub
 
 	}

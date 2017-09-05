@@ -1,6 +1,8 @@
 package rocks.inspectit.android.instrument.config.xml;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -18,8 +20,8 @@ public class TraceCollectionConfiguration {
 	/**
 	 * Ruleset for packages which should be monitored with traces.
 	 */
-	@XmlElement(name = "package")
-	private List<String> packages;
+	@XmlElement(name = "rule")
+	private List<TraceCollectionRule> packages;
 
 	/**
 	 * Creates an empty trace collection configuration.
@@ -30,7 +32,7 @@ public class TraceCollectionConfiguration {
 	/**
 	 * @return the packages
 	 */
-	public List<String> getPackages() {
+	public List<TraceCollectionRule> getPackages() {
 		return packages;
 	}
 
@@ -38,15 +40,17 @@ public class TraceCollectionConfiguration {
 	 * @param packages
 	 *            the packages to set
 	 */
-	public void setPackages(final List<String> packages) {
+	public void setPackages(final List<TraceCollectionRule> packages) {
 		this.packages = packages;
 	}
 
-	public boolean isTracedMethod(String clazz, String method, List<? extends CharSequence> parameters) {
-		List<String> patterns = this.getPackages();
+	public Set<String> isTracedMethod(String clazz, String method, List<? extends CharSequence> parameters) {
+		List<TraceCollectionRule> patterns = this.getPackages();
 
-		for (String pattern : patterns) {
-			String[] patternSplit = pattern.split("\\.");
+		Set<String> output = new HashSet<>();
+
+		for (TraceCollectionRule pattern : patterns) {
+			String[] patternSplit = pattern.getPattern().split("\\.");
 			String[] matchSplit = (clazz.replaceAll("/", ".").substring(1, clazz.length() - 1) + "." + method).split("\\.");
 
 			int k = 0;
@@ -58,7 +62,7 @@ public class TraceCollectionConfiguration {
 
 				if (!part.equals("*")) {
 					if (part.equals("**")) {
-						return true;
+						output.addAll(pattern.getSensor());
 					} else {
 						if (!part.equals(matchSplit[k])) {
 							break;
@@ -70,7 +74,7 @@ public class TraceCollectionConfiguration {
 			}
 		}
 
-		return false;
+		return output;
 	}
 
 }

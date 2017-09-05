@@ -1,10 +1,12 @@
-package rocks.inspectit.android.instrument;
+package rocks.inspectit.android.instrument.dex;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.AbstractSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,19 +17,21 @@ import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.DexFile;
 import org.jf.dexlib2.iface.Method;
+import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.immutable.ImmutableClassDef;
 import org.jf.dexlib2.immutable.ImmutableMethod;
 
 import com.google.common.collect.Lists;
 
+import rocks.inspectit.agent.android.delegation.AndroidAgentDelegator;
+import rocks.inspectit.agent.android.delegation.DelegationAnnotation;
+import rocks.inspectit.agent.android.delegation.DelegationPoint;
 import rocks.inspectit.android.instrument.config.InstrumentationConfiguration;
 import rocks.inspectit.android.instrument.config.xml.TraceCollectionConfiguration;
-import rocks.inspectit.android.instrument.dex.IDexClassInstrumenter;
-import rocks.inspectit.android.instrument.dex.IDexMethodImplementationInstrumenter;
-import rocks.inspectit.android.instrument.dex.IDexMethodInstrumenter;
 import rocks.inspectit.android.instrument.dex.impl.DexActivityInstrumenter;
 import rocks.inspectit.android.instrument.dex.impl.DexSensorInstrumenter;
 import rocks.inspectit.android.instrument.dex.impl.DexSensorMethodInstrumenter;
+import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
 
 /**
  * @author David Monschein
@@ -40,12 +44,17 @@ public class DexInstrumenter {
 	private IDexMethodInstrumenter[] methodInstrumenters;
 	private IDexMethodImplementationInstrumenter[] implementationInstrumenters;
 
+	private Map<DelegationPoint, MethodReference> delegationPointMapping;
+
 	public DexInstrumenter(InstrumentationConfiguration config) {
 		this.traceConfiguration = config.getXmlConfiguration().getTraceCollectionList();
 
-		this.classInstrumenters = new IDexClassInstrumenter[] { new DexActivityInstrumenter() };
+		this.delegationPointMapping = new HashMap<>();
+		loadDelegationMap();
+
+		this.classInstrumenters = new IDexClassInstrumenter[] { new DexActivityInstrumenter(delegationPointMapping) };
 		this.methodInstrumenters = new IDexMethodInstrumenter[] { new DexSensorInstrumenter(traceConfiguration) };
-		this.implementationInstrumenters = new IDexMethodImplementationInstrumenter[] { new DexSensorMethodInstrumenter(traceConfiguration) }; // new
+		this.implementationInstrumenters = new IDexMethodImplementationInstrumenter[] { new DexSensorMethodInstrumenter(traceConfiguration, delegationPointMapping) }; // new
 		// DexNetworkInstrumenter()
 		// };
 	}
@@ -85,13 +94,14 @@ public class DexInstrumenter {
 			for (Method method : methods) {
 				if (method.getImplementation() != null) {
 					for (IDexMethodImplementationInstrumenter instrumenter : implementationInstrumenters) {
-						Pair<Boolean, MutableMethodImplementation> impl = instrumenter.instrument(method.getImplementation());
+						Pair<Boolean, MutableMethodImplementation> impl = instrumenter.instrument(method);
 						if (impl.getKey()) {
-							methods.set(j++, new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(),
+							methods.set(j, new ImmutableMethod(method.getDefiningClass(), method.getName(), method.getParameters(), method.getReturnType(), method.getAccessFlags(),
 									method.getAnnotations(), impl.getValue()));
 						}
 					}
 				}
+				j++;
 			}
 
 			classDef = new ImmutableClassDef(classDef.getType(), classDef.getAccessFlags(), classDef.getSuperclass(), classDef.getInterfaces(), classDef.getSourceFile(), classDef.getAnnotations(),
@@ -120,6 +130,18 @@ public class DexInstrumenter {
 				return Opcodes.getDefault();
 			}
 		});
+	}
+
+	private void loadDelegationMap() {
+		this.delegationPointMapping.clear();
+
+		for (java.lang.reflect.Method delMethod : AndroidAgentDelegator.class.getDeclaredMethods()) {
+			if (delMethod.isAnnotationPresent(DelegationAnnotation.class)) {
+				MethodReference methRef = DexInstrumentationUtil.getMethodReference(AndroidAgentDelegator.class, delMethod.getName(), "V", delMethod.getParameterTypes());
+
+				this.delegationPointMapping.put(delMethod.getAnnotation(DelegationAnnotation.class).correspondsTo(), methRef);
+			}
+		}
 	}
 
 }
