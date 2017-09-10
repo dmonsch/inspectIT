@@ -6,7 +6,7 @@ import java.util.Map;
 
 import rocks.inspectit.agent.android.broadcast.AbstractBroadcastReceiver;
 import rocks.inspectit.agent.android.module.AbstractMonitoringModule;
-import rocks.inspectit.agent.android.sensor.ISensor;
+import rocks.inspectit.agent.android.sensor.AbstractMethodSensor;
 import rocks.inspectit.agent.android.sensor.SensorAnnotation;
 
 /**
@@ -20,7 +20,7 @@ public class AndroidAgentDelegator {
 	private AbstractBroadcastReceiver[] broadcastReceivers;
 	private AbstractMonitoringModule[] monitoringModules;
 
-	private Map<Integer, ISensor> classSensorMapping;
+	private Map<Integer, AbstractMethodSensor> classSensorMapping;
 
 	private static boolean inited;
 
@@ -63,15 +63,15 @@ public class AndroidAgentDelegator {
 		classSensorMapping = new HashMap<>();
 	}
 
-	public void initDelegator(List<AbstractBroadcastReceiver> rc, List<AbstractMonitoringModule> ms, List<ISensor> sl) {
-		initDelegator(rc.toArray(new AbstractBroadcastReceiver[rc.size()]), ms.toArray(new AbstractMonitoringModule[ms.size()]), sl.toArray(new ISensor[sl.size()]));
+	public void initDelegator(List<AbstractBroadcastReceiver> rc, List<AbstractMonitoringModule> ms, List<AbstractMethodSensor> sl) {
+		initDelegator(rc.toArray(new AbstractBroadcastReceiver[rc.size()]), ms.toArray(new AbstractMonitoringModule[ms.size()]), sl.toArray(new AbstractMethodSensor[sl.size()]));
 	}
 
-	public void initDelegator(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, ISensor[] sensors) {
+	public void initDelegator(AbstractBroadcastReceiver[] receivers, AbstractMonitoringModule[] modules, AbstractMethodSensor[] sensors) {
 		broadcastReceivers = receivers;
 		monitoringModules = modules;
 
-		for (ISensor sensor : sensors) {
+		for (AbstractMethodSensor sensor : sensors) {
 			SensorAnnotation annot = sensor.getClass().getAnnotation(SensorAnnotation.class);
 			classSensorMapping.put(annot.id(), sensor);
 		}

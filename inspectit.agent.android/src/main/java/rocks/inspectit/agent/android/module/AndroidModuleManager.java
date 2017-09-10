@@ -9,7 +9,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
-import rocks.inspectit.agent.android.module.net.NetworkModule;
 import rocks.inspectit.agent.android.module.util.ExecutionProperty;
 import rocks.inspectit.agent.android.util.DependencyManager;
 
@@ -22,7 +21,7 @@ public class AndroidModuleManager {
 	/**
 	 * Modules which will be created when the agent is initialized.
 	 */
-	private static final Class<?>[] MODULES = new Class<?>[] { NetworkModule.class, CrashModule.class, SystemResourcesModule.class };
+	private static final Class<?>[] MODULES = new Class<?>[] { CrashModule.class, SystemResourcesModule.class };
 
 	/**
 	 * Maps a certain module class to an instantiated module object.
@@ -32,8 +31,6 @@ public class AndroidModuleManager {
 	private final String LOG_TAG;
 	private final Context applicationContext;
 	private final Handler mHandler;
-
-	private NetworkModule networkModule;
 
 	public AndroidModuleManager(Context ctx, Handler mHandler) {
 		LOG_TAG = AgentConfiguration.current.getLogTag();
@@ -59,9 +56,6 @@ public class AndroidModuleManager {
 		// INIT MODULE REOCCURING CALLS
 		Log.i(LOG_TAG, "Creating and initializing existing modules.");
 		for (AbstractMonitoringModule module : instantiatedModules) {
-			if (module instanceof NetworkModule) {
-				setNetworkModule((NetworkModule) module);
-			}
 			setupScheduledMethods(module);
 		}
 	}
@@ -74,27 +68,8 @@ public class AndroidModuleManager {
 		}
 	}
 
-	/**
-	 * Gets {@link #networkModule}.
-	 *
-	 * @return {@link #networkModule}
-	 */
-	public NetworkModule getNetworkModule() {
-		return networkModule;
-	}
-
 	public List<AbstractMonitoringModule> getModules() {
 		return instantiatedModules;
-	}
-
-	/**
-	 * Sets {@link #networkModule}.
-	 *
-	 * @param networkModule
-	 *            New value for {@link #networkModule}
-	 */
-	private void setNetworkModule(NetworkModule networkModule) {
-		this.networkModule = networkModule;
 	}
 
 	/**

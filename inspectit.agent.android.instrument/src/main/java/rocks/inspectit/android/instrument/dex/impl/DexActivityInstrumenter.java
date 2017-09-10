@@ -23,8 +23,6 @@ import org.jf.dexlib2.util.MethodUtil;
 
 import com.google.common.collect.Lists;
 
-import android.app.Activity;
-import android.os.Bundle;
 import rocks.inspectit.agent.android.core.AndroidAgent;
 import rocks.inspectit.agent.android.delegation.DelegationPoint;
 import rocks.inspectit.android.instrument.dex.IDexClassInstrumenter;
@@ -41,6 +39,9 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 	private static final String METHOD_ONSTOP = "onStop";
 	private static final String METHOD_ONSTART = "onStart";
 
+	private static final String ACTIVITY_TYPE = "Landroid/app/Activity;";
+	private static final String BUNDLE_TYPE = "Landroid/os/Bundle;";
+
 	private Map<DelegationPoint, MethodReference> delegationPointMapping;
 
 	public DexActivityInstrumenter(Map<DelegationPoint, MethodReference> delegationPointMapping) {
@@ -50,7 +51,7 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 	@Override
 	public boolean isTargetClass(ClassDef clazz) {
 		String superClass = clazz.getSuperclass();
-		return (superClass != null) && (superClass.equals(DexInstrumentationUtil.getType(Activity.class)));
+		return (superClass != null) && (superClass.equals(ACTIVITY_TYPE));
 	}
 
 	@Override
@@ -83,7 +84,7 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 
 		if (!foundOnCreate) {
 			MethodImplementation nImpl = generateOnCreateMethodImpl();
-			List<ImmutableMethodParameter> parameters = Lists.newArrayList(new ImmutableMethodParameter(DexInstrumentationUtil.getType(Bundle.class), new HashSet<Annotation>(), "bundle"));
+			List<ImmutableMethodParameter> parameters = Lists.newArrayList(new ImmutableMethodParameter(BUNDLE_TYPE, new HashSet<Annotation>(), "bundle"));
 			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONCREATE, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
 		}
 
@@ -184,7 +185,7 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 
 		impl.addInstruction(0, new BuilderInstruction10x(Opcode.RETURN_VOID));
 
-		MethodReference methRef = DexInstrumentationUtil.getMethodReference(Activity.class, superName, "V");
+		MethodReference methRef = DexInstrumentationUtil.getMethodReference(ACTIVITY_TYPE, superName, "V");
 		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 1, 1, 0, 0, 0, 0, methRef);
 
 		impl.addInstruction(0, delegation);
@@ -203,7 +204,7 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 
 		impl.addInstruction(0, new BuilderInstruction10x(Opcode.RETURN_VOID));
 
-		MethodReference methRef = DexInstrumentationUtil.getMethodReference(Activity.class, "onCreate", "V", Bundle.class);
+		MethodReference methRef = DexInstrumentationUtil.getMethodReference(ACTIVITY_TYPE, "onCreate", "V", BUNDLE_TYPE);
 
 		// first register is this register -> because 1 is parameter register
 		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 2, thisRegister, parameterRegister, 0, 0, 0, methRef);
@@ -219,7 +220,7 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 
 		impl.addInstruction(0, new BuilderInstruction10x(Opcode.RETURN_VOID));
 
-		MethodReference methRef = DexInstrumentationUtil.getMethodReference(Activity.class, "onDestroy", "V");
+		MethodReference methRef = DexInstrumentationUtil.getMethodReference(ACTIVITY_TYPE, "onDestroy", "V");
 
 		BuilderInstruction35c superInvocation = new BuilderInstruction35c(Opcode.INVOKE_SUPER, 1, 0, 0, 0, 0, 0, methRef);
 
@@ -230,7 +231,7 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 	}
 
 	private BuilderInstruction createAgentInitInvocation(int thisRegister) {
-		MethodReference methodReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "initAgent", "V", Activity.class);
+		MethodReference methodReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "initAgent", "V", ACTIVITY_TYPE);
 		BuilderInstruction35c invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, thisRegister, 0, 0, 0, 0, methodReference);
 
 		return invokeInstruction;

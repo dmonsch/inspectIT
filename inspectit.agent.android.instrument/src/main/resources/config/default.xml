@@ -29,6 +29,11 @@
 			<package>net.hockeyapp.android.**</package>
 			<sensor>rocks.inspectit.agent.android.sensor.TraceSensor</sensor>
 		</rule>
+		
+		<rule>
+			<package>java.net.HttpURLConnection.**</package>
+			<sensor>rocks.inspectit.agent.android.sensor.NetworkSensor</sensor>
+		</rule>
 	</traceCollection>
 
 </instrumenter-configuration>

@@ -1,15 +1,19 @@
 defaultTasks 'releaseAndAnalyze'
 
-sourceCompatibility = '1.7'
-targetCompatibility = '1.7'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 
 buildscript {
     repositories {
         jcenter()
     }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
+    }
 }
 
 apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 repositories {
     jcenter()
@@ -26,23 +30,40 @@ sourceSets {
 /** Setting compile configuration as plugin in Eclipse needs it */
 configurations {
 	compile {
-		extendsFrom configurations.agentJavaProd
+		extendsFrom configurations.androidInstrumentProd
 	}
 	testCompile {
-		extendsFrom configurations.agentJavaTest
+		extendsFrom configurations.androidInstrumentTest
 		extendsFrom configurations.jmhbase
 	}
 }
 
+ext {
+	distJarName = 'inspectit-android-instrument'
+	releaseName = "inspectit-android-instrument-${versionInfo}.zip"
+}
+
 dependencies {
 	compile project(":inspectit.agent.android")
-
-	compile group: 'net.lingala.zip4j', name: 'zip4j', version: '1.3.2'
-	compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
-	compile group: 'commons-io', name: 'commons-io', version: '2.5'
-	compile group: 'org.smali', name: 'dexlib2', version: '2.2.0'
+	compile project(':inspectit.shared.all')
 	
     testCompile 'junit:junit:4.12'
+}
+
+jar {
+	archivesBaseName = distJarName
+	libsDirName = buildReleaseRoot
+	
+	manifest {
+		attributes(
+			'Main-Class': 'rocks.inspectit.android.instrument.cli.InstrumentationMain'
+		)
+	}
+}
+
+shadowJar {
+	/** Apply the mock, this is necessary because otherwise we get a runtime exception that the class "BroadcastReceiver" could not be found */
+	relocate 'rocks.inspectit.android.instrument.mock', 'android.content'
 }
 
 task releaseAndAnalyze {

@@ -16,8 +16,6 @@ public class CoreSpanReporter implements Reporter {
 	@Override
 	public void report(SpanImpl span) {
 		SpanContextImpl context = span.context();
-		System.out.println(context.getId() + " {" + span.getOperationName() + "}");
-		System.out.println(context.getParentId());
 	}
 
 }

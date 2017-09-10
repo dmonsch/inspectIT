@@ -44,8 +44,8 @@ public class NetRequestResponse extends MobileDefaultData {
 	@InfluxCompatibleAnnotation(key = "responsecode", tag = false)
 	private int responseCode;
 
-	@InfluxCompatibleAnnotation(key = "conntype", tag = false)
-	private String connectionType;
+	@InfluxCompatibleAnnotation(key = "contenttype", tag = false)
+	private String contentType;
 
 	/**
 	 * Creates an empty net request response with default values.
@@ -118,8 +118,8 @@ public class NetRequestResponse extends MobileDefaultData {
 	 *
 	 * @return {@link #connectionType}
 	 */
-	public String getConnectionType() {
-		return connectionType;
+	public String getContentType() {
+		return contentType;
 	}
 
 	/**
@@ -128,7 +128,7 @@ public class NetRequestResponse extends MobileDefaultData {
 	 * @param connectionType
 	 *            New value for {@link #connectionType}
 	 */
-	public void setConnectionType(String connectionType) {
-		this.connectionType = connectionType;
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
 	}
 }

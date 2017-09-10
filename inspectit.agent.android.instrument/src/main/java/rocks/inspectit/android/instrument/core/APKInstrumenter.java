@@ -13,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -20,8 +21,6 @@ import java.util.zip.ZipEntry;
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.ObjectWriter;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
@@ -41,8 +40,6 @@ import rocks.inspectit.shared.all.util.Pair;
  *
  */
 public class APKInstrumenter {
-	private static final File AGENT_BUILD_JAVA = new File("../inspectit.agent.android/build/release/inspectit.agent.android-all.jar");
-
 	/** Temporary file for building the current agent version. */
 	private static final File AGENT_BUILD = new File("dxbuild/agent.dex");
 
@@ -54,12 +51,10 @@ public class APKInstrumenter {
 
 	private static final File DEX_FILES_PATH = new File("temp-dexs");
 
-	private static final int LIMIT_64K = 65536;
-
 	// _________________________________________________ //
 
 	/** Logger. */
-	private static final Logger LOG = LogManager.getLogger(APKInstrumenter.class);
+	private static final Logger LOG = Logger.getLogger(APKInstrumenter.class.getName());
 
 	/** Path which is used to save a modified manifest file. */
 	private static final File MODIFIED_MANIFEST = new File("modified_manifest.xml");
@@ -104,11 +99,11 @@ public class APKInstrumenter {
 	 * @param pass
 	 *            the password of the keystore
 	 */
-	public APKInstrumenter(final boolean override, final File keystore, final String alias, final String pass) {
-		this.setOverride(override);
-		this.setKeystore(keystore);
-		this.setAlias(alias);
-		this.setPass(pass);
+	public APKInstrumenter(boolean override, File keystore, String alias, String pass) {
+		this.override = override;
+		this.keystore = keystore;
+		this.alias = alias;
+		this.pass = pass;
 
 		dxProxy = new DxJarProxy(new File("lib/dx.jar"));
 	}
@@ -134,7 +129,8 @@ public class APKInstrumenter {
 	 * @throws URISyntaxException
 	 *             URI syntax problem
 	 */
-	public boolean instrumentAPK(final File input, final File output) throws IOException, ZipException, KeyStoreException, NoSuchAlgorithmException, CertificateException, URISyntaxException {
+	public boolean instrumentAPK(File input, File output, File agentJar)
+			throws IOException, ZipException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
 		// CHECK IF INPUT EXISTS AND OUTPUT DOESNT
 		if (!input.exists() || (output.exists() && !override)) {
 			return false;
@@ -142,15 +138,12 @@ public class APKInstrumenter {
 
 		// LOAD CONFIGURATION
 		final InstrumentationConfiguration instrConfig = new InstrumentationConfiguration();
-		final File instrConfigFile = new File(APKInstrumenter.class.getResource("/config/default.xml").toURI());
 		try {
-			instrConfig.parseConfigFile(instrConfigFile);
+			instrConfig.parseConfigFile(APKInstrumenter.class.getResourceAsStream("/config/default.xml"));
 		} catch (JAXBException e) {
-			LOG.error("Failed to load configuration.");
+			LOG.severe("Failed to load configuration.");
 			return false;
 		}
-
-		LOG.info("Successfully loaded instrumentation config '" + instrConfigFile.getAbsolutePath() + "'.");
 
 		// INSERT RIGHTS NEEDED
 		this.neededRights = instrConfig.getXmlConfiguration().getManifestTransformer().getPermissions();
@@ -188,12 +181,12 @@ public class APKInstrumenter {
 			if (!buildAgent) {
 				return false;
 			} else {
-				buildDexAgent(instrConfig);
+				buildDexAgent(agentJar, instrConfig);
 			}
 		} else {
 			if (buildAgent) {
 				AGENT_BUILD.delete();
-				buildDexAgent(instrConfig);
+				buildDexAgent(agentJar, instrConfig);
 			}
 		}
 
@@ -235,7 +228,7 @@ public class APKInstrumenter {
 				injected = true;
 				break;
 			} catch (InvocationTargetException e) {
-				LOG.warn("Merging with agent failed (Multidex problem).");
+				LOG.warning("Merging with agent failed (Multidex problem).");
 			} finally {
 				tempFile.delete();
 			}
@@ -244,7 +237,7 @@ public class APKInstrumenter {
 
 		if (!injected) {
 			// NOT TESTED YET
-			LOG.warn("Created an additional dex file. Please make sure that mutlidex is enabled.");
+			LOG.warning("Created an additional dex file. Please make sure that mutlidex is enabled.");
 			String fName = "classes" + nCount + ".dex";
 			File newDex = new File(DEX_FILES_PATH + File.separator + fName);
 			Files.move(AGENT_BUILD.toPath(), newDex.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -297,7 +290,7 @@ public class APKInstrumenter {
 		// RESIGN
 		LOG.info("Resigning the output APK.");
 		final JarSigner signer = new JarSigner();
-		signer.signJar(output, getKeystore(), getAlias(), getPass());
+		signer.signJar(output, keystore, alias, pass);
 
 		// REMOVE ALL TEMP FILES
 		if (cleanAfter) {
@@ -319,12 +312,12 @@ public class APKInstrumenter {
 		return n;
 	}
 
-	private void buildDexAgent(InstrumentationConfiguration instrConfig) {
+	private void buildDexAgent(File jarPath, InstrumentationConfiguration instrConfig) {
 		LOG.info("Building the agent.");
 
 		// compile the java files
-		if (!AGENT_BUILD_JAVA.exists()) {
-			LOG.error("Please build the agent before running the instrumentation!");
+		if (!jarPath.exists()) {
+			LOG.severe("Please build the agent before running the instrumentation!");
 			cleanUpAll();
 			System.exit(1);
 		}
@@ -333,12 +326,12 @@ public class APKInstrumenter {
 		temporaryFolder.mkdir();
 
 		try {
-			ZipFile agentZip = new ZipFile(AGENT_BUILD_JAVA);
+			ZipFile agentZip = new ZipFile(jarPath);
 			agentZip.extractAll(temporaryFolder.getAbsolutePath() + "/");
 
 		} catch (ZipException e) {
 			e.printStackTrace();
-			LOG.error("Couldn't unzip the agent.");
+			LOG.severe("Couldn't unzip the agent.");
 		}
 
 		// delete all except of rocks folder
@@ -349,7 +342,7 @@ public class APKInstrumenter {
 					try {
 						FileUtils.deleteDirectory(toDel);
 					} catch (IOException e) {
-						LOG.error("Couldn't delete temporary folder.");
+						LOG.severe("Couldn't delete temporary folder.");
 					}
 				}
 			} else {
@@ -365,100 +358,10 @@ public class APKInstrumenter {
 		try {
 			FileUtils.deleteDirectory(temporaryFolder);
 		} catch (IOException e) {
-			LOG.error("Couldn't remove temporary folder.");
+			LOG.severe("Couldn't remove temporary folder.");
 		}
 
 		LOG.info("Finished building the agent.");
-	}
-
-	/**
-	 * @return the override
-	 */
-	public boolean isOverride() {
-		return override;
-	}
-
-	/**
-	 * @param override
-	 *            the override to set
-	 */
-	public void setOverride(final boolean override) {
-		this.override = override;
-	}
-
-	/**
-	 * @return the keystore
-	 */
-	public File getKeystore() {
-		return keystore;
-	}
-
-	/**
-	 * @param keystore
-	 *            the keystore to set
-	 */
-	public void setKeystore(final File keystore) {
-		this.keystore = keystore;
-	}
-
-	/**
-	 * @return the alias
-	 */
-	public String getAlias() {
-		return alias;
-	}
-
-	/**
-	 * @param alias
-	 *            the alias to set
-	 */
-	public void setAlias(final String alias) {
-		this.alias = alias;
-	}
-
-	/**
-	 * @return the pass
-	 */
-	public String getPass() {
-		return pass;
-	}
-
-	/**
-	 * @param pass
-	 *            the pass to set
-	 */
-	public void setPass(final String pass) {
-		this.pass = pass;
-	}
-
-	/**
-	 * @return the cleanBefore
-	 */
-	public boolean isCleanBefore() {
-		return cleanBefore;
-	}
-
-	/**
-	 * @param cleanBefore
-	 *            the cleanBefore to set
-	 */
-	public void setCleanBefore(final boolean cleanBefore) {
-		this.cleanBefore = cleanBefore;
-	}
-
-	/**
-	 * @return the cleanAfter
-	 */
-	public boolean isCleanAfter() {
-		return cleanAfter;
-	}
-
-	/**
-	 * @param cleanAfter
-	 *            the cleanAfter to set
-	 */
-	public void setCleanAfter(final boolean cleanAfter) {
-		this.cleanAfter = cleanAfter;
 	}
 
 	/**
@@ -510,8 +413,10 @@ public class APKInstrumenter {
 			FileUtils.deleteDirectory(OUTPUT_TEMP);
 			FileUtils.deleteDirectory(OUTPUT_TEMPO);
 			FileUtils.deleteDirectory(DEX_FILES_PATH);
+			FileUtils.deleteDirectory(new File("dxbuild")); // agent build
+			FileUtils.forceDelete(new File("AndroidManifest.xml"));
 		} catch (IOException e) {
-			LOG.error("Couldn't remove the temporary folders.");
+			LOG.warning("Couldn't remove the temporary folders.");
 		}
 
 		MODIFIED_MANIFEST.delete();

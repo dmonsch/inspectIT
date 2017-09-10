@@ -36,6 +36,9 @@ configurations {
 		extendsFrom configurations.sharedAllProd
 		extendsFrom configurations.agentJavaSdkProd
 	}
+	androidInstrumentProd {
+		extendsFrom configurations.sharedAllProd
+	}
 	serverProd {
 		extendsFrom configurations.sharedAllProd
 		extendsFrom configurations.sharedCsProd
@@ -64,6 +67,7 @@ configurations {
 	agentJavaSdkTest {
 		extendsFrom configurations.testbase
 	}
+	androidInstrumentTest
 	serverTest {
 		extendsFrom configurations.testbase
 		extendsFrom configurations.classmexer
@@ -94,6 +98,8 @@ configurations.sharedAllProd.transitive = false
 configurations.sharedCsProd.transitive = false
 configurations.agentJavaProd.transitive = false
 configurations.agentJavaSdkProd.transitive = false
+configurations.androidInstrumentProd.transitive = false
+configurations.androidInstrumentTest.transitive = false
 configurations.serverProd.transitive = false
 configurations.serverDiagnosisProd.transitive = false
 configurations.uiRcpProd.transitive = false
@@ -188,6 +194,18 @@ dependencies {
 		// currently only to support starting agent with Java 9, but needed if we want to start 
 		// any other component with Java 9 in future
 		'javax.annotation:javax.annotation-api:1.2'
+	)
+	
+	/** inspectit.agent.android.instrument */
+	androidInstrumentProd (
+		'net.lingala.zip4j:zip4j:1.3.2',
+		'org.apache.commons:commons-lang3:3.0',
+		'commons-io:commons-io:2.5',
+		
+		'org.smali:util:2.2.1',
+		'org.smali:dexlib2:2.2.1',
+		
+		'com.beust:jcommander:1.72'
 	)
 
 	/** inspectit.server */

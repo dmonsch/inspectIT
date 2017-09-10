@@ -35,6 +35,8 @@ import org.jf.dexlib2.immutable.reference.ImmutableMethodReference;
 import org.jf.dexlib2.immutable.reference.ImmutableStringReference;
 import org.jf.dexlib2.util.MethodUtil;
 
+import com.beust.jcommander.internal.Lists;
+
 /**
  * @author David Monschein
  *
@@ -168,13 +170,30 @@ public class DexInstrumentationUtil {
 		return builder.toString();
 	}
 
+	public static MethodReference getMethodReference(String clazzType, String name, String returnType, String... parameterTypes) {
+		List<String> parameters = Lists.newArrayList(parameterTypes);
+		return getMethodReference(clazzType, name, returnType, parameters);
+	}
+
+	public static MethodReference getMethodReference(Class<?> clazz, String name, String returnType, String... paras) {
+		return getMethodReference(DexInstrumentationUtil.getType(clazz), name, returnType, paras);
+	}
+
+	public static MethodReference getMethodReference(Class<?> clazz, String name, String returnType) {
+		return getMethodReference(DexInstrumentationUtil.getType(clazz), name, returnType, Lists.newArrayList());
+	}
+
 	public static MethodReference getMethodReference(Class<?> clazz, String name, String returnType, Class<?>... parameters) {
 		List<String> parameterList = new ArrayList<>();
 		for (Class<?> paraClass : parameters) {
 			parameterList.add(DexInstrumentationUtil.getType(paraClass));
 		}
 
-		return new ImmutableMethodReference(DexInstrumentationUtil.getType(clazz), name, parameterList, returnType);
+		return getMethodReference(DexInstrumentationUtil.getType(clazz), name, returnType, parameterList);
+	}
+
+	public static MethodReference getMethodReference(String clazzType, String name, String returnType, List<String> paras) {
+		return new ImmutableMethodReference(clazzType, name, paras, returnType);
 	}
 
 	public static int getThisRegister(int maxRegisters, int parameters) {

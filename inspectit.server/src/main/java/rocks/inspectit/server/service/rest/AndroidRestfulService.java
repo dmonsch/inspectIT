@@ -142,9 +142,9 @@ public class AndroidRestfulService {
 		if (field.getType().equals(String.class)) {
 			String literal = (String) field.get(obj);
 			if (tag) {
-				point.tag(key, literal);
+				point.tag(key, literal == null ? "null" : literal);
 			} else {
-				point.addField(key, literal);
+				point.addField(key, literal == null ? "null" : literal);
 			}
 		} else if (field.getType().equals(boolean.class)) {
 			boolean bool = (boolean) field.get(obj);

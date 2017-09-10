@@ -23,7 +23,7 @@ import rocks.inspectit.agent.android.callback.strategies.IntervalStrategy;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.delegation.AndroidAgentDelegator;
 import rocks.inspectit.agent.android.module.AndroidModuleManager;
-import rocks.inspectit.agent.android.sensor.ISensor;
+import rocks.inspectit.agent.android.sensor.AbstractMethodSensor;
 import rocks.inspectit.agent.android.sensor.NetworkSensor;
 import rocks.inspectit.agent.android.sensor.TraceSensor;
 import rocks.inspectit.agent.android.util.DependencyManager;
@@ -47,7 +47,7 @@ public final class AndroidAgent {
 	/**
 	 * The sensor which is responsible for collecting traces of instrumented method executions.
 	 */
-	private static List<ISensor> sensorList;
+	private static List<AbstractMethodSensor> sensorList;
 
 	private static AndroidModuleManager moduleManager;
 	private static CMRConnectionManager connectionManager;
@@ -123,6 +123,10 @@ public final class AndroidAgent {
 		sensorList.add(new TraceSensor());
 		sensorList.add(new NetworkSensor());
 
+		for (AbstractMethodSensor sens : sensorList) {
+			injectDependencies(sens);
+		}
+
 		// INITING MODULES
 		moduleManager = new AndroidModuleManager(ctx, mHandler);
 		moduleManager.initModules();
@@ -173,6 +177,11 @@ public final class AndroidAgent {
 	public static void shutdownAgent(String message) {
 		Log.w(AgentConfiguration.current.getLogTag(), "The Android Agent encountered a problem (\"" + message + "\") and will shut down.");
 		destroyAgent();
+	}
+
+	private static void injectDependencies(AndroidMonitoringComponent comp) {
+		comp.setAndroidDataCollector(DependencyManager.getAndroidDataCollector());
+		comp.setCallbackManager(DependencyManager.getCallbackManager());
 	}
 
 	private static void initDataCollector(Context ctx) {

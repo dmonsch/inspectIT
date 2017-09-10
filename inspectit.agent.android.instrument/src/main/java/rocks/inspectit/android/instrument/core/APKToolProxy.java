@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -18,8 +19,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -39,7 +38,7 @@ import net.lingala.zip4j.exception.ZipException;
 public class APKToolProxy {
 
 	/** Logger. */
-	private static final Logger LOG = LogManager.getLogger(APKToolProxy.class);
+	private static final Logger LOG = Logger.getLogger(APKToolProxy.class.getName());
 
 	/** Path to the library. */
 	private static final String LIB_PATH = "lib\\apktool.jar";
@@ -82,7 +81,7 @@ public class APKToolProxy {
 			pb.start().waitFor();
 			return true;
 		} catch (InterruptedException | IOException e) {
-			LOG.error("Failed to execute APKTool to decode application.");
+			LOG.severe("Failed to execute APKTool to decode application.");
 			return false;
 		}
 	}
@@ -179,7 +178,7 @@ public class APKToolProxy {
 		try {
 			pb.start().waitFor();
 		} catch (InterruptedException | IOException e) {
-			LOG.error("Failed to rebuild apk with APKTool.");
+			LOG.severe("Failed to rebuild apk with APKTool.");
 			return false;
 		}
 
@@ -190,7 +189,7 @@ public class APKToolProxy {
 			Files.copy(new File(folderName + "/" + "manifest_new" + "/" + MANIFEST_FILE).toPath(),
 					modifiedManifest.toPath());
 		} catch (ZipException | IOException e) {
-			LOG.error("Failed to extract the manifest from the rebuilt application.");
+			LOG.severe("Failed to extract the manifest from the rebuilt application.");
 			return false;
 		}
 

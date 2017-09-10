@@ -21,7 +21,6 @@
 		<libraryFolders>
 			<folder>rocks</folder>
 			<folder>org</folder>
-			<folder>kieker</folder>
 		</libraryFolders>
 	</agentBuild>
 	
