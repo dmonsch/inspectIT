@@ -7,9 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
 /**
  * @author David Monschein
@@ -18,7 +16,7 @@ import org.apache.log4j.Logger;
 public class DxJarProxy {
 
 	/** Logger. */
-	private static final Logger LOG = LogManager.getLogger(DxJarProxy.class);
+	private static final Logger LOG = Logger.getLogger(DxJarProxy.class.getName());
 
 	private File dxLocation;
 
@@ -36,7 +34,7 @@ public class DxJarProxy {
 			pb.start().waitFor();
 		} catch (InterruptedException | IOException e) {
 			e.printStackTrace();
-			LOG.error("Failed to execute dx tool.");
+			LOG.severe("Failed to execute dx tool.");
 		}
 	}
 

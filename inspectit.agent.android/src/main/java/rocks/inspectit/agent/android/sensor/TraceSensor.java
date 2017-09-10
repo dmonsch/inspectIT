@@ -15,7 +15,7 @@ import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanImpl;
  *
  */
 @SensorAnnotation(id = 2)
-public class TraceSensor implements ISensor {
+public class TraceSensor extends AbstractMethodSensor {
 	/**
 	 * Reference to the {@link CallbackManager}.
 	 */

@@ -1,6 +1,6 @@
 package rocks.inspectit.android.instrument.config;
 
-import java.io.File;
+import java.io.InputStream;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -30,19 +30,17 @@ public class InstrumentationConfiguration {
 	/**
 	 * Parses a XML configuration file.
 	 *
-	 * @param config
+	 * @param inputStream
 	 *            configuration file
 	 * @throws JAXBException
 	 *             if the configuration couldn't be parsed
 	 */
-	public void parseConfigFile(final File config) throws JAXBException {
-		if (config.exists()) {
-			final JAXBContext jc = JAXBContext.newInstance(RootConfigurationXml.class);
-			final Unmarshaller unmarshaller = jc.createUnmarshaller();
+	public void parseConfigFile(final InputStream inputStream) throws JAXBException {
+		final JAXBContext jc = JAXBContext.newInstance(RootConfigurationXml.class);
+		final Unmarshaller unmarshaller = jc.createUnmarshaller();
 
-			final RootConfigurationXml sc = (RootConfigurationXml) unmarshaller.unmarshal(config);
-			this.xmlConfiguration = sc;
-		}
+		final RootConfigurationXml sc = (RootConfigurationXml) unmarshaller.unmarshal(inputStream);
+		this.xmlConfiguration = sc;
 	}
 
 	/**

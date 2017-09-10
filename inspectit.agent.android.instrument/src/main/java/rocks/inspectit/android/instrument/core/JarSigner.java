@@ -4,9 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import java.util.logging.Logger;
 
 /**
  * Proxy class for the Java Jarsigner. This needs the jarsigner tooling
@@ -19,7 +17,7 @@ import org.apache.log4j.Logger;
 public class JarSigner {
 
 	/** Logger. */
-	private static final Logger LOG = LogManager.getLogger(JarSigner.class);
+	private static final Logger LOG = Logger.getLogger(JarSigner.class.getName());
 
 	/** Creates a new Jarsigner instance. */
 	public JarSigner() {
@@ -55,7 +53,7 @@ public class JarSigner {
 		try {
 			signJarProcess.waitFor();
 		} catch (InterruptedException e) {
-			LOG.error("JarSigner failed to resign file '" + jarFile.getAbsolutePath() + "' with keystore '" + keyStore
+			LOG.severe("JarSigner failed to resign file '" + jarFile.getAbsolutePath() + "' with keystore '" + keyStore
 					+ "'.");
 			return;
 		}

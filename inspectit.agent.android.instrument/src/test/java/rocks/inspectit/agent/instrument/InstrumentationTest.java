@@ -61,7 +61,7 @@ public class InstrumentationTest {
 		}
 
 		APKInstrumenter instrumenter = new APKInstrumenter(true, new File("lib/release.keystore"), "androiddebugkey", "android");
-		instrumenter.instrumentAPK(toInstrument, new File("app-instr.apk"));
+		instrumenter.instrumentAPK(toInstrument, new File("app-instr.apk"), new File("../inspectit.agent.android/build/release/inspectit.agent.android-all.jar"));
 
 	}
 

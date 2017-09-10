@@ -9,6 +9,7 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jf.dexlib2.Opcode;
 import org.jf.dexlib2.builder.MutableMethodImplementation;
+import org.jf.dexlib2.builder.instruction.BuilderInstruction11x;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction35c;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction3rc;
 import org.jf.dexlib2.iface.Method;
@@ -34,7 +35,7 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 			Opcode.INVOKE_SUPER_QUICK, Opcode.INVOKE_SUPER_QUICK_RANGE, Opcode.INVOKE_SUPER_RANGE, Opcode.INVOKE_VIRTUAL, Opcode.INVOKE_VIRTUAL_QUICK, Opcode.INVOKE_VIRTUAL_QUICK_RANGE,
 			Opcode.INVOKE_VIRTUAL_RANGE };
 
-	private static final int REGISTER_ADD_COUNT = 5;
+	private static final int REGISTER_ADD_COUNT = 7;
 	private static final String CONSTRUCTOR_METHOD_NAME = "<init>";
 
 	private TraceCollectionConfiguration config;
@@ -90,6 +91,9 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 		boolean instrumented = false;
 		for (Pair<Integer, MethodReference> tracedMethodCall : tracedInstructions) {
 			int[] sensors = resolveAllSensorIds(tracedMethodCall.getRight());
+			if (sensors.length > 1) {
+				System.out.println(tracedMethodCall.getRight().getDefiningClass() + "#" + tracedMethodCall.getRight().getName());
+			}
 			int added = instrument(mutedImplementation.getRight(), tracedMethodCall.getLeft() + offset, destRegisterStart, sensors, tracedMethodCall.getRight());
 			if (added > 0) {
 				instrumented = true;
@@ -107,15 +111,23 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 	private int instrument(MutableMethodImplementation impl, int position, int dest, int[] sensors, MethodReference toTrace) {
 
 		Instruction instr = impl.getInstructions().get(position);
+
 		boolean isStatic = (instr.getOpcode() == Opcode.INVOKE_STATIC) || (instr.getOpcode() == Opcode.INVOKE_STATIC_RANGE);
 		int firstRegister = -1; // holds the object reference
 		int instrDest = position;
 
+		char returnTypeFirstChar = toTrace.getReturnType().charAt(0);
+		Opcode returnTypeMoveOpcode = ((returnTypeFirstChar == 'J') || (returnTypeFirstChar == 'D')) ? Opcode.MOVE_WIDE
+				: (((returnTypeFirstChar == 'L') || (returnTypeFirstChar == '[')) ? Opcode.MOVE_OBJECT : Opcode.MOVE);
+		boolean returnTransformed = false;
+
 		if (!isStatic) {
 			if (instr instanceof BuilderInstruction35c) {
-				firstRegister = ((BuilderInstruction35c) instr).getRegisterC();
+				BuilderInstruction35c instrTemp = (BuilderInstruction35c) instr;
+				firstRegister = instrTemp.getRegisterC();
 			} else if (instr instanceof BuilderInstruction3rc) {
-				firstRegister = ((BuilderInstruction3rc) instr).getStartRegister();
+				BuilderInstruction3rc instrTemp = (BuilderInstruction3rc) instr;
+				firstRegister = instrTemp.getStartRegister();
 			}
 		}
 
@@ -152,6 +164,16 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 		Instruction afterInvoc = impl.getInstructions().get(instrDest);
 		Opcode afterInvocOpcode = afterInvoc.getOpcode();
 		if ((afterInvocOpcode == Opcode.MOVE_RESULT) || (afterInvocOpcode == Opcode.MOVE_RESULT_OBJECT) || (afterInvocOpcode == Opcode.MOVE_RESULT_WIDE)) {
+			// inspect the move
+			BuilderInstruction11x resultMoveInstr = (BuilderInstruction11x) afterInvoc;
+			if (resultMoveInstr.getRegisterA() == firstRegister) {
+				// replace the move
+				BuilderInstruction11x transformedMove = new BuilderInstruction11x(resultMoveInstr.getOpcode(), dest + 5);
+				impl.replaceInstruction(instrDest, transformedMove);
+				returnTransformed = true;
+			}
+
+			// jump over move
 			instrDest++;
 			jumpedInstructions++;
 		}
@@ -159,6 +181,8 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 		// move object #2
 		if (!isStatic) {
 			impl.addInstruction(instrDest++, DexInstrumentationUtil.moveRegister(dest + 4, firstRegister, Opcode.MOVE_OBJECT));
+		} else {
+			impl.addInstruction(instrDest++, DexInstrumentationUtil.createIntegerConstant(dest + 4, 0));
 		}
 
 		// reload parameters
@@ -174,8 +198,10 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 		}
 
 		// move back #2
-		if (!isStatic) {
+		if (!isStatic && !returnTransformed) {
 			impl.addInstruction(instrDest++, DexInstrumentationUtil.moveRegister(firstRegister, dest + 4, Opcode.MOVE_OBJECT));
+		} else if (returnTransformed) {
+			impl.addInstruction(instrDest++, DexInstrumentationUtil.moveRegister(firstRegister, dest + 5, returnTypeMoveOpcode));
 		}
 
 		return instrDest - position - jumpedInstructions;

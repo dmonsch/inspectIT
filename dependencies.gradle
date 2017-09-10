@@ -36,6 +36,9 @@ configurations {
 		extendsFrom configurations.sharedAllProd
 		extendsFrom configurations.agentJavaSdkProd
 	}
+	androidInstrumentProd {
+		extendsFrom configurations.sharedAllProd
+	}
 	serverProd {
 		extendsFrom configurations.sharedAllProd
 		extendsFrom configurations.sharedCsProd
@@ -61,6 +64,7 @@ configurations {
 	agentJavaSdkTest {
 		extendsFrom configurations.testbase
 	}
+	androidInstrumentTest
 	serverTest {
 		extendsFrom configurations.testbase
 		extendsFrom configurations.classmexer
@@ -91,6 +95,8 @@ configurations.sharedAllProd.transitive = false
 configurations.sharedCsProd.transitive = false
 configurations.agentJavaProd.transitive = false
 configurations.agentJavaSdkProd.transitive = false
+configurations.androidInstrumentProd.transitive = false
+configurations.androidInstrumentTest.transitive = false
 configurations.serverProd.transitive = false
 configurations.serverDiagnosisProd.transitive = false
 configurations.uiRcpProd.transitive = false
@@ -170,6 +176,18 @@ dependencies {
 		'ch.qos.logback:logback-core:1.1.7',
 		'ch.qos.logback:logback-classic:1.1.7',
 		'piccolo:piccolo:1.0.3'
+	)
+	
+	/** inspectit.agent.android.instrument */
+	androidInstrumentProd (
+		'net.lingala.zip4j:zip4j:1.3.2',
+		'org.apache.commons:commons-lang3:3.0',
+		'commons-io:commons-io:2.5',
+		
+		'org.smali:util:2.2.1',
+		'org.smali:dexlib2:2.2.1',
+		
+		'com.beust:jcommander:1.72'
 	)
 
 	/** inspectit.server */
