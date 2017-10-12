@@ -207,6 +207,18 @@ dependencies {
 		
 		'com.beust:jcommander:1.72'
 	)
+	
+	/** inspectit.agent.android.instrument */
+	androidInstrumentProd (
+		'net.lingala.zip4j:zip4j:1.3.2',
+		'org.apache.commons:commons-lang3:3.0',
+		'commons-io:commons-io:2.5',
+		
+		'org.smali:util:2.2.1',
+		'org.smali:dexlib2:2.2.1',
+		
+		'com.beust:jcommander:1.72'
+	)
 
 	/** inspectit.server */
 	serverProd (
