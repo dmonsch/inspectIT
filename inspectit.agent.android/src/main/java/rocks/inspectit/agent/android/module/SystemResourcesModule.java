@@ -7,7 +7,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Debug.MemoryInfo;
 import rocks.inspectit.agent.android.module.util.ExecutionProperty;
-import rocks.inspectit.shared.android.mobile.SystemResourceUsageResponse;
+import rocks.inspectit.shared.all.communication.data.mobile.SystemResourceUsage;
 
 /**
  * @author David Monschein
@@ -49,7 +49,7 @@ public class SystemResourcesModule extends AbstractMonitoringModule {
 		float cpu = collectCpuUsage();
 		float memory = collectMemoryUsage();
 
-		SystemResourceUsageResponse resp = new SystemResourceUsageResponse();
+		SystemResourceUsage resp = new SystemResourceUsage();
 		resp.setCpuUsage(cpu);
 		resp.setMemoryUsage(memory);
 

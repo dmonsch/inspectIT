@@ -1,7 +1,7 @@
 package rocks.inspectit.agent.android.callback.strategies;
 
 import android.os.Handler;
-import rocks.inspectit.shared.android.mobile.MobileDefaultData;
+import rocks.inspectit.shared.all.communication.DefaultData;
 
 /**
  * Callback strategy which collects data over a specified period of time and
@@ -39,7 +39,7 @@ public class IntervalStrategy extends AbstractCallbackStrategy {
 	 * @param intervalLength
 	 *            the length of the interval in milliseconds
 	 */
-	public IntervalStrategy(final long intervalLength) {
+	public IntervalStrategy(long intervalLength) {
 		alreadyRunning = false;
 		this.setIntervalLength(intervalLength);
 
@@ -57,7 +57,7 @@ public class IntervalStrategy extends AbstractCallbackStrategy {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void addData(MobileDefaultData data) {
+	public synchronized void addData(DefaultData data) {
 		super.data.addChildData(data);
 		if (!alreadyRunning) {
 			mHandler.postDelayed(mHandlerTask, 10000);

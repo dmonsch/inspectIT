@@ -31,7 +31,6 @@ dependencies {
 	
 	compile project(":inspectit.shared.all")
 	compile project(":inspectit.agent.java.sdk")
-	compile project(":inspectit.shared.android")
 	
 	compile 'io.opentracing:opentracing-api:0.20.9'
 	compile 'io.opentracing:opentracing-noop:0.20.9'
@@ -45,7 +44,7 @@ shadowJar {
 	
 	/** Only this dependencies are included in the build */
 	dependencies {
-		include(project(":inspectit.shared.android"))
+		include(project(":inspectit.shared.all"))
 		
 		include(project(":inspectit.agent.java.sdk"))
 		include(dependency('io.opentracing:opentracing-api:0.20.9'))

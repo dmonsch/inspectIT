@@ -3,7 +3,7 @@ package rocks.inspectit.agent.android.broadcast;
 import android.content.Context;
 import android.content.Intent;
 import android.os.BatteryManager;
-import rocks.inspectit.shared.android.mobile.BatteryConsumptionResponse;
+import rocks.inspectit.shared.all.communication.data.mobile.BatteryConsumption;
 
 /**
  * Broadcast receiver which receives information about the current battery and charging state.
@@ -53,7 +53,7 @@ public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 
 				long timeInterval = endTimestamp - startTimestamp;
 
-				BatteryConsumptionResponse bcrp = new BatteryConsumptionResponse();
+				BatteryConsumption bcrp = new BatteryConsumption();
 				bcrp.setConsumptionPercent(consumption);
 				bcrp.setTimeInterval(timeInterval);
 

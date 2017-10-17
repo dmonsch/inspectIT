@@ -21,7 +21,7 @@ public class AndroidModuleManager {
 	/**
 	 * Modules which will be created when the agent is initialized.
 	 */
-	private static final Class<?>[] MODULES = new Class<?>[] { CrashModule.class, SystemResourcesModule.class };
+	private static final Class<?>[] MODULES = new Class<?>[] { CrashModule.class, SystemResourcesModule.class, CoreSpanReporter.class };
 
 	/**
 	 * Maps a certain module class to an instantiated module object.

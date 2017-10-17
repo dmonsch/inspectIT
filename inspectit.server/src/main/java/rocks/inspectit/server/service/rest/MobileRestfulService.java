@@ -20,13 +20,10 @@ import com.google.common.collect.Lists;
 
 import rocks.inspectit.server.dao.DefaultDataDao;
 import rocks.inspectit.shared.all.communication.DefaultData;
-import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultDataWrapper;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileCallbackData;
 import rocks.inspectit.shared.all.communication.data.mobile.SessionCreation;
+import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationResponse;
 import rocks.inspectit.shared.all.util.Pair;
-import rocks.inspectit.shared.android.mobile.MobileCallbackData;
-import rocks.inspectit.shared.android.mobile.MobileDefaultData;
-import rocks.inspectit.shared.android.mobile.SessionCreationRequest;
-import rocks.inspectit.shared.android.mobile.SessionCreationResponse;
 
 /**
  * @author David Monschein
@@ -34,7 +31,7 @@ import rocks.inspectit.shared.android.mobile.SessionCreationResponse;
  */
 @Controller
 @RequestMapping(value = "/mobile")
-public class AndroidRestfulService {
+public class MobileRestfulService {
 
 	private ObjectMapper mapper;
 
@@ -43,7 +40,7 @@ public class AndroidRestfulService {
 	@Autowired
 	private DefaultDataDao defaultDataDao;
 
-	public AndroidRestfulService() {
+	public MobileRestfulService() {
 		mapper = new ObjectMapper();
 		sessionStorage = new HashMap<>();
 	}
@@ -54,16 +51,15 @@ public class AndroidRestfulService {
 		try {
 			MobileCallbackData data = mapper.readValue(json, MobileCallbackData.class);
 			if ((data.getChildData().size() == 1)) {
-				MobileDefaultData singleElement = data.getChildData().get(0);
-				if (singleElement instanceof SessionCreationRequest) {
-					SessionCreationRequest request = (SessionCreationRequest) singleElement;
-					SessionCreation wrapped = new SessionCreation(request);
+				DefaultData singleElement = data.getChildData().get(0);
+				if (singleElement instanceof SessionCreation) {
+					SessionCreation request = (SessionCreation) singleElement;
 
 					String sessionId = createSessionIdEntry();
 					sessionStorage.put(sessionId, new Pair<String, String>(request.getAppName(), request.getDeviceId()));
 
 					// insert into influx
-					defaultDataDao.saveAll(Lists.newArrayList(wrapped));
+					defaultDataDao.saveAll(Lists.newArrayList(request));
 
 					SessionCreationResponse resp = new SessionCreationResponse();
 					resp.setSessionId(sessionId);
@@ -88,12 +84,8 @@ public class AndroidRestfulService {
 
 				List<DefaultData> collectedItems = new ArrayList<DefaultData>();
 
-				for (MobileDefaultData defData : data.getChildData()) {
-					// process these points
-					DefaultData conversion = MobileDefaultDataWrapper.wrap(defData);
-					if (conversion != null) {
-						collectedItems.add(conversion);
-					}
+				for (DefaultData defData : data.getChildData()) {
+					collectedItems.add(defData);
 				}
 
 				defaultDataDao.saveAll(collectedItems);

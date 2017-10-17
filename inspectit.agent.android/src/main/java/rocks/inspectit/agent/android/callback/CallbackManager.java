@@ -7,9 +7,9 @@ import android.util.Log;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.android.mobile.MobileCallbackData;
-import rocks.inspectit.shared.android.mobile.MobileDefaultData;
-import rocks.inspectit.shared.android.mobile.SessionCreationRequest;
+import rocks.inspectit.shared.all.communication.DefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileCallbackData;
+import rocks.inspectit.shared.all.communication.data.mobile.SessionCreation;
 
 /**
  * Component which handles the connection to the CMR which persists the monitoring data.
@@ -37,14 +37,14 @@ public class CallbackManager {
 	 * Contains all data which isn't sent already because there is no
 	 * connection.
 	 */
-	private List<MobileDefaultData> sessQueue;
+	private List<DefaultData> sessQueue;
 
 	/**
 	 * Creates a new callback manager.
 	 */
 	public CallbackManager() {
 		this.sessActive = false;
-		this.sessQueue = new ArrayList<MobileDefaultData>();
+		this.sessQueue = new ArrayList<DefaultData>();
 		this.LOG_TAG = AgentConfiguration.current.getLogTag();
 	}
 
@@ -55,7 +55,7 @@ public class CallbackManager {
 	 * @param data
 	 *            data which should be transferred to the server
 	 */
-	public void pushData(MobileDefaultData data) {
+	public void pushData(DefaultData data) {
 		if (!sessActive) {
 			this.sessQueue.add(data);
 		} else {
@@ -69,12 +69,12 @@ public class CallbackManager {
 	 * @param response
 	 *            hello request which should be sent to the servers
 	 */
-	public void pushHelloMessage(SessionCreationRequest response) {
+	public void pushHelloMessage(SessionCreation request) {
 		final MobileCallbackData data = new MobileCallbackData();
 		data.setSessionId(null);
 
-		final List<MobileDefaultData> childs = new ArrayList<MobileDefaultData>();
-		childs.add(response);
+		List<DefaultData> childs = new ArrayList<DefaultData>();
+		childs.add(request);
 
 		data.setChildData(childs);
 
@@ -98,7 +98,7 @@ public class CallbackManager {
 	 * Flushes all entries in the session queue to the callback strategy.
 	 */
 	private void swapQueue() {
-		for (MobileDefaultData data : sessQueue) {
+		for (DefaultData data : sessQueue) {
 			strategy.addData(data);
 		}
 		sessQueue.clear();

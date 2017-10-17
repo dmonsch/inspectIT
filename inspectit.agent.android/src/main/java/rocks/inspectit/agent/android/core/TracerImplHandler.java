@@ -2,6 +2,7 @@ package rocks.inspectit.agent.android.core;
 
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
+import rocks.inspectit.agent.android.module.CoreSpanReporter;
 import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanImpl;
 import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.TracerImpl;
 import rocks.inspectit.agent.java.sdk.opentracing.util.SystemTimer;

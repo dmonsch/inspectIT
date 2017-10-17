@@ -10,6 +10,11 @@ import rocks.inspectit.shared.all.tracing.data.PropagationType;
  */
 public class MobileFunctionExecution extends AbstractMobileSpanDetails {
 
+	/**
+	 * Serial UID.
+	 */
+	private static final long serialVersionUID = 795929811165409499L;
+
 	@JsonProperty
 	private String methodSignature;
 

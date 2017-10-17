@@ -41,7 +41,6 @@ configurations {
 
 /** Depend on inspectit.shared.all and cs, testCompile must depend on shared all test sources because of TestBase class */
 dependencies {
-	compile project(":inspectit.shared.android")
 	compile project(':inspectit.shared.all')
 	compile project(':inspectit.shared.cs')
 	compile project(':inspectit.server.diagnosis')

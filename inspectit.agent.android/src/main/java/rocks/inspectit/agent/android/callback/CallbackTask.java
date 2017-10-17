@@ -14,7 +14,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.android.mobile.SessionCreationResponse;
+import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationResponse;
 
 /**
  * Task which is responsible for sending data to the REST interface of the
@@ -84,7 +84,7 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 	protected void onPostExecute(String result) {
 		if ((result != null) && !result.isEmpty()) {
 			try {
-				final SessionCreationResponse resp = OBJECTMAPPER.readValue(result, SessionCreationResponse.class);
+				SessionCreationResponse resp = OBJECTMAPPER.readValue(result, SessionCreationResponse.class);
 				if ((resp.getSessionId() != null) && (resp.getSessionId().length() > 0)) {
 					callbackManager.applySessionId(resp.getSessionId());
 				}

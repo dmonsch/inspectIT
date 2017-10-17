@@ -11,6 +11,7 @@ import org.jf.dexlib2.builder.BuilderInstruction;
 import org.jf.dexlib2.builder.MutableMethodImplementation;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction10x;
 import org.jf.dexlib2.builder.instruction.BuilderInstruction35c;
+import org.jf.dexlib2.builder.instruction.BuilderInstruction3rc;
 import org.jf.dexlib2.iface.Annotation;
 import org.jf.dexlib2.iface.ClassDef;
 import org.jf.dexlib2.iface.Method;
@@ -232,8 +233,13 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 
 	private BuilderInstruction createAgentInitInvocation(int thisRegister) {
 		MethodReference methodReference = DexInstrumentationUtil.getMethodReference(AndroidAgent.class, "initAgent", "V", ACTIVITY_TYPE);
-		BuilderInstruction35c invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, thisRegister, 0, 0, 0, 0, methodReference);
 
+		BuilderInstruction invokeInstruction;
+		if (DexInstrumentationUtil.numBits(thisRegister) == 4) {
+			invokeInstruction = new BuilderInstruction35c(Opcode.INVOKE_STATIC, 1, thisRegister, 0, 0, 0, 0, methodReference);
+		} else {
+			invokeInstruction = new BuilderInstruction3rc(Opcode.INVOKE_STATIC_RANGE, thisRegister, 1, methodReference);
+		}
 		return invokeInstruction;
 	}
 

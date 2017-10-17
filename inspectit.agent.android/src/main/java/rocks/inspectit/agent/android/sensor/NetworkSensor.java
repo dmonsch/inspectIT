@@ -11,7 +11,7 @@ import rocks.inspectit.agent.android.core.TracerImplHandler;
 import rocks.inspectit.agent.android.sensor.http.HttpConnectionPoint;
 import rocks.inspectit.agent.android.sensor.http.HttpConnectionState;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.android.mobile.NetRequestResponse;
+import rocks.inspectit.shared.all.communication.data.mobile.HttpNetworkRequest;
 
 /**
  * @author David Monschein
@@ -69,7 +69,9 @@ public class NetworkSensor extends AbstractMethodSensor {
 				state.update(belonging);
 
 				if (state.finished()) {
-					NetRequestResponse reqResp = new NetRequestResponse();
+					// TODO integrate into span
+
+					HttpNetworkRequest reqResp = new HttpNetworkRequest();
 					reqResp.setContentType(casted.getContentType());
 					reqResp.setDuration(state.responseTime());
 					reqResp.setMethod(casted.getRequestMethod());

@@ -1,12 +1,12 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
-import rocks.inspectit.shared.android.mobile.CrashResponse;
+import rocks.inspectit.shared.all.communication.DefaultData;
 
 /**
  * @author David Monschein
  *
  */
-public class AppCrash extends MobileDefaultData {
+public class AppCrash extends DefaultData {
 
 	/**
 	 * Serial UID.
@@ -18,13 +18,12 @@ public class AppCrash extends MobileDefaultData {
 	private String exceptionMessage;
 
 	/**
-	 * @param analog
+	 * @param name
+	 * @param message
 	 */
-	public AppCrash(CrashResponse analog) {
-		super(analog);
-
-		this.exceptionClass = analog.getExceptionClass();
-		this.exceptionMessage = analog.getExceptionMessage();
+	public AppCrash(String name, String message) {
+		this.exceptionClass = name;
+		this.exceptionMessage = message;
 	}
 
 	/**

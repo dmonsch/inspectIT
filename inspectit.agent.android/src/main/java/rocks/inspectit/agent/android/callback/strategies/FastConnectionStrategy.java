@@ -5,7 +5,7 @@ import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.android.mobile.MobileDefaultData;
+import rocks.inspectit.shared.all.communication.DefaultData;
 
 /**
  * Checks whether the connection speed and only sends beacons if the connection is fast enough.
@@ -33,7 +33,7 @@ public class FastConnectionStrategy extends AbstractCallbackStrategy {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void addData(MobileDefaultData dat) {
+	public void addData(DefaultData dat) {
 		this.data.addChildData(dat);
 
 		NetworkInfo info = dataCollector.getNetworkInfo();

@@ -1,12 +1,12 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
-import rocks.inspectit.shared.android.mobile.NetRequestResponse;
+import rocks.inspectit.shared.all.tracing.data.PropagationType;
 
 /**
  * @author David Monschein
  *
  */
-public class HttpNetworkRequest extends MobileDefaultData {
+public class HttpNetworkRequest extends AbstractMobileSpanDetails {
 
 	/**
 	 * Serial UID.
@@ -22,19 +22,6 @@ public class HttpNetworkRequest extends MobileDefaultData {
 	private int responseCode;
 
 	private String contentType;
-
-	/**
-	 * @param analog
-	 */
-	public HttpNetworkRequest(NetRequestResponse analog) {
-		super(analog);
-
-		this.setUrl(analog.getUrl());
-		this.setMethod(analog.getMethod());
-		this.setDuration(analog.getDuration());
-		this.setResponseCode(analog.getResponseCode());
-		this.setContentType(analog.getContentType());
-	}
 
 	/**
 	 * Gets {@link #url}.
@@ -129,6 +116,22 @@ public class HttpNetworkRequest extends MobileDefaultData {
 	 */
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean isExternalCall() {
+		return true;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public PropagationType getPropagationType() {
+		return PropagationType.HTTP;
 	}
 
 }

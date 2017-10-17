@@ -53,7 +53,7 @@ public class MobileSpan extends AbstractSpan {
 	 * @param eumDetails
 	 *            the details.
 	 */
-	void setDetails(AbstractMobileSpanDetails mobileDetails) {
+	public void setDetails(AbstractMobileSpanDetails mobileDetails) {
 		this.details = mobileDetails;
 		mobileDetails.setOwningSpan(this);
 

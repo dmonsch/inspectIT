@@ -8,7 +8,7 @@ import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.core.AndroidAgent;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.android.mobile.SessionCreationRequest;
+import rocks.inspectit.shared.all.communication.data.mobile.SessionCreation;
 
 /**
  * @author David Monschein
@@ -42,7 +42,7 @@ public class CMRConnectionManager {
 
 	public void establishCommunication(Context ctx) {
 		AndroidDataCollector androidDataCollector = DependencyManager.getAndroidDataCollector();
-		final SessionCreationRequest helloRequest = new SessionCreationRequest();
+		SessionCreation helloRequest = new SessionCreation();
 		helloRequest.setAppName(androidDataCollector.resolveAppName());
 		helloRequest.setDeviceId(androidDataCollector.getDeviceId());
 
@@ -57,7 +57,7 @@ public class CMRConnectionManager {
 		callbackManager.pushHelloMessage(helloRequest);
 	}
 
-	private void scheduleSessionCreationRequest(final SessionCreationRequest req) {
+	private void scheduleSessionCreationRequest(SessionCreation req) {
 		final Runnable scheduleRunnable = new Runnable() {
 			@Override
 			public void run() {

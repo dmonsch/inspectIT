@@ -1,12 +1,12 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
-import rocks.inspectit.shared.android.mobile.SystemResourceUsageResponse;
+import rocks.inspectit.shared.all.communication.DefaultData;
 
 /**
  * @author David Monschein
  *
  */
-public class SystemResourceUsage extends MobileDefaultData {
+public class SystemResourceUsage extends DefaultData {
 
 	/**
 	 * Serial UID.
@@ -16,13 +16,6 @@ public class SystemResourceUsage extends MobileDefaultData {
 	private float cpuUsage;
 
 	private float memoryUsage;
-
-	public SystemResourceUsage(SystemResourceUsageResponse resp) {
-		super(resp);
-
-		this.cpuUsage = resp.getCpuUsage();
-		this.memoryUsage = resp.getMemoryUsage();
-	}
 
 	/**
 	 * Gets {@link #cpuUsage}.

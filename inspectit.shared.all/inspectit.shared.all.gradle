@@ -96,7 +96,3 @@ task ('jarTest', type:Jar, dependsOn: testClasses, description: 'Assembles a jar
 artifacts {
 	testArchives project.jarTest
 }
-
-dependencies {
-	compile project(':inspectit.shared.android')
-}
