@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ***************************************************************************/
-package rocks.inspectit.shared.all.communication.data.mobile;
+package rocks.inspectit.shared.android.mobile;
 
 /**
  * Class representing an initial request response from the server for

@@ -7,9 +7,9 @@ import android.util.Log;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.all.communication.data.mobile.MobileCallbackData;
-import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
-import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationRequest;
+import rocks.inspectit.shared.android.mobile.MobileCallbackData;
+import rocks.inspectit.shared.android.mobile.MobileDefaultData;
+import rocks.inspectit.shared.android.mobile.SessionCreationRequest;
 
 /**
  * Component which handles the connection to the CMR which persists the monitoring data.

@@ -8,7 +8,7 @@ import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.core.AndroidAgent;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationRequest;
+import rocks.inspectit.shared.android.mobile.SessionCreationRequest;
 
 /**
  * @author David Monschein

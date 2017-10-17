@@ -11,11 +11,12 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  ***************************************************************************/
-package rocks.inspectit.shared.all.communication.data.mobile;
+package rocks.inspectit.shared.android.mobile;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonSubTypes;
-import org.codehaus.jackson.annotate.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * Parent class for mobile monitoring records.
@@ -28,11 +29,21 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 	@JsonSubTypes.Type(value = SessionCreationRequest.class),
 	@JsonSubTypes.Type(value = NetRequestResponse.class),
 	@JsonSubTypes.Type(value = CrashResponse.class),
-	@JsonSubTypes.Type(value = SystemResourceUsageResponse.class) })
-public class MobileDefaultData {
+	@JsonSubTypes.Type(value = SystemResourceUsageResponse.class),
+	@JsonSubTypes.Type(value = SpanResponse.class)})
+public abstract class MobileDefaultData {
+
+	@JsonProperty
+	private long creationTimestamp;
+
 	/**
 	 * Default instance creation.
 	 */
 	public MobileDefaultData() {
+		this.creationTimestamp = System.currentTimeMillis();
+	}
+
+	public long getCreationTimestamp() {
+		return this.creationTimestamp;
 	}
 }

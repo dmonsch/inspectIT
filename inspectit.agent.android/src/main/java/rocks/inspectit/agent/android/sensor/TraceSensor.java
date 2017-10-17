@@ -7,6 +7,7 @@ import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.core.TracerImplHandler;
 import rocks.inspectit.agent.android.util.DependencyManager;
 import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanImpl;
+import rocks.inspectit.shared.android.mobile.SpanResponse;
 
 /**
  * Sensor for dealing with operations executed before and after method instrumented executions.
@@ -48,7 +49,10 @@ public class TraceSensor extends AbstractMethodSensor {
 			spanMapping.set(new HashMap<Long, SpanImpl>());
 		}
 
-		spanMapping.get().put(methodId, tracerUtil.buildSpan(methodSignature));
+		SpanImpl nSpan = tracerUtil.buildSpan(methodSignature);
+
+		spanMapping.get().put(methodId, nSpan);
+		nSpan.start();
 	}
 
 	/**
@@ -62,6 +66,8 @@ public class TraceSensor extends AbstractMethodSensor {
 				SpanImpl correspondingSpan = implMapping.get(methodId);
 				correspondingSpan.finish();
 				implMapping.remove(methodId);
+
+				callbackManager.pushData(new SpanResponse(correspondingSpan));
 			}
 		}
 	}

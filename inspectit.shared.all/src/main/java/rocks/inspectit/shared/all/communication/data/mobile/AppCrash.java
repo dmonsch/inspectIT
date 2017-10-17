@@ -1,27 +1,31 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
+import rocks.inspectit.shared.android.mobile.CrashResponse;
+
 /**
  * @author David Monschein
  *
  */
-@InfluxCompatibleAnnotation(measurement = "crashes")
-public class CrashResponse extends MobileDefaultData {
+public class AppCrash extends MobileDefaultData {
 
 	/**
-	 * @param exceptionClass
-	 * @param exceptionMessage
+	 * Serial UID.
 	 */
-	public CrashResponse(String exceptionClass, String exceptionMessage) {
-		super();
-		this.exceptionClass = exceptionClass;
-		this.exceptionMessage = exceptionMessage;
-	}
+	private static final long serialVersionUID = 8049333482421879947L;
 
-	@InfluxCompatibleAnnotation(key = "class", tag = false)
 	private String exceptionClass;
 
-	@InfluxCompatibleAnnotation(key = "message", tag = false)
 	private String exceptionMessage;
+
+	/**
+	 * @param analog
+	 */
+	public AppCrash(CrashResponse analog) {
+		super(analog);
+
+		this.exceptionClass = analog.getExceptionClass();
+		this.exceptionMessage = analog.getExceptionMessage();
+	}
 
 	/**
 	 * Gets {@link #exceptionClass}.
@@ -29,7 +33,7 @@ public class CrashResponse extends MobileDefaultData {
 	 * @return {@link #exceptionClass}
 	 */
 	public String getExceptionClass() {
-		return this.exceptionClass;
+		return exceptionClass;
 	}
 
 	/**
@@ -48,7 +52,7 @@ public class CrashResponse extends MobileDefaultData {
 	 * @return {@link #exceptionMessage}
 	 */
 	public String getExceptionMessage() {
-		return this.exceptionMessage;
+		return exceptionMessage;
 	}
 
 	/**

@@ -27,7 +27,12 @@ public enum PropagationType {
 	/**
 	 * Propagation via Javascript calls or callbacks.
 	 */
-	JAVASCRIPT;
+	JAVASCRIPT,
+
+	/**
+	 * Propagation on mobile device.
+	 */
+	MOBILE;
 
 	/**
 	 * Returns result of {@link #valueOf(String)} if the given parameter is not <code>null</code>.

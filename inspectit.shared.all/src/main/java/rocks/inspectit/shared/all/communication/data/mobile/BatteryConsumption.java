@@ -1,17 +1,31 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
+import rocks.inspectit.shared.android.mobile.BatteryConsumptionResponse;
+
 /**
  * @author David Monschein
  *
  */
-@InfluxCompatibleAnnotation(measurement = "battery_consumption")
-public class BatteryConsumptionResponse extends MobileDefaultData {
+public class BatteryConsumption extends MobileDefaultData {
 
-	@InfluxCompatibleAnnotation(key = "consumption", tag = false)
 	private float consumptionPercent;
 
-	@InfluxCompatibleAnnotation(key = "interval", tag = false)
 	private long timeInterval;
+
+	/**
+	 * Serial UID.
+	 */
+	private static final long serialVersionUID = 2725738546375825464L;
+
+	/**
+	 * @param analog
+	 */
+	public BatteryConsumption(BatteryConsumptionResponse analog) {
+		super(analog);
+
+		this.setConsumptionPercent(analog.getConsumptionPercent());
+		this.setTimeInterval(analog.getTimeInterval());
+	}
 
 	/**
 	 * Gets {@link #consumptionPercent}.

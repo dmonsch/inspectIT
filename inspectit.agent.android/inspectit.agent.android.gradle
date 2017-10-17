@@ -40,7 +40,7 @@ dependencies {
 }
 
 shadowJar {
-	relocate 'org.codehaus', 'rocks.org.codehaus'
+	relocate 'com.fasterxml', 'rocks.org.codehaus'
 	exclude 'META-INF/*'
 	
 	/** Only this dependencies are included in the build */
@@ -51,8 +51,9 @@ shadowJar {
 		include(dependency('io.opentracing:opentracing-api:0.20.9'))
 		include(dependency('io.opentracing:opentracing-noop:0.20.9'))
 		
-		include(dependency('org.codehaus.jackson:jackson-core-asl:1.9.13'))
-		include(dependency('org.codehaus.jackson:jackson-mapper-asl:1.9.13'))
+		include(dependency('com.fasterxml.jackson.core:jackson-annotations:2.7.0'))
+		include(dependency('com.fasterxml.jackson.core:jackson-core:2.7.2'))
+		include(dependency('com.fasterxml.jackson.core:jackson-databind:2.7.2'))
 	}
 }
 

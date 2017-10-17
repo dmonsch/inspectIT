@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ***************************************************************************/
-package rocks.inspectit.shared.all.communication.data.mobile;
+package rocks.inspectit.shared.android.mobile;
+
+import io.opentracing.Span;
 
 /**
  * Monitoring record class for network requests.
@@ -21,31 +23,27 @@ package rocks.inspectit.shared.all.communication.data.mobile;
  * @author David Monschein
  *
  */
-@InfluxCompatibleAnnotation(measurement = "netrequests")
 public class NetRequestResponse extends MobileDefaultData {
 	/**
 	 * URL which has been accessed.
 	 */
-	@InfluxCompatibleAnnotation(key = "url", tag = false)
 	private String url;
 	/**
 	 * Method which was used.
 	 */
-	@InfluxCompatibleAnnotation(key = "method", tag = false)
 	private String method;
 	/**
 	 * Duration of the request.
 	 */
-	@InfluxCompatibleAnnotation(key = "duration", tag = false)
 	private long duration;
 	/**
 	 * Response code of the request.
 	 */
-	@InfluxCompatibleAnnotation(key = "responsecode", tag = false)
 	private int responseCode;
 
-	@InfluxCompatibleAnnotation(key = "contenttype", tag = false)
 	private String contentType;
+
+	private Span ctxSpan;
 
 	/**
 	 * Creates an empty net request response with default values.
@@ -130,5 +128,24 @@ public class NetRequestResponse extends MobileDefaultData {
 	 */
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
+	}
+
+	/**
+	 * Gets {@link #ctxSpan}.
+	 *
+	 * @return {@link #ctxSpan}
+	 */
+	public Span getContextSpan() {
+		return ctxSpan;
+	}
+
+	/**
+	 * Sets {@link #ctxSpan}.
+	 *
+	 * @param ctxSpan
+	 *            New value for {@link #ctxSpan}
+	 */
+	public void setContextSpan(Span ctxSpan) {
+		this.ctxSpan = ctxSpan;
 	}
 }

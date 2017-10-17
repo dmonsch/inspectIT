@@ -5,7 +5,7 @@ import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
+import rocks.inspectit.shared.android.mobile.MobileDefaultData;
 
 /**
  * Checks whether the connection speed and only sends beacons if the connection is fast enough.

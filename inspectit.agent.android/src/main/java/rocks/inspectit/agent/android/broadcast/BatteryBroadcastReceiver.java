@@ -3,7 +3,7 @@ package rocks.inspectit.agent.android.broadcast;
 import android.content.Context;
 import android.content.Intent;
 import android.os.BatteryManager;
-import rocks.inspectit.shared.all.communication.data.mobile.BatteryConsumptionResponse;
+import rocks.inspectit.shared.android.mobile.BatteryConsumptionResponse;
 
 /**
  * Broadcast receiver which receives information about the current battery and charging state.

@@ -5,9 +5,13 @@ import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.opentracing.SpanContext;
+import io.opentracing.propagation.Format;
+import rocks.inspectit.agent.android.core.TracerImplHandler;
 import rocks.inspectit.agent.android.sensor.http.HttpConnectionPoint;
 import rocks.inspectit.agent.android.sensor.http.HttpConnectionState;
-import rocks.inspectit.shared.all.communication.data.mobile.NetRequestResponse;
+import rocks.inspectit.agent.android.util.DependencyManager;
+import rocks.inspectit.shared.android.mobile.NetRequestResponse;
 
 /**
  * @author David Monschein
@@ -18,8 +22,15 @@ public class NetworkSensor extends AbstractMethodSensor {
 
 	private Map<HttpURLConnection, HttpConnectionState> connectionStateMap;
 
+	/**
+	 * Link to the tracer implementation.
+	 */
+	private TracerImplHandler tracerUtil;
+
 	public NetworkSensor() {
 		this.connectionStateMap = new HashMap<>();
+
+		tracerUtil = DependencyManager.getTracerImplHandler();
 	}
 
 	/**
@@ -29,6 +40,12 @@ public class NetworkSensor extends AbstractMethodSensor {
 	public void beforeBody(long methodId, String methodSignature, Object object) {
 		if ((object != null) && (object instanceof HttpURLConnection)) {
 			HttpURLConnection casted = (HttpURLConnection) object;
+			// get current context
+			SpanContext currCtx = tracerUtil.getCurrentContext();
+			if (currCtx != null) {
+				// we need to create an association
+				tracerUtil.inject(currCtx, Format.Builtin.HTTP_HEADERS, new HttpURLConnectionAdapter(casted));
+			}
 
 			if (!connectionStateMap.containsKey(casted)) {
 				connectionStateMap.put(casted, new HttpConnectionState());

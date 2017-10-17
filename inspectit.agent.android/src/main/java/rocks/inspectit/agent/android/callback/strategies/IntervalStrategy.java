@@ -1,7 +1,7 @@
 package rocks.inspectit.agent.android.callback.strategies;
 
 import android.os.Handler;
-import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
+import rocks.inspectit.shared.android.mobile.MobileDefaultData;
 
 /**
  * Callback strategy which collects data over a specified period of time and

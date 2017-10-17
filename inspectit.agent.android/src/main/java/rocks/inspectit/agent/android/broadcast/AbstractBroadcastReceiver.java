@@ -3,7 +3,7 @@ package rocks.inspectit.agent.android.broadcast;
 import android.content.BroadcastReceiver;
 import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
-import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
+import rocks.inspectit.shared.android.mobile.MobileDefaultData;
 
 /**
  * Abstract class for setting up a broadcast receiver for Android.

@@ -1,17 +1,14 @@
-package rocks.inspectit.shared.all.communication.data.mobile;
+package rocks.inspectit.shared.android.mobile;
 
 /**
  * @author David Monschein
  *
  */
-@InfluxCompatibleAnnotation(measurement = "resourceusage")
 public class SystemResourceUsageResponse extends MobileDefaultData {
 
-	@InfluxCompatibleAnnotation(key = "cpu", tag = false)
 	private float cpuUsage;
 
 	// in kB
-	@InfluxCompatibleAnnotation(key = "memory", tag = false)
 	private float memoryUsage;
 
 	/**

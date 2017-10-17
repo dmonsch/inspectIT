@@ -1,6 +1,6 @@
 package rocks.inspectit.agent.android.callback.strategies;
 
-import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
+import rocks.inspectit.shared.android.mobile.MobileDefaultData;
 
 /**
  * Strategy which immediately sends all data objects to the server. This means

@@ -8,13 +8,13 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import android.os.AsyncTask;
 import android.util.Log;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationResponse;
+import rocks.inspectit.shared.android.mobile.SessionCreationResponse;
 
 /**
  * Task which is responsible for sending data to the REST interface of the

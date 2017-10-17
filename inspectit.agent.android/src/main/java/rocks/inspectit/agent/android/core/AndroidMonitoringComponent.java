@@ -1,7 +1,7 @@
 package rocks.inspectit.agent.android.core;
 
 import rocks.inspectit.agent.android.callback.CallbackManager;
-import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
+import rocks.inspectit.shared.android.mobile.MobileDefaultData;
 
 /**
  * @author David Monschein

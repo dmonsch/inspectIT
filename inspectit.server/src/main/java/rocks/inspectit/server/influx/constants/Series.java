@@ -749,4 +749,53 @@ public interface Series {
 		String FIELD_DURATION = "duration";
 
 	}
+
+	interface MobileBasicSeries {
+	}
+
+	interface MobileResourceUsage extends MobileBasicSeries {
+		String NAME = "mobile_resourceusage";
+
+		String CPU_USAGE = "cpuUsage";
+
+		String MEMORY_USAGE = "memoryUsage";
+	}
+
+	interface MobileSessionCreation extends MobileBasicSeries {
+		String NAME = "mobile_session";
+
+		String APP_NAME = "appName";
+
+		String DEVICE_ID = "deviceId";
+	}
+
+	interface MobileAppCrash extends MobileBasicSeries {
+		String NAME = "mobile_crash";
+
+		String EXCEPTION_CLASS = "exceptionClass";
+
+		String EXCEPTION_MESSAGE = "exceptionMessage";
+	}
+
+	interface MobileBatteryConsumption extends MobileBasicSeries {
+		String NAME = "mobile_battery_consumption";
+
+		String INTERVAL = "intervalLength";
+
+		String PERCENTS = "consumptionPercents";
+	}
+
+	interface MobileHttpNetworkRequest extends MobileBasicSeries {
+		String NAME = "mobile_http_request";
+
+		String DURATION = "duration";
+
+		String CONTENT_TYPE = "contentType";
+
+		String METHOD = "method";
+
+		String RESPONSE_CODE = "responseCode";
+
+		String URL = "url";
+	}
 }

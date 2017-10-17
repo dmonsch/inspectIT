@@ -3,7 +3,7 @@ package rocks.inspectit.agent.android.module;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 import android.content.Context;
-import rocks.inspectit.shared.all.communication.data.mobile.CrashResponse;
+import rocks.inspectit.shared.android.mobile.CrashResponse;
 
 /**
  * Module which captures crashes of the application and sends them back to the CMR.

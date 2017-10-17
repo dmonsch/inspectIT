@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ***************************************************************************/
-package rocks.inspectit.shared.all.communication.data.mobile;
+package rocks.inspectit.shared.android.mobile;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Contains multiple monitoring records and the session id. This is the
@@ -42,26 +42,10 @@ public class MobileCallbackData {
 	private String sessionId;
 
 	/**
-	 * The timestamp when this container was created or reseted.
-	 */
-	@JsonProperty
-	private long creationTimestamp;
-
-	/**
 	 * Creates an empty container.
 	 */
 	public MobileCallbackData() {
-		this.creationTimestamp = System.currentTimeMillis();
 		this.childData = new ArrayList<MobileDefaultData>();
-	}
-
-	/**
-	 * Gets the creation timestamp.
-	 *
-	 * @return creation timestmap
-	 */
-	public long getCreationTimestamp() {
-		return creationTimestamp;
 	}
 
 	/**
@@ -97,7 +81,6 @@ public class MobileCallbackData {
 	 * Clears the container and removes all current monitoring records.
 	 */
 	public void clear() {
-		creationTimestamp = System.currentTimeMillis();
 		this.childData.clear();
 	}
 
