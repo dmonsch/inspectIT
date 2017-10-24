@@ -1,6 +1,7 @@
 package rocks.inspectit.agent.android.callback.strategies;
 
-import rocks.inspectit.shared.all.communication.DefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
 
 /**
  * Strategy which immediately sends all data objects to the server. This means
@@ -17,12 +18,19 @@ public class ImmediatelyStrategy extends AbstractCallbackStrategy {
 	 */
 	public ImmediatelyStrategy() {
 	}
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void stop() {
+
+	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public synchronized void addData(DefaultData data) {
+	public void addData(MobileDefaultData data) {
 		this.data.addChildData(data);
 
 		// DIRECTLY SEND
@@ -33,7 +41,8 @@ public class ImmediatelyStrategy extends AbstractCallbackStrategy {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void stop() {
-
+	public void addData(MobileSpan dat) {
+		this.data.addChildSpan(dat);
+		super.sendBeacon();
 	}
 }

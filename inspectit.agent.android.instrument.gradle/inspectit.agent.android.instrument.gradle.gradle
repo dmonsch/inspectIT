@@ -1,4 +1,13 @@
-apply plugin: 'groovy'
+apply plugin: 'java-gradle-plugin'
+
+gradlePlugin {
+    plugins {
+        inspectITInstrumentationPlugin {
+            id = 'rocks.inspectit.agent.android.instrument'
+            implementationClass = 'rocks.inspectit.agent.android.instrument.GradleInstrumentation'
+        }
+    }
+}
 
 dependencies {
     compile gradleApi()

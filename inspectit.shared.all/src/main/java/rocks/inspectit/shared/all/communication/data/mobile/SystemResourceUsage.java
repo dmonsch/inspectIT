@@ -1,12 +1,10 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
-import rocks.inspectit.shared.all.communication.DefaultData;
-
 /**
  * @author David Monschein
  *
  */
-public class SystemResourceUsage extends DefaultData {
+public class SystemResourceUsage extends MobileDefaultData {
 
 	/**
 	 * Serial UID.

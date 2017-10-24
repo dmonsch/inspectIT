@@ -1,26 +1,9 @@
-/***************************************************************************
- * Copyright (C) 2016 iObserve Project (https://www.iobserve-devops.net)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ***************************************************************************/
 package rocks.inspectit.shared.all.communication.data.mobile;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import rocks.inspectit.shared.all.communication.DefaultData;
 
 /**
  * Contains multiple monitoring records and the session id. This is the
@@ -35,7 +18,13 @@ public class MobileCallbackData {
 	 * Container for monitoring records.
 	 */
 	@JsonProperty
-	private List<DefaultData> childData;
+	private List<MobileDefaultData> childData;
+
+	/**
+	 * Container for span records.
+	 */
+	@JsonProperty
+	private List<MobileSpan> childSpans;
 
 	/**
 	 * The Session id.
@@ -47,7 +36,8 @@ public class MobileCallbackData {
 	 * Creates an empty container.
 	 */
 	public MobileCallbackData() {
-		this.childData = new ArrayList<DefaultData>();
+		this.childData = new ArrayList<MobileDefaultData>();
+		this.childSpans = new ArrayList<MobileSpan>();
 	}
 
 	/**
@@ -55,7 +45,7 @@ public class MobileCallbackData {
 	 *
 	 * @return monitoring records in this container
 	 */
-	public List<DefaultData> getChildData() {
+	public List<MobileDefaultData> getChildData() {
 		return childData;
 	}
 
@@ -65,7 +55,7 @@ public class MobileCallbackData {
 	 * @param childData
 	 *            monitoring records to set
 	 */
-	public void setChildData(List<DefaultData> childData) {
+	public void setChildData(List<MobileDefaultData> childData) {
 		this.childData = childData;
 	}
 
@@ -75,7 +65,7 @@ public class MobileCallbackData {
 	 * @param data
 	 *            monitoring record to add
 	 */
-	public void addChildData(DefaultData data) {
+	public void addChildData(MobileDefaultData data) {
 		this.childData.add(data);
 	}
 
@@ -84,6 +74,7 @@ public class MobileCallbackData {
 	 */
 	public void clear() {
 		this.childData.clear();
+		this.childSpans.clear();
 	}
 
 	/**
@@ -103,5 +94,24 @@ public class MobileCallbackData {
 	 */
 	public void setSessionId(String sessionId) {
 		this.sessionId = sessionId;
+	}
+
+	/**
+	 * Gets {@link #childSpans}.
+	 *
+	 * @return {@link #childSpans}
+	 */
+	public List<MobileSpan> getChildSpans() {
+		return this.childSpans;
+	}
+
+	/**
+	 * Adds a span to {@link #childSpans}.
+	 *
+	 * @param child
+	 *            span to add
+	 */
+	public void addChildSpan(MobileSpan child) {
+		this.childSpans.add(child);
 	}
 }

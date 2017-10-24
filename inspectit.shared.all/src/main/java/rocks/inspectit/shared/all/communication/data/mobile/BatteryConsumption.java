@@ -1,12 +1,10 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
-import rocks.inspectit.shared.all.communication.DefaultData;
-
 /**
  * @author David Monschein
  *
  */
-public class BatteryConsumption extends DefaultData {
+public class BatteryConsumption extends MobileDefaultData {
 
 	private float consumptionPercent;
 

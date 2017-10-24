@@ -6,8 +6,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import rocks.inspectit.agent.android.callback.CallbackTask;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
-import rocks.inspectit.shared.all.communication.DefaultData;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileCallbackData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
 
 
 /**
@@ -43,7 +44,9 @@ public abstract class AbstractCallbackStrategy {
 	 * @param dat
 	 *            data which should be added
 	 */
-	public abstract void addData(DefaultData dat);
+	public abstract void addData(MobileDefaultData dat);
+
+	public abstract void addData(MobileSpan dat);
 
 	/**
 	 * Stops the callback strategy.

@@ -3,7 +3,7 @@ package rocks.inspectit.agent.android.broadcast;
 import android.content.BroadcastReceiver;
 import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
-import rocks.inspectit.shared.all.communication.DefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
 
 /**
  * Abstract class for setting up a broadcast receiver for Android.
@@ -60,7 +60,7 @@ public abstract class AbstractBroadcastReceiver extends BroadcastReceiver {
 	 * @param data
 	 *            the data which should be passed to the callback manager.
 	 */
-	protected void pushData(DefaultData data) {
+	protected void pushData(MobileDefaultData data) {
 		callbackManager.pushData(data);
 	}
 }

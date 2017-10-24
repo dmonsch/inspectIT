@@ -2,13 +2,11 @@ package rocks.inspectit.shared.all.communication.data.mobile;
 
 import java.util.Map;
 
-import rocks.inspectit.shared.all.communication.DefaultData;
-
 /**
  * @author David Monschein
  *
  */
-public class SessionCreation extends DefaultData {
+public class SessionCreation extends MobileDefaultData {
 
 	/**
 	 * Serial UID.
@@ -85,7 +83,7 @@ public class SessionCreation extends DefaultData {
 
 	/**
 	 * Puts an entry to the additional information map.
-	 * 
+	 *
 	 * @param first
 	 *            the key of the information
 	 * @param second

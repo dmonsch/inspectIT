@@ -2,14 +2,13 @@ package rocks.inspectit.shared.all.communication.data.mobile;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import rocks.inspectit.shared.all.communication.DefaultData;
 import rocks.inspectit.shared.all.tracing.data.PropagationType;
 
 /**
  * @author David Monschein
  *
  */
-public abstract class AbstractMobileSpanDetails extends DefaultData {
+public abstract class AbstractMobileSpanDetails extends MobileDefaultData {
 
 	/**
 	 * Serial UID.

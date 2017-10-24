@@ -7,8 +7,9 @@ import android.util.Log;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.all.communication.DefaultData;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileCallbackData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
 import rocks.inspectit.shared.all.communication.data.mobile.SessionCreation;
 
 /**
@@ -37,14 +38,17 @@ public class CallbackManager {
 	 * Contains all data which isn't sent already because there is no
 	 * connection.
 	 */
-	private List<DefaultData> sessQueue;
+	private List<MobileDefaultData> sessQueue;
+
+	private List<MobileSpan> sessQueueSpans;
 
 	/**
 	 * Creates a new callback manager.
 	 */
 	public CallbackManager() {
 		this.sessActive = false;
-		this.sessQueue = new ArrayList<DefaultData>();
+		this.sessQueue = new ArrayList<MobileDefaultData>();
+		this.sessQueueSpans = new ArrayList<MobileSpan>();
 		this.LOG_TAG = AgentConfiguration.current.getLogTag();
 	}
 
@@ -55,9 +59,17 @@ public class CallbackManager {
 	 * @param data
 	 *            data which should be transferred to the server
 	 */
-	public void pushData(DefaultData data) {
+	public void pushData(MobileDefaultData data) {
 		if (!sessActive) {
 			this.sessQueue.add(data);
+		} else {
+			this.strategy.addData(data);
+		}
+	}
+
+	public void pushData(MobileSpan data) {
+		if (!sessActive) {
+			this.sessQueueSpans.add(data);
 		} else {
 			this.strategy.addData(data);
 		}
@@ -73,7 +85,7 @@ public class CallbackManager {
 		final MobileCallbackData data = new MobileCallbackData();
 		data.setSessionId(null);
 
-		List<DefaultData> childs = new ArrayList<DefaultData>();
+		List<MobileDefaultData> childs = new ArrayList<MobileDefaultData>();
 		childs.add(request);
 
 		data.setChildData(childs);
@@ -98,7 +110,10 @@ public class CallbackManager {
 	 * Flushes all entries in the session queue to the callback strategy.
 	 */
 	private void swapQueue() {
-		for (DefaultData data : sessQueue) {
+		for (MobileDefaultData data : sessQueue) {
+			strategy.addData(data);
+		}
+		for (MobileSpan data : sessQueueSpans) {
 			strategy.addData(data);
 		}
 		sessQueue.clear();

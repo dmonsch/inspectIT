@@ -1,9 +1,13 @@
 package rocks.inspectit.agent.android.module;
 
+import java.util.LinkedList;
+
 import android.content.Context;
 import rocks.inspectit.agent.android.util.SpanTransformer;
 import rocks.inspectit.agent.java.sdk.opentracing.Reporter;
 import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanImpl;
+import rocks.inspectit.shared.all.communication.data.mobile.AbstractMobileSpanDetails;
+import rocks.inspectit.shared.all.communication.data.mobile.HttpNetworkRequest;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileFunctionExecution;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
 
@@ -13,6 +17,12 @@ import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
  */
 public class CoreSpanReporter extends AbstractMonitoringModule implements Reporter {
 
+	private static LinkedList<HttpNetworkRequest> networkRequestCorrelation = new LinkedList<HttpNetworkRequest>();
+
+	public static void queueNetworkRequest(HttpNetworkRequest req) {
+		networkRequestCorrelation.add(req);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -20,8 +30,14 @@ public class CoreSpanReporter extends AbstractMonitoringModule implements Report
 	public void report(SpanImpl span) {
 		MobileSpan actualSpan = SpanTransformer.transform(span);
 
-		MobileFunctionExecution details = new MobileFunctionExecution();
-		details.setMethodSignature(span.getOperationName());
+		AbstractMobileSpanDetails details;
+		if (span.getBaggageItem("net") == null) {
+			MobileFunctionExecution funcDetails = new MobileFunctionExecution();
+			funcDetails.setMethodSignature(span.getOperationName());
+			details = funcDetails;
+		} else {
+			details = networkRequestCorrelation.pop();
+		}
 
 		actualSpan.setDetails(details);
 

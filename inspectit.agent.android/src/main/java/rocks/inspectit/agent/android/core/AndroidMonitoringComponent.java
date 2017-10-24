@@ -1,7 +1,8 @@
 package rocks.inspectit.agent.android.core;
 
 import rocks.inspectit.agent.android.callback.CallbackManager;
-import rocks.inspectit.shared.all.communication.DefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
 
 /**
  * @author David Monschein
@@ -45,7 +46,11 @@ public class AndroidMonitoringComponent {
 	 * @param data
 	 *            data which should be passed to the callback manager
 	 */
-	protected void pushData(DefaultData data) {
+	protected void pushData(MobileDefaultData data) {
+		callbackManager.pushData(data);
+	}
+
+	protected void pushData(MobileSpan data) {
 		callbackManager.pushData(data);
 	}
 

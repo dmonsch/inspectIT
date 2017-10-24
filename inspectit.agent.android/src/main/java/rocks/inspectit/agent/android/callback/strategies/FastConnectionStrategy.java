@@ -5,7 +5,8 @@ import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
 import rocks.inspectit.agent.android.util.DependencyManager;
-import rocks.inspectit.shared.all.communication.DefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
 
 /**
  * Checks whether the connection speed and only sends beacons if the connection is fast enough.
@@ -33,9 +34,28 @@ public class FastConnectionStrategy extends AbstractCallbackStrategy {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void addData(DefaultData dat) {
+	public void addData(MobileDefaultData dat) {
 		this.data.addChildData(dat);
+		sendEvaluation();
+	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void addData(MobileSpan dat) {
+		this.data.addChildSpan(dat);
+		sendEvaluation();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void stop() {
+	}
+
+	private void sendEvaluation() {
 		NetworkInfo info = dataCollector.getNetworkInfo();
 		if (info != null) {
 			if (info.getType() == ConnectivityManager.TYPE_WIFI) {
@@ -44,13 +64,6 @@ public class FastConnectionStrategy extends AbstractCallbackStrategy {
 				super.sendBeacon();
 			}
 		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void stop() {
 	}
 
 }
