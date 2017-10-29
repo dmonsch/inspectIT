@@ -40,7 +40,7 @@ public class IntervalStrategy extends AbstractCallbackStrategy {
 	 * @param intervalLength
 	 *            the length of the interval in milliseconds
 	 */
-	public IntervalStrategy(long intervalLength) {
+	public IntervalStrategy(final long intervalLength) {
 		alreadyRunning = false;
 		this.setIntervalLength(intervalLength);
 

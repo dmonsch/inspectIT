@@ -26,7 +26,6 @@ import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 import org.jf.dexlib2.iface.ExceptionHandler;
 import org.jf.dexlib2.iface.Method;
 import org.jf.dexlib2.iface.MethodImplementation;
-import org.jf.dexlib2.iface.MethodParameter;
 import org.jf.dexlib2.iface.TryBlock;
 import org.jf.dexlib2.iface.debug.DebugItem;
 import org.jf.dexlib2.iface.instruction.Instruction;
@@ -140,33 +139,17 @@ public class DexInstrumentationUtil {
 
 	public static String getMethodSignature(MethodReference ref) {
 		StringBuilder builder = new StringBuilder();
-		builder.append(ref.getDefiningClass().replaceAll("/", ".")).substring(1, ref.getDefiningClass().length() - 1);
+		builder.append(ref.getDefiningClass());
 		builder.append(ref.getName());
 		builder.append("(");
 		String prefix = "";
 		for (CharSequence para : ref.getParameterTypes()) {
-			builder.append(para);
 			builder.append(prefix);
+			builder.append(para);
 			prefix = ",";
 		}
 		builder.append(")");
 		builder.append(ref.getReturnType());
-		return builder.toString();
-	}
-
-	public static String getMethodSignature(Method method) {
-		StringBuilder builder = new StringBuilder();
-		builder.append(method.getDefiningClass().replaceAll("/", ".")).substring(1, method.getDefiningClass().length() - 1);
-		builder.append(method.getName());
-		builder.append("(");
-		String prefix = "";
-		for (MethodParameter para : method.getParameters()) {
-			builder.append(para.getType());
-			builder.append(prefix);
-			prefix = ",";
-		}
-		builder.append(")");
-		builder.append(method.getReturnType());
 		return builder.toString();
 	}
 

@@ -57,6 +57,9 @@ public class AndroidModuleManager {
 		Log.i(LOG_TAG, "Creating and initializing existing modules.");
 		for (AbstractMonitoringModule module : instantiatedModules) {
 			setupScheduledMethods(module);
+
+			// ADD TO THE INSTANTIATED MODULES
+			DependencyManager.putModule(module.getClass(), module);
 		}
 	}
 

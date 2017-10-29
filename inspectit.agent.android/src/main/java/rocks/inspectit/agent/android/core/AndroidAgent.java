@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -118,6 +118,11 @@ public final class AndroidAgent {
 		connectionManager = new CMRConnectionManager(callbackManager, mHandler);
 		connectionManager.establishCommunication(ctx);
 
+		// INITING MODULES
+		moduleManager = new AndroidModuleManager(ctx, mHandler);
+		moduleManager.initModules();
+		initTracerUtil(); // needs module
+
 		// INITING SENSORS
 		sensorList = new ArrayList<>();
 		sensorList.add(new TraceSensor());
@@ -126,10 +131,6 @@ public final class AndroidAgent {
 		for (AbstractMethodSensor sens : sensorList) {
 			injectDependencies(sens);
 		}
-
-		// INITING MODULES
-		moduleManager = new AndroidModuleManager(ctx, mHandler);
-		moduleManager.initModules();
 
 		// INIT BROADCASTS
 		Log.i(LOG_TAG, "Initializing broadcast receivers programmatically.");
@@ -191,14 +192,16 @@ public final class AndroidAgent {
 		DependencyManager.setAndroidDataCollector(androidDataCollector);
 	}
 
+	private static void initTracerUtil() {
+		DependencyManager.setTracerImplHandler(new TracerImplHandler());
+	}
+
 	private static void initCallbackManager(Context ctx) {
 		// INITING CALLBACK
 		final AbstractCallbackStrategy callbackStrategy = new IntervalStrategy(5000L);
 		DependencyManager.setCallbackStrategy(callbackStrategy);
 		callbackManager = new CallbackManager();
 		DependencyManager.setCallbackManager(callbackManager);
-		TracerImplHandler tracerImplHandler = new TracerImplHandler();
-		DependencyManager.setTracerImplHandler(tracerImplHandler);
 	}
 
 	private static void initBroadcastReceivers(Context ctx) {

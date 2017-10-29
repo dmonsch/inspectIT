@@ -1,9 +1,13 @@
 package rocks.inspectit.agent.android.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
 import rocks.inspectit.agent.android.core.TracerImplHandler;
+import rocks.inspectit.agent.android.module.AbstractMonitoringModule;
 
 /**
  * Holds the main components of the agent.
@@ -28,6 +32,12 @@ public final class DependencyManager {
 	private static AbstractCallbackStrategy callbackStrategy;
 
 	private static TracerImplHandler tracerImplHandler;
+
+	private static Map<Class<? extends AbstractMonitoringModule>, AbstractMonitoringModule> moduleMapping;
+
+	static {
+		moduleMapping = new HashMap<>();
+	}
 
 	/**
 	 * Helper class where no instance creation is allowed.
@@ -80,22 +90,30 @@ public final class DependencyManager {
 		DependencyManager.callbackStrategy = callbackStrategy;
 	}
 
+	public static AbstractMonitoringModule getModuleByClass(Class<? extends AbstractMonitoringModule> clazz) {
+		return moduleMapping.get(clazz);
+	}
+
+	public static void putModule(Class<? extends AbstractMonitoringModule> clazz, AbstractMonitoringModule module) {
+		moduleMapping.put(clazz, module);
+	}
+
 	/**
 	 * Gets {@link #tracerImplHandler}.
-	 *   
-	 * @return {@link #tracerImplHandler}  
-	 */ 
+	 *
+	 * @return {@link #tracerImplHandler}
+	 */
 	public static TracerImplHandler getTracerImplHandler() {
 		return tracerImplHandler;
 	}
 
-	/**  
-	 * Sets {@link #tracerImplHandler}.  
-	 *   
-	 * @param tracerImplHandler  
-	 *            New value for {@link #tracerImplHandler}  
+	/**
+	 * Sets {@link #tracerImplHandler}.
+	 *
+	 * @param tracerUtil
+	 *            New value for {@link #tracerImplHandler}
 	 */
-	public static void setTracerImplHandler(TracerImplHandler tracerImplHandler) {
-		DependencyManager.tracerImplHandler = tracerImplHandler;
+	public static void setTracerImplHandler(TracerImplHandler tracerUtil) {
+		DependencyManager.tracerImplHandler = tracerUtil;
 	}
 }

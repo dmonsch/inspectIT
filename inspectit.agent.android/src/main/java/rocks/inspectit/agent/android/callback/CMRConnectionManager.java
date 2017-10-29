@@ -57,7 +57,7 @@ public class CMRConnectionManager {
 		callbackManager.pushHelloMessage(helloRequest);
 	}
 
-	private void scheduleSessionCreationRequest(SessionCreation req) {
+	private void scheduleSessionCreationRequest(final SessionCreation req) {
 		final Runnable scheduleRunnable = new Runnable() {
 			@Override
 			public void run() {

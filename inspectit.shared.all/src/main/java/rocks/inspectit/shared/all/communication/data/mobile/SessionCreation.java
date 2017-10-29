@@ -1,5 +1,6 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -24,6 +25,10 @@ public class SessionCreation extends MobileDefaultData {
 	private String deviceId;
 
 	private Map<String, String> additionalInformation;
+
+	public SessionCreation() {
+		this.additionalInformation = new HashMap<String, String>();
+	}
 
 	/**
 	 * Gets {@link #appName}.

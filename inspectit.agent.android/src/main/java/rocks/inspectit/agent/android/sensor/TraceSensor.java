@@ -2,8 +2,8 @@ package rocks.inspectit.agent.android.sensor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
-import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.core.TracerImplHandler;
 import rocks.inspectit.agent.android.util.DependencyManager;
 import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanImpl;
@@ -16,10 +16,8 @@ import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanImpl;
  */
 @SensorAnnotation(id = 2)
 public class TraceSensor extends AbstractMethodSensor {
-	/**
-	 * Reference to the {@link CallbackManager}.
-	 */
-	private CallbackManager callbackManager;
+
+	private static final Pattern METHOD_SIG_PATTERN = Pattern.compile("(L.*;)(.*)\\((.*?)\\)(.*)");
 
 	/**
 	 * Link to the tracer implementation.
@@ -35,7 +33,6 @@ public class TraceSensor extends AbstractMethodSensor {
 	 * Creates a new instance.
 	 */
 	public TraceSensor() {
-		callbackManager = DependencyManager.getCallbackManager();
 		tracerUtil = DependencyManager.getTracerImplHandler();
 	}
 
@@ -59,6 +56,7 @@ public class TraceSensor extends AbstractMethodSensor {
 	 */
 	@Override
 	public void firstAfterBody(long methodId, String methodSignature, Object object) {
+		System.out.println(methodSignature);
 		if (spanMapping.get() != null) {
 			Map<Long, SpanImpl> implMapping = spanMapping.get();
 			if (implMapping.containsKey(methodId)) {

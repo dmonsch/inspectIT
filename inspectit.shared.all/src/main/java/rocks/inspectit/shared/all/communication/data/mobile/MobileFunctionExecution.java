@@ -31,7 +31,7 @@ public class MobileFunctionExecution extends AbstractMobileSpanDetails {
 	 */
 	@Override
 	public PropagationType getPropagationType() {
-		return PropagationType.JAVASCRIPT;
+		return PropagationType.MOBILE;
 	}
 
 	/**

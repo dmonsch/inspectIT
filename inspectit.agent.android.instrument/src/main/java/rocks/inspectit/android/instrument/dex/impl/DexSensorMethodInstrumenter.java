@@ -23,6 +23,7 @@ import rocks.inspectit.agent.android.sensor.SensorAnnotation;
 import rocks.inspectit.android.instrument.config.xml.TraceCollectionConfiguration;
 import rocks.inspectit.android.instrument.dex.IDexMethodImplementationInstrumenter;
 import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
+import rocks.inspectit.android.instrument.util.MethodSignatureFormatter;
 
 /**
  * @author David Monschein
@@ -43,10 +44,13 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 	private Map<DelegationPoint, MethodReference> delegationMapping;
 	private Map<String, Integer> sensorIdCache;
 
+	private MethodSignatureFormatter methodSignatureFormatter;
+
 	public DexSensorMethodInstrumenter(TraceCollectionConfiguration traceConfig, Map<DelegationPoint, MethodReference> delegationMapping) {
 		this.config = traceConfig;
 		this.delegationMapping = delegationMapping;
 		this.sensorIdCache = new HashMap<>();
+		this.methodSignatureFormatter = new MethodSignatureFormatter();
 	}
 
 	/**
@@ -132,7 +136,7 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 		}
 
 		// generate invocation stuff
-		String signature = DexInstrumentationUtil.getMethodSignature(toTrace);
+		String signature = methodSignatureFormatter.formatSignature(DexInstrumentationUtil.getMethodSignature(toTrace));
 
 		impl.addInstruction(instrDest++, DexInstrumentationUtil.createLongConstant(dest + 1, signature.hashCode()));
 		impl.addInstruction(instrDest++, DexInstrumentationUtil.createStringConstant(dest + 3, signature));

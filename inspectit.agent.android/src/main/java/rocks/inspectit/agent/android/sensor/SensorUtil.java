@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
  */
 public class SensorUtil {
 
-	private static final Pattern METHOD_NAME_PATTERN = Pattern.compile(";(.*?)\\(");
+	private static final Pattern METHOD_NAME_PATTERN = Pattern.compile("(.*?)\\(");
 
 	public static String getMethodName(String methodSignature) {
 		Matcher matcher = METHOD_NAME_PATTERN.matcher(methodSignature);

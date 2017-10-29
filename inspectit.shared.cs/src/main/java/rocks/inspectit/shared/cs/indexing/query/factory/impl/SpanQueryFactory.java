@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import rocks.inspectit.shared.all.communication.data.eum.EUMSpan;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
 import rocks.inspectit.shared.all.indexing.IIndexQuery;
 import rocks.inspectit.shared.all.tracing.data.ClientSpan;
 import rocks.inspectit.shared.all.tracing.data.ServerSpan;
@@ -30,7 +31,7 @@ public class SpanQueryFactory<E extends IIndexQuery> extends AbstractQueryFactor
 	/**
 	 * List of span classes used in the queries.
 	 */
-	private static final List<Class<?>> CLASSES_LIST = Collections.unmodifiableList(Arrays.<Class<?>> asList(EUMSpan.class, ServerSpan.class, ClientSpan.class));
+	private static final List<Class<?>> CLASSES_LIST = Collections.unmodifiableList(Arrays.<Class<?>> asList(MobileSpan.class, EUMSpan.class, ServerSpan.class, ClientSpan.class));
 
 	/**
 	 * Returns query for searching root spans.

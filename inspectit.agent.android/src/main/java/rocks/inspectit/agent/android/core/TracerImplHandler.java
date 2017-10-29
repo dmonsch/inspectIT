@@ -3,6 +3,7 @@ package rocks.inspectit.agent.android.core;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import rocks.inspectit.agent.android.module.CoreSpanReporter;
+import rocks.inspectit.agent.android.util.DependencyManager;
 import rocks.inspectit.agent.java.sdk.opentracing.Reporter;
 import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanImpl;
 import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.TracerImpl;
@@ -19,7 +20,7 @@ public class TracerImplHandler {
 	private TracerImpl tracer;
 
 	public TracerImplHandler() {
-		reporter = new CoreSpanReporter();
+		reporter = (CoreSpanReporter) DependencyManager.getModuleByClass(CoreSpanReporter.class);
 		tracer = new TracerImpl(new SystemTimer(), reporter, true);
 	}
 

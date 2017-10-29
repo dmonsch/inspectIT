@@ -17,10 +17,14 @@ import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
  */
 public class CoreSpanReporter extends AbstractMonitoringModule implements Reporter {
 
-	private static LinkedList<HttpNetworkRequest> networkRequestCorrelation = new LinkedList<HttpNetworkRequest>();
+	private static LinkedList<HttpNetworkRequest> netRequestStack;
 
-	public static void queueNetworkRequest(HttpNetworkRequest req) {
-		networkRequestCorrelation.add(req);
+	static {
+		netRequestStack = new LinkedList<>();
+	}
+
+	public static void queueNetRequest(HttpNetworkRequest req) {
+		netRequestStack.add(req);
 	}
 
 	/**
@@ -31,12 +35,13 @@ public class CoreSpanReporter extends AbstractMonitoringModule implements Report
 		MobileSpan actualSpan = SpanTransformer.transform(span);
 
 		AbstractMobileSpanDetails details;
+
 		if (span.getBaggageItem("net") == null) {
 			MobileFunctionExecution funcDetails = new MobileFunctionExecution();
 			funcDetails.setMethodSignature(span.getOperationName());
 			details = funcDetails;
 		} else {
-			details = networkRequestCorrelation.pop();
+			details = netRequestStack.pop();
 		}
 
 		actualSpan.setDetails(details);

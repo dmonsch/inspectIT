@@ -93,6 +93,9 @@ import rocks.inspectit.shared.all.communication.data.eum.JSTimerExecution;
 import rocks.inspectit.shared.all.communication.data.eum.PageLoadRequest;
 import rocks.inspectit.shared.all.communication.data.eum.ResourceLoadRequest;
 import rocks.inspectit.shared.all.communication.data.eum.UserSessionInfo;
+import rocks.inspectit.shared.all.communication.data.mobile.HttpNetworkRequest;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileFunctionExecution;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
 import rocks.inspectit.shared.all.exception.BusinessException;
 import rocks.inspectit.shared.all.exception.RemoteException;
 import rocks.inspectit.shared.all.exception.TechnicalException;
@@ -429,6 +432,17 @@ public class SerializationManager implements ISerializer, IKryoProvider, Initial
 		kryo.register(JSEventListenerExecution.class, new FieldSerializer<JSEventListenerExecution>(kryo, JSEventListenerExecution.class), nextRegistrationId++);
 		kryo.register(JSDomEventListenerExecution.class, new FieldSerializer<JSDomEventListenerExecution>(kryo, JSDomEventListenerExecution.class), nextRegistrationId++);
 		kryo.register(UserSessionInfo.class, new FieldSerializer<UserSessionInfo>(kryo, UserSessionInfo.class), nextRegistrationId++);
+
+		kryo.register(MobileSpan.class, new FieldSerializer<MobileSpan>(kryo, MobileSpan.class) {
+			@Override
+			public MobileSpan read(Kryo kryo, Input input, Class<MobileSpan> type) {
+				MobileSpan read = super.read(kryo, input, type);
+				read.getDetails().setOwningSpan(read);
+				return read;
+			}
+		}, nextRegistrationId++);
+		kryo.register(HttpNetworkRequest.class, new FieldSerializer<HttpNetworkRequest>(kryo, HttpNetworkRequest.class), nextRegistrationId++);
+		kryo.register(MobileFunctionExecution.class, new FieldSerializer<MobileFunctionExecution>(kryo, MobileFunctionExecution.class), nextRegistrationId++);
 	}
 
 	/**

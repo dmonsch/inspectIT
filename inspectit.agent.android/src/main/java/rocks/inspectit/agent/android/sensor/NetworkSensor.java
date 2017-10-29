@@ -43,16 +43,18 @@ public class NetworkSensor extends AbstractMethodSensor {
 		if ((object != null) && (object instanceof HttpURLConnection)) {
 			HttpURLConnection casted = (HttpURLConnection) object;
 
-			// build span for the network request
-			SpanImpl currSp = tracerUtil.buildSpan(casted.getURL().toString());
-
-			if (currSp.context() != null) {
-				// we need to create an association
-				tracerUtil.inject(currSp.context(), Format.Builtin.HTTP_HEADERS, new HttpURLConnectionAdapter(casted));
-			}
-
 			if (!connectionStateMap.containsKey(casted)) {
-				connectionStateMap.put(casted, new Pair<SpanImpl, HttpConnectionState>(currSp, new HttpConnectionState()));
+				// build span for the network request
+				SpanImpl currSp = tracerUtil.buildSpan(casted.getURL().toString());
+
+				if (currSp.context() != null) {
+					// we need to create an association
+					tracerUtil.inject(currSp.context(), Format.Builtin.HTTP_HEADERS, new HttpURLConnectionAdapter(casted));
+				}
+
+				if (!connectionStateMap.containsKey(casted)) {
+					connectionStateMap.put(casted, new Pair<SpanImpl, HttpConnectionState>(currSp, new HttpConnectionState()));
+				}
 			}
 		}
 	}
@@ -86,13 +88,16 @@ public class NetworkSensor extends AbstractMethodSensor {
 					}
 
 					// SPAN things
-					CoreSpanReporter.queueNetworkRequest(reqResp);
+					CoreSpanReporter.queueNetRequest(reqResp);
 					// finish span
 					state.getFirst().setBaggageItem("net", "");
 					state.getFirst().finish();
 
 					// this goes directly to influx
 					this.pushData(reqResp);
+
+					// remove this
+					connectionStateMap.remove(casted);
 				}
 			}
 		}

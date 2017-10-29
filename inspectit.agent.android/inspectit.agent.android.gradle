@@ -29,8 +29,9 @@ dependencies {
     /** Agent dependencies. */
 	compile group: 'com.google.android', name: 'android', version: '4.1.1.4'
 	
-	compile project(":inspectit.shared.all")
+	compile project(":inspectit.shared.android")
 	compile project(":inspectit.agent.java.sdk")
+	compile project(':inspectit.shared.all')
 	
 	compile 'io.opentracing:opentracing-api:0.20.9'
 	compile 'io.opentracing:opentracing-noop:0.20.9'
@@ -40,11 +41,14 @@ dependencies {
 
 shadowJar {
 	relocate 'com.fasterxml', 'rocks.org.codehaus'
+	relocate 'rocks.inspectit.shared.android.javax.mock', 'javax'
+	
 	exclude 'META-INF/*'
 	
 	/** Only this dependencies are included in the build */
 	dependencies {
-		include(project(":inspectit.shared.all"))
+		include(project(":inspectit.shared.android"))
+		include(project(':inspectit.shared.all'))
 		
 		include(project(":inspectit.agent.java.sdk"))
 		include(dependency('io.opentracing:opentracing-api:0.20.9'))

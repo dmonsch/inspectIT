@@ -2,7 +2,7 @@ package rocks.inspectit.agent.android.callback.strategies;
 
 import java.io.IOException;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import rocks.inspectit.agent.android.callback.CallbackTask;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
@@ -102,7 +102,7 @@ public abstract class AbstractCallbackStrategy {
 	 *            whether it is a session creation message or not
 	 */
 	private void sendBeacon(MobileCallbackData dat, boolean helloReq) {
-		if ((dat != null) && (dat.getChildData().size() > 0)) {
+		if ((dat != null) && ((dat.getChildData().size() > 0) || (dat.getChildSpans().size() > 0))) {
 			final String callbackUrl;
 			if (helloReq) {
 				callbackUrl = AgentConfiguration.current.getSessionUrl();

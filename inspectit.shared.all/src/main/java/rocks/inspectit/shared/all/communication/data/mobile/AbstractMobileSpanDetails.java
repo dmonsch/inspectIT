@@ -1,6 +1,9 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import rocks.inspectit.shared.all.tracing.data.PropagationType;
 
@@ -8,6 +11,11 @@ import rocks.inspectit.shared.all.tracing.data.PropagationType;
  * @author David Monschein
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes({
+	@JsonSubTypes.Type(value = HttpNetworkRequest.class),
+	@JsonSubTypes.Type(value = MobileFunctionExecution.class)})
 public abstract class AbstractMobileSpanDetails extends MobileDefaultData {
 
 	/**

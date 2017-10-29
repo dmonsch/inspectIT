@@ -1,5 +1,8 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.opentracing.References;
 import rocks.inspectit.shared.all.tracing.data.AbstractSpan;
 
@@ -7,6 +10,7 @@ import rocks.inspectit.shared.all.tracing.data.AbstractSpan;
  * @author David Monschein
  *
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MobileSpan extends AbstractSpan {
 
 	/**
@@ -25,6 +29,7 @@ public class MobileSpan extends AbstractSpan {
 	 * {@inheritDoc}
 	 */
 	@Override
+	@JsonIgnore
 	public boolean isCaller() {
 		return details.isExternalCall();
 	}
