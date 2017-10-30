@@ -1,11 +1,6 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import rocks.inspectit.shared.all.tracing.constants.ExtraTags;
-import rocks.inspectit.shared.all.tracing.data.PropagationType;
 
 /**
  * @author David Monschein
@@ -25,26 +20,8 @@ public class MobileFunctionExecution extends AbstractMobileSpanDetails {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void collectTags(Map<String, String> tags) {
-		if (!methodSignature.isEmpty()) {
-			tags.put(ExtraTags.OPERATION_NAME, methodSignature);
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public boolean isExternalCall() {
 		return false;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public PropagationType getPropagationType() {
-		return PropagationType.MOBILE;
 	}
 
 	/**
@@ -100,6 +77,14 @@ public class MobileFunctionExecution extends AbstractMobileSpanDetails {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public PropagationType getPropagationType() {
+		return PropagationType.MOBILE;
 	}
 
 }

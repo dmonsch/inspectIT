@@ -1,13 +1,9 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.opentracing.References;
-import rocks.inspectit.shared.all.tracing.data.AbstractSpan;
 
 /**
  * @author David Monschein
@@ -28,9 +24,6 @@ public class MobileSpan extends AbstractSpan {
 
 	private long sessionId;
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	@JsonIgnore
 	public boolean isCaller() {
@@ -63,7 +56,6 @@ public class MobileSpan extends AbstractSpan {
 	 */
 	public void setDetails(AbstractMobileSpanDetails mobileDetails) {
 		this.details = mobileDetails;
-		mobileDetails.setOwningSpan(this);
 
 		if (!isRoot()) {
 			setReferenceType(References.FOLLOWS_FROM);
@@ -72,12 +64,6 @@ public class MobileSpan extends AbstractSpan {
 		}
 
 		this.setPropagationType(mobileDetails.getPropagationType());
-	}
-
-	public void collectChildTags() {
-		Map<String, String> allTags = new HashMap<String, String>();
-		details.collectTags(allTags);
-		this.addAllTags(allTags);
 	}
 
 	/**

@@ -4,9 +4,9 @@ import java.sql.Timestamp;
 
 import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanContextImpl;
 import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanImpl;
+import rocks.inspectit.shared.all.communication.data.mobile.ExtraTags;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
-import rocks.inspectit.shared.all.tracing.constants.ExtraTags;
-import rocks.inspectit.shared.all.tracing.data.SpanIdent;
+import rocks.inspectit.shared.all.communication.data.mobile.SpanIdent;
 
 /**
  * @author David Monschein

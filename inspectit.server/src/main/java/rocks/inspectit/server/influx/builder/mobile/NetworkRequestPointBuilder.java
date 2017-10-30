@@ -6,7 +6,6 @@ import java.util.Collections;
 import org.influxdb.dto.Point.Builder;
 import org.springframework.stereotype.Component;
 
-import rocks.inspectit.server.influx.builder.SinglePointBuilder;
 import rocks.inspectit.server.influx.constants.Series;
 import rocks.inspectit.shared.all.communication.data.mobile.HttpNetworkRequest;
 
@@ -15,7 +14,7 @@ import rocks.inspectit.shared.all.communication.data.mobile.HttpNetworkRequest;
  *
  */
 @Component
-public class NetworkRequestPointBuilder extends SinglePointBuilder<HttpNetworkRequest> {
+public class NetworkRequestPointBuilder extends AbstractMobilePointBuilder<HttpNetworkRequest> {
 
 	/**
 	 * {@inheritDoc}
@@ -37,7 +36,7 @@ public class NetworkRequestPointBuilder extends SinglePointBuilder<HttpNetworkRe
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void addFields(HttpNetworkRequest data, Builder builder) {
+	protected void completeFields(HttpNetworkRequest data, Builder builder) {
 		builder.addField(Series.MobileHttpNetworkRequest.CONTENT_TYPE, data.getContentType());
 		builder.addField(Series.MobileHttpNetworkRequest.DURATION, data.getDuration());
 		builder.addField(Series.MobileHttpNetworkRequest.METHOD, data.getMethod());

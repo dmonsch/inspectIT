@@ -29,6 +29,7 @@ public interface InspectITImages {
 	String IMG_PARAMETER = InspectITConstants.ICON_PATH_SELFMADE + "parameter.png";
 	String IMG_FIELD = InspectITConstants.ICON_PATH_SELFMADE + "field.png";
 	String IMG_JAVASCRIPT = InspectITConstants.ICON_PATH_SELFMADE + "javascript.png";
+	String IMG_MOBILE = InspectITConstants.ICON_PATH_SELFMADE + "mobile.png";
 
 	// images from Eclipse, license EPL 1.0
 	String IMG_ACTIVITY = InspectITConstants.ICON_PATH_ECLIPSE + "debugtt_obj.gif";

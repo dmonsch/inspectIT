@@ -1,10 +1,5 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
-import java.util.Map;
-
-import io.opentracing.tag.Tags;
-import rocks.inspectit.shared.all.tracing.data.PropagationType;
-
 /**
  * @author David Monschein
  *
@@ -25,16 +20,6 @@ public class HttpNetworkRequest extends AbstractMobileSpanDetails {
 	private int responseCode;
 
 	private String contentType;
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void collectTags(Map<String, String> tags) {
-		tags.put(Tags.HTTP_URL.getKey(), url);
-		tags.put(Tags.HTTP_METHOD.getKey(), method);
-		tags.put(Tags.HTTP_STATUS.getKey(), String.valueOf(responseCode));
-	}
 
 	/**
 	 * Gets {@link #url}.
@@ -143,14 +128,6 @@ public class HttpNetworkRequest extends AbstractMobileSpanDetails {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public PropagationType getPropagationType() {
-		return PropagationType.HTTP;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
@@ -205,6 +182,14 @@ public class HttpNetworkRequest extends AbstractMobileSpanDetails {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public PropagationType getPropagationType() {
+		return PropagationType.HTTP;
 	}
 
 }

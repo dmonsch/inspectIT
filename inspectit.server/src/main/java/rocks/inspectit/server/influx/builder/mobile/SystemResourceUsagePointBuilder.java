@@ -6,7 +6,6 @@ import java.util.Collections;
 import org.influxdb.dto.Point.Builder;
 import org.springframework.stereotype.Component;
 
-import rocks.inspectit.server.influx.builder.SinglePointBuilder;
 import rocks.inspectit.server.influx.constants.Series;
 import rocks.inspectit.shared.all.communication.data.mobile.SystemResourceUsage;
 
@@ -15,7 +14,7 @@ import rocks.inspectit.shared.all.communication.data.mobile.SystemResourceUsage;
  *
  */
 @Component
-public class SystemResourceUsagePointBuilder extends SinglePointBuilder<SystemResourceUsage> {
+public class SystemResourceUsagePointBuilder extends AbstractMobilePointBuilder<SystemResourceUsage> {
 
 	/**
 	 * {@inheritDoc}
@@ -37,7 +36,7 @@ public class SystemResourceUsagePointBuilder extends SinglePointBuilder<SystemRe
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void addFields(SystemResourceUsage data, Builder builder) {
+	protected void completeFields(SystemResourceUsage data, Builder builder) {
 		builder.addField(Series.MobileResourceUsage.CPU_USAGE, data.getCpuUsage());
 		builder.addField(Series.MobileResourceUsage.MEMORY_USAGE, data.getMemoryUsage());
 	}

@@ -19,6 +19,7 @@ import io.opentracing.References;
 import rocks.inspectit.shared.all.cmr.model.PlatformIdent;
 import rocks.inspectit.shared.all.communication.data.cmr.AgentStatusData;
 import rocks.inspectit.shared.all.communication.data.eum.EUMSpan;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
 import rocks.inspectit.shared.all.tracing.data.PropagationType;
 import rocks.inspectit.shared.all.tracing.data.Span;
 import rocks.inspectit.shared.cs.ci.AlertingDefinition;
@@ -43,11 +44,11 @@ import rocks.inspectit.shared.cs.ci.sensor.ISensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.exception.impl.ExceptionSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.jmx.JmxSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.method.AbstractRemoteSensorConfig;
+import rocks.inspectit.shared.cs.ci.sensor.method.impl.ApacheClientExchangeHandlerSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.method.impl.ConnectionSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.method.impl.HttpSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.method.impl.InvocationSequenceSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.method.impl.Log4jLoggingSensorConfig;
-import rocks.inspectit.shared.cs.ci.sensor.method.impl.ApacheClientExchangeHandlerSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.method.impl.PreparedStatementParameterSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.method.impl.PreparedStatementSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.method.impl.StatementSensorConfig;
@@ -701,6 +702,8 @@ public final class ImageFormatter {
 			return InspectIT.getDefault().getImage(InspectITImages.IMG_ACTIVITY);
 		case JAVASCRIPT:
 			return InspectIT.getDefault().getImage(InspectITImages.IMG_JAVASCRIPT);
+		case MOBILE:
+			return InspectIT.getDefault().getImage(InspectITImages.IMG_MOBILE);
 		default:
 			return InspectIT.getDefault().getImage(InspectITImages.IMG_REMOTE);
 		}
@@ -753,6 +756,8 @@ public final class ImageFormatter {
 	public static Image getSpanOriginImage(Span span, PlatformIdent spanPlatform) {
 		if (span instanceof EUMSpan) {
 			return InspectIT.getDefault().getImage(InspectITImages.IMG_BROWSER);
+		} else if (span instanceof MobileSpan) {
+			return InspectIT.getDefault().getImage(InspectITImages.IMG_MOBILE);
 		} else if (spanPlatform != null) {
 			return InspectIT.getDefault().getImage(InspectITImages.IMG_AGENT);
 		}

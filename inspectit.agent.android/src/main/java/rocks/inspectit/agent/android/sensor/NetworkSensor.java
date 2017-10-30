@@ -11,9 +11,9 @@ import rocks.inspectit.agent.android.module.CoreSpanReporter;
 import rocks.inspectit.agent.android.sensor.http.HttpConnectionPoint;
 import rocks.inspectit.agent.android.sensor.http.HttpConnectionState;
 import rocks.inspectit.agent.android.util.DependencyManager;
+import rocks.inspectit.agent.android.util.Pair;
 import rocks.inspectit.agent.java.sdk.opentracing.internal.impl.SpanImpl;
 import rocks.inspectit.shared.all.communication.data.mobile.HttpNetworkRequest;
-import rocks.inspectit.shared.all.util.Pair;
 
 /**
  * @author David Monschein

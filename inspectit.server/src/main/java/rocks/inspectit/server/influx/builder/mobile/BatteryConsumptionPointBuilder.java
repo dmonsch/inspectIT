@@ -6,7 +6,6 @@ import java.util.Collections;
 import org.influxdb.dto.Point.Builder;
 import org.springframework.stereotype.Component;
 
-import rocks.inspectit.server.influx.builder.SinglePointBuilder;
 import rocks.inspectit.server.influx.constants.Series;
 import rocks.inspectit.shared.all.communication.data.mobile.BatteryConsumption;
 
@@ -15,7 +14,7 @@ import rocks.inspectit.shared.all.communication.data.mobile.BatteryConsumption;
  *
  */
 @Component
-public class BatteryConsumptionPointBuilder extends SinglePointBuilder<BatteryConsumption> {
+public class BatteryConsumptionPointBuilder extends AbstractMobilePointBuilder<BatteryConsumption> {
 
 	/**
 	 * {@inheritDoc}
@@ -37,7 +36,7 @@ public class BatteryConsumptionPointBuilder extends SinglePointBuilder<BatteryCo
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void addFields(BatteryConsumption data, Builder builder) {
+	protected void completeFields(BatteryConsumption data, Builder builder) {
 		builder.addField(Series.MobileBatteryConsumption.INTERVAL, data.getTimeInterval());
 		builder.addField(Series.MobileBatteryConsumption.PERCENTS, data.getConsumptionPercent());
 	}

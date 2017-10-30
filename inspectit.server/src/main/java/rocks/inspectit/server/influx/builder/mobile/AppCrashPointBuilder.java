@@ -6,7 +6,6 @@ import java.util.Collections;
 import org.influxdb.dto.Point.Builder;
 import org.springframework.stereotype.Component;
 
-import rocks.inspectit.server.influx.builder.SinglePointBuilder;
 import rocks.inspectit.server.influx.constants.Series;
 import rocks.inspectit.shared.all.communication.data.mobile.AppCrash;
 
@@ -15,7 +14,7 @@ import rocks.inspectit.shared.all.communication.data.mobile.AppCrash;
  *
  */
 @Component
-public class AppCrashPointBuilder extends SinglePointBuilder<AppCrash> {
+public class AppCrashPointBuilder extends AbstractMobilePointBuilder<AppCrash> {
 
 	/**
 	 * {@inheritDoc}
@@ -37,7 +36,7 @@ public class AppCrashPointBuilder extends SinglePointBuilder<AppCrash> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void addFields(AppCrash data, Builder builder) {
+	protected void completeFields(AppCrash data, Builder builder) {
 		builder.addField(Series.MobileAppCrash.EXCEPTION_CLASS, data.getExceptionClass());
 		builder.addField(Series.MobileAppCrash.EXCEPTION_MESSAGE, data.getExceptionMessage());
 	}

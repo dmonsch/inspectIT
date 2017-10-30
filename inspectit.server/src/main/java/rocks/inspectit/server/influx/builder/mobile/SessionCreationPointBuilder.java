@@ -6,7 +6,6 @@ import java.util.Collections;
 import org.influxdb.dto.Point.Builder;
 import org.springframework.stereotype.Component;
 
-import rocks.inspectit.server.influx.builder.SinglePointBuilder;
 import rocks.inspectit.server.influx.constants.Series;
 import rocks.inspectit.shared.all.communication.data.mobile.SessionCreation;
 
@@ -15,7 +14,7 @@ import rocks.inspectit.shared.all.communication.data.mobile.SessionCreation;
  *
  */
 @Component
-public class SessionCreationPointBuilder extends SinglePointBuilder<SessionCreation> {
+public class SessionCreationPointBuilder extends AbstractMobilePointBuilder<SessionCreation> {
 
 	/**
 	 * {@inheritDoc}
@@ -37,12 +36,8 @@ public class SessionCreationPointBuilder extends SinglePointBuilder<SessionCreat
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void addFields(SessionCreation data, Builder builder) {
-		builder.tag(Series.MobileSessionCreation.APP_NAME, data.getAppName()).tag(Series.MobileSessionCreation.DEVICE_ID, data.getDeviceId());
-
-		for (String key : data.getAdditionalInformation().keySet()) {
-			builder.addField(key, data.getAdditionalInformation().get(key));
-		}
+	protected void completeFields(SessionCreation data, Builder builder) {
+		builder.addField(Series.MobileSessionCreation.APP_NAME, data.getAppName()).addField(Series.MobileSessionCreation.DEVICE_ID, data.getDeviceId());
 	}
 
 }

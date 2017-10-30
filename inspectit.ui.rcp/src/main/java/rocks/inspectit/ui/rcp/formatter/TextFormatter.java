@@ -39,6 +39,7 @@ import rocks.inspectit.shared.all.communication.data.TimerData;
 import rocks.inspectit.shared.all.communication.data.cmr.AgentStatusData;
 import rocks.inspectit.shared.all.communication.data.cmr.AgentStatusData.InstrumentationStatus;
 import rocks.inspectit.shared.all.communication.data.eum.EUMSpan;
+import rocks.inspectit.shared.all.communication.data.mobile.MobileSpan;
 import rocks.inspectit.shared.all.tracing.constants.ExtraTags;
 import rocks.inspectit.shared.all.tracing.data.PropagationType;
 import rocks.inspectit.shared.all.tracing.data.Span;
@@ -843,6 +844,8 @@ public final class TextFormatter {
 		StyledString styledString = new StyledString();
 		if (propagationType == PropagationType.JAVASCRIPT) {
 			styledString.append("JavaScript");
+		} else if (propagationType == PropagationType.MOBILE) {
+			styledString.append("Mobile Device");
 		} else if (null != propagationType) {
 			styledString.append(propagationType.toString());
 		} else {
@@ -1094,6 +1097,8 @@ public final class TextFormatter {
 	public static StyledString getSpanOriginStyled(Span span, PlatformIdent platformIdent) {
 		if (span instanceof EUMSpan) {
 			return new StyledString("Browser");
+		} else if (span instanceof MobileSpan) {
+			return new StyledString("Mobile Device");
 		} else if (null != platformIdent) {
 			return new StyledString(platformIdent.getAgentName());
 		} else {
