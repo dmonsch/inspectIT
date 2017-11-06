@@ -1,10 +1,8 @@
 package rocks.inspectit.android.instrument.dex.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.jf.dexlib2.Opcode;
@@ -19,7 +17,6 @@ import org.jf.dexlib2.iface.instruction.formats.Instruction3rc;
 import org.jf.dexlib2.iface.reference.MethodReference;
 
 import rocks.inspectit.agent.android.delegation.DelegationPoint;
-import rocks.inspectit.agent.android.sensor.SensorAnnotation;
 import rocks.inspectit.android.instrument.config.xml.TraceCollectionConfiguration;
 import rocks.inspectit.android.instrument.dex.IDexMethodImplementationInstrumenter;
 import rocks.inspectit.android.instrument.util.DexInstrumentationUtil;
@@ -42,15 +39,16 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 	private TraceCollectionConfiguration config;
 
 	private Map<DelegationPoint, MethodReference> delegationMapping;
-	private Map<String, Integer> sensorIdCache;
 
 	private MethodSignatureFormatter methodSignatureFormatter;
+
+	private SensorCache sensorCache;
 
 	public DexSensorMethodInstrumenter(TraceCollectionConfiguration traceConfig, Map<DelegationPoint, MethodReference> delegationMapping) {
 		this.config = traceConfig;
 		this.delegationMapping = delegationMapping;
-		this.sensorIdCache = new HashMap<>();
 		this.methodSignatureFormatter = new MethodSignatureFormatter();
+		this.sensorCache = SensorCache.getCurrentInstance(config);
 	}
 
 	/**
@@ -74,13 +72,13 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 					if (instr instanceof Instruction35c) {
 						Instruction35c invoc = (Instruction35c) instr;
 						MethodReference meth = (MethodReference) invoc.getReference();
-						if (config.isTracedMethod(meth.getDefiningClass(), meth.getName(), meth.getParameterTypes()).size() > 0) {
+						if ((config.isTracedMethod(meth.getDefiningClass(), meth.getName(), meth.getParameterTypes()).size() > 0) && !config.isAlreadyInstrumented(meth)) {
 							tracedInstructions.add(Pair.of(k, meth));
 						}
 					} else if (instr instanceof Instruction3rc) {
 						Instruction3rc invoc = (Instruction3rc) instr;
 						MethodReference meth = (MethodReference) invoc.getReference();
-						if (config.isTracedMethod(meth.getDefiningClass(), meth.getName(), meth.getParameterTypes()).size() > 0) {
+						if ((config.isTracedMethod(meth.getDefiningClass(), meth.getName(), meth.getParameterTypes()).size() > 0) && !config.isAlreadyInstrumented(meth)) {
 							tracedInstructions.add(Pair.of(k, meth));
 						}
 					} // else shouldn't happen => would be invalid bytecode
@@ -94,10 +92,7 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 
 		boolean instrumented = false;
 		for (Pair<Integer, MethodReference> tracedMethodCall : tracedInstructions) {
-			int[] sensors = resolveAllSensorIds(tracedMethodCall.getRight());
-			if (sensors.length > 1) {
-				System.out.println(tracedMethodCall.getRight().getDefiningClass() + "#" + tracedMethodCall.getRight().getName());
-			}
+			int[] sensors = sensorCache.resolveAllSensorIds(tracedMethodCall.getRight());
 			int added = instrument(mutedImplementation.getRight(), tracedMethodCall.getLeft() + offset, destRegisterStart, sensors, tracedMethodCall.getRight());
 			if (added > 0) {
 				instrumented = true;
@@ -209,35 +204,6 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 		}
 
 		return instrDest - position - jumpedInstructions;
-	}
-
-	private int[] resolveAllSensorIds(MethodReference meth) {
-		Set<String> sens = config.isTracedMethod(meth.getDefiningClass(), meth.getName(), meth.getParameterTypes());
-		int[] _return = new int[sens.size()];
-
-		int k = 0;
-		for (String se : sens) {
-			_return[k++] = resolveSensorId(se);
-		}
-
-		return _return;
-	}
-
-	private int resolveSensorId(String sensorClazz) {
-		if (sensorIdCache.containsKey(sensorClazz)) {
-			return sensorIdCache.get(sensorClazz);
-		}
-		try {
-			Class<?> sensorClass = Class.forName(sensorClazz);
-			if (sensorClass.isAnnotationPresent(SensorAnnotation.class)) {
-				int retId = sensorClass.getAnnotation(SensorAnnotation.class).id();
-				sensorIdCache.put(sensorClazz, retId);
-				return retId;
-			}
-		} catch (ClassNotFoundException e) {
-			return -1;
-		}
-		return -1;
 	}
 
 }

@@ -11,11 +11,6 @@ public class BatteryConsumption extends MobileDefaultData {
 	private long timeInterval;
 
 	/**
-	 * Serial UID.
-	 */
-	private static final long serialVersionUID = 2725738546375825464L;
-
-	/**
 	 * Gets {@link #consumptionPercent}.
 	 *
 	 * @return {@link #consumptionPercent}

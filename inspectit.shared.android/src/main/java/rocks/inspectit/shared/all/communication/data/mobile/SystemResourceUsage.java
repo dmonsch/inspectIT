@@ -5,12 +5,6 @@ package rocks.inspectit.shared.all.communication.data.mobile;
  *
  */
 public class SystemResourceUsage extends MobileDefaultData {
-
-	/**
-	 * Serial UID.
-	 */
-	private static final long serialVersionUID = -5781998757005571236L;
-
 	private float cpuUsage;
 
 	private float memoryUsage;

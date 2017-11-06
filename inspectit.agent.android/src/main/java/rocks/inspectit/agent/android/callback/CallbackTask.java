@@ -28,12 +28,12 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 	/**
 	 * Read timeout for the REST calls to the CMR.
 	 */
-	private static final int READ_TIMEOUT = 30000;
+	private static final int READ_TIMEOUT = 10000;
 
 	/**
 	 * Connect timeout for the REST calls to the CMR.
 	 */
-	private static final int CONNECT_TIMEOUT = 30000;
+	private static final int CONNECT_TIMEOUT = 10000;
 
 	/**
 	 * Consistent log tag which is used by the agent.
@@ -54,6 +54,8 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 	 * Reference to the {@link CallbackManager}.
 	 */
 	private CallbackManager callbackManager = DependencyManager.getCallbackManager();
+
+	private CMRConnectionManager connectionManager = DependencyManager.getCmrConnectionManager();
 
 	/**
 	 * Creates a new task with a specified url.
@@ -133,6 +135,9 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 			Log.e(LOG_TAG, "Malformed URL while sending the data to the CMR.");
 			return null;
 		} catch (IOException e) {
+			connectionManager.beaconSendProblem(); // this triggers reconnect after some point of
+			// time
+			// here we need to be careful
 			Log.e(LOG_TAG, "Couldn't send the data back to the CMR because of an IOException.");
 			return null;
 		}

@@ -104,6 +104,7 @@ public class MobileRestfulService {
 					}
 
 					// insert into influx
+					request.setSessionTags(sessionStorage.getTags(sessionId));
 					defaultDataDao.saveAll(Lists.newArrayList(request));
 
 					SessionCreationResponse resp = new SessionCreationResponse();

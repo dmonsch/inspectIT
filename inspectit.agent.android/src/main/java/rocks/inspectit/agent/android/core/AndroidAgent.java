@@ -116,6 +116,7 @@ public final class AndroidAgent {
 
 		// OPEN COMMUNICATION WITH CMR
 		connectionManager = new CMRConnectionManager(callbackManager, mHandler);
+		DependencyManager.setCmrConnectionManager(connectionManager);
 		connectionManager.establishCommunication(ctx);
 
 		// INITING MODULES

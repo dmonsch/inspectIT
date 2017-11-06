@@ -5,12 +5,6 @@ package rocks.inspectit.shared.all.communication.data.mobile;
  *
  */
 public class AppCrash extends MobileDefaultData {
-
-	/**
-	 * Serial UID.
-	 */
-	private static final long serialVersionUID = 8049333482421879947L;
-
 	private String exceptionClass;
 
 	private String exceptionMessage;

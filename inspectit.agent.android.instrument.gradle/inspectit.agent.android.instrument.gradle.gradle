@@ -1,4 +1,8 @@
+group = 'rocks.inspectit.android'
+version = '1.0.0-SNAPSHOT'
+
 apply plugin: 'java-gradle-plugin'
+apply plugin: 'maven'
 
 gradlePlugin {
     plugins {
@@ -12,4 +16,6 @@ gradlePlugin {
 dependencies {
     compile gradleApi()
     compile localGroovy()
+    
+    compile group: 'commons-io', name: 'commons-io', version: '2.6'
 }

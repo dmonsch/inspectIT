@@ -11,12 +11,6 @@ import io.opentracing.References;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MobileSpan extends AbstractSpan {
-
-	/**
-	 * Serial UID.
-	 */
-	private static final long serialVersionUID = 8027959082036217638L;
-
 	/**
 	 * Stores further information about this trace element. One-to-One relationship.
 	 */
@@ -64,46 +58,6 @@ public class MobileSpan extends AbstractSpan {
 		}
 
 		this.setPropagationType(mobileDetails.getPropagationType());
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = (prime * result) + ((this.details == null) ? 0 : this.details.hashCode());
-		result = (prime * result) + (int) (this.sessionId ^ (this.sessionId >>> 32));
-		return result;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		MobileSpan other = (MobileSpan) obj;
-		if (this.details == null) {
-			if (other.details != null) {
-				return false;
-			}
-		} else if (!this.details.equals(other.details)) {
-			return false;
-		}
-		if (this.sessionId != other.sessionId) {
-			return false;
-		}
-		return true;
 	}
 
 }

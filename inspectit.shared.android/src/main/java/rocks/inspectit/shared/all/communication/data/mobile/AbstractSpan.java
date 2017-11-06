@@ -1,6 +1,5 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -194,30 +193,6 @@ public abstract class AbstractSpan extends DefaultData {
 			tags = new HashMap<String, String>(1, 1f);
 		}
 		return tags.put(tag, value);
-	}
-
-	/**
-	 * Adds all tags from the given map to the tags of this span.
-	 *
-	 * @param otherTags
-	 *            Map of tags to add.
-	 */
-	public void addAllTags(Map<String, String> otherTags) {
-		if (null == tags) {
-			tags = new HashMap<String, String>(otherTags.size(), 1f);
-		}
-		tags.putAll(otherTags);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Map<String, String> getTags() {
-		if (null == tags) {
-			return Collections.emptyMap();
-		} else {
-			return Collections.unmodifiableMap(tags);
-		}
 	}
 
 }

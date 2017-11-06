@@ -8,12 +8,6 @@ import java.util.Map;
  *
  */
 public class SessionCreation extends MobileDefaultData {
-
-	/**
-	 * Serial UID.
-	 */
-	private static final long serialVersionUID = -7916188901232481459L;
-
 	/**
 	 * The name of the mobile application.
 	 */

@@ -66,6 +66,25 @@ shadowJar {
 	relocate 'rocks.inspectit.android.instrument.mock', 'android.content'
 }
 
+task packageGradlePluginDependencies(type: Zip) {
+	dependsOn "shadowJar"
+	dependsOn ":inspectit.agent.android:shadowJar"
+	
+	from ("build/release/") {
+		include "inspectit-android-instrument-all.jar"
+	}
+	from ("lib") {
+		include "*"
+		into "lib"
+	}
+	from ("../inspectit.agent.android/build/release") {
+		include "inspectit.agent.android-all.jar"
+	}
+	
+	archiveName 'android-package.zip'
+    destinationDir = file('build/release')
+}
+
 task releaseAndAnalyze {
 	description = "Runs all unit tests, all checks and releases the jar."
 	group = 'Release'

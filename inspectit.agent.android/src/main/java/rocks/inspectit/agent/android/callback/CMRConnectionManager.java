@@ -25,6 +25,8 @@ public class CMRConnectionManager {
 	 */
 	private static final int RECONNECT_MAX_TRIES = 10;
 
+	private static final int MAX_DROPS_TILL_RECONNECT = 5;
+
 	/**
 	 * Current number of tries to connect to the CMR.
 	 */
@@ -34,13 +36,19 @@ public class CMRConnectionManager {
 	private final Handler mHandler;
 	private final String LOG_TAG;
 
+	private int consecutiveDrops;
+
+	private Context usedContext;
+
 	public CMRConnectionManager(CallbackManager callbackManager, Handler mHandler) {
 		this.callbackManager = callbackManager;
 		this.mHandler = mHandler;
 		this.LOG_TAG = AgentConfiguration.current.getLogTag();
+		this.consecutiveDrops = 0;
 	}
 
 	public void establishCommunication(Context ctx) {
+		usedContext = ctx;
 		AndroidDataCollector androidDataCollector = DependencyManager.getAndroidDataCollector();
 		SessionCreation helloRequest = new SessionCreation();
 		helloRequest.setAppName(androidDataCollector.resolveAppName());
@@ -57,11 +65,21 @@ public class CMRConnectionManager {
 		callbackManager.pushHelloMessage(helloRequest);
 	}
 
+	public void beaconSendProblem() {
+		consecutiveDrops++;
+		if (consecutiveDrops > MAX_DROPS_TILL_RECONNECT) {
+			// schedule reconnection
+			callbackManager.beforeReconnect();
+			establishCommunication(usedContext);
+		}
+	}
+
 	private void scheduleSessionCreationRequest(final SessionCreation req) {
 		final Runnable scheduleRunnable = new Runnable() {
 			@Override
 			public void run() {
 				if (callbackManager.isSessionActive()) {
+					RECONNECT_TRIES = 0;
 					return;
 				} else {
 					Log.w(LOG_TAG, "Couldn't create session. Retrying now.");

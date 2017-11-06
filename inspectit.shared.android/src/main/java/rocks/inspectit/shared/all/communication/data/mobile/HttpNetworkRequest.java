@@ -5,12 +5,6 @@ package rocks.inspectit.shared.all.communication.data.mobile;
  *
  */
 public class HttpNetworkRequest extends AbstractMobileSpanDetails {
-
-	/**
-	 * Serial UID.
-	 */
-	private static final long serialVersionUID = -6955687075035464630L;
-
 	private String url;
 
 	private String method;
@@ -121,66 +115,6 @@ public class HttpNetworkRequest extends AbstractMobileSpanDetails {
 	 */
 	@Override
 	public boolean isExternalCall() {
-		return true;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = (prime * result) + ((this.contentType == null) ? 0 : this.contentType.hashCode());
-		result = (prime * result) + (int) (this.duration ^ (this.duration >>> 32));
-		result = (prime * result) + ((this.method == null) ? 0 : this.method.hashCode());
-		result = (prime * result) + this.responseCode;
-		result = (prime * result) + ((this.url == null) ? 0 : this.url.hashCode());
-		return result;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		HttpNetworkRequest other = (HttpNetworkRequest) obj;
-		if (this.contentType == null) {
-			if (other.contentType != null) {
-				return false;
-			}
-		} else if (!this.contentType.equals(other.contentType)) {
-			return false;
-		}
-		if (this.duration != other.duration) {
-			return false;
-		}
-		if (this.method == null) {
-			if (other.method != null) {
-				return false;
-			}
-		} else if (!this.method.equals(other.method)) {
-			return false;
-		}
-		if (this.responseCode != other.responseCode) {
-			return false;
-		}
-		if (this.url == null) {
-			if (other.url != null) {
-				return false;
-			}
-		} else if (!this.url.equals(other.url)) {
-			return false;
-		}
 		return true;
 	}
 

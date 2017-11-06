@@ -23,8 +23,8 @@ public class InstrumentationMain {
 	@Parameter(names = "--help", help = true)
 	private boolean help;
 
-	@Parameter(names = { "-w", "--override" }, required = true, description = "If the application is permitted to override existing files.", converter = BooleanConverter.class)
-	private boolean override;
+	@Parameter(names = { "-w", "--override" }, required = false, description = "If the application is permitted to override existing files.", converter = BooleanConverter.class)
+	private boolean override = false;
 
 	@Parameter(names = { "-k", "--keystore" }, required = true, description = "Path to the keystore.")
 	private String keystore;

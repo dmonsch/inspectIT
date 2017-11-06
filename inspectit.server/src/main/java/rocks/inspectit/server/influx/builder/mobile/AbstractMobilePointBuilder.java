@@ -19,6 +19,7 @@ public abstract class AbstractMobilePointBuilder<T extends MobileDefaultData> ex
 	protected void addFields(T data, Builder builder) {
 		for (Pair<String, String> tag : data.getSessionTags()) {
 			builder.tag(tag.getFirst(), tag.getSecond());
+			builder.addField("field_" + tag.getFirst(), tag.getSecond());
 		}
 
 		this.completeFields(data, builder);

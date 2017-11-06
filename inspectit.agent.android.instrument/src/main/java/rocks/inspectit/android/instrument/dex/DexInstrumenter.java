@@ -53,7 +53,7 @@ public class DexInstrumenter {
 		loadDelegationMap();
 
 		this.classInstrumenters = new IDexClassInstrumenter[] { new DexActivityInstrumenter(delegationPointMapping) };
-		this.methodInstrumenters = new IDexMethodInstrumenter[] { new DexSensorInstrumenter(traceConfiguration) };
+		this.methodInstrumenters = new IDexMethodInstrumenter[] { new DexSensorInstrumenter(delegationPointMapping, traceConfiguration) };
 		this.implementationInstrumenters = new IDexMethodImplementationInstrumenter[] { new DexSensorMethodInstrumenter(traceConfiguration, delegationPointMapping) }; // new
 		// DexNetworkInstrumenter()
 		// };

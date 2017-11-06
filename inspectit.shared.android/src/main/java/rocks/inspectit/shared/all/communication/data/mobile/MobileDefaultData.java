@@ -20,12 +20,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 	@JsonSubTypes.Type(value = BatteryConsumption.class),
 	@JsonSubTypes.Type(value = HttpNetworkRequest.class)})
 public class MobileDefaultData extends DefaultData {
-
-	/**
-	 * Serial UID.
-	 */
-	private static final long serialVersionUID = -685466883035297259L;
-
 	public MobileDefaultData() {
 		this.setTimeStamp(new Timestamp(System.currentTimeMillis()));
 	}

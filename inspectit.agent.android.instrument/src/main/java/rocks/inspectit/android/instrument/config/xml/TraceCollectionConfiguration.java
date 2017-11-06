@@ -7,6 +7,10 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import org.jf.dexlib2.iface.Method;
+import org.jf.dexlib2.iface.reference.MethodReference;
 
 /**
  * Class for configuring the packages which should be monitored with trace collection.
@@ -23,10 +27,45 @@ public class TraceCollectionConfiguration {
 	@XmlElement(name = "rule")
 	private List<TraceCollectionRule> packages;
 
+	@XmlTransient
+	private Set<Method> directlyInstrumentedMethods;
+
 	/**
 	 * Creates an empty trace collection configuration.
 	 */
 	public TraceCollectionConfiguration() {
+		this.directlyInstrumentedMethods = new HashSet<Method>();
+	}
+
+	/**
+	 * @param meth
+	 * @return
+	 */
+	public boolean isAlreadyInstrumented(MethodReference meth) {
+		for (Method mt : directlyInstrumentedMethods) {
+			if (mt.getName().equals(meth.getName()) && mt.getDefiningClass().equals(meth.getDefiningClass()) && meth.getReturnType().equals(mt.getReturnType())
+					&& arrayEq(mt.getParameterTypes(), meth.getParameterTypes())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * @param parameterTypes
+	 * @param parameterTypes2
+	 * @return
+	 */
+	private boolean arrayEq(List<? extends CharSequence> parameterTypes, List<? extends CharSequence> parameterTypes2) {
+		if (parameterTypes.size() != parameterTypes2.size()) {
+			return false;
+		}
+		for (int i = 0; i < parameterTypes.size(); i++) {
+			if (!parameterTypes.get(i).toString().equals(parameterTypes2.get(i).toString())) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -34,6 +73,17 @@ public class TraceCollectionConfiguration {
 	 */
 	public List<TraceCollectionRule> getPackages() {
 		return packages;
+	}
+
+	public void markMethodAsInstrumented(Method meth) {
+		directlyInstrumentedMethods.add(meth);
+	}
+
+	public boolean isAlreadyInstrumented(Method meth) {
+		if (meth == null) {
+			return false;
+		}
+		return directlyInstrumentedMethods.contains(meth);
 	}
 
 	/**

@@ -1,6 +1,6 @@
 package rocks.inspectit.agent.android.config;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author David Monschein
@@ -81,7 +81,7 @@ public class AgentConfiguration {
 
 	/**
 	 * Gets {@link #collectLocation}.
-	 * 
+	 *
 	 * @return {@link #collectLocation}
 	 */
 	public boolean isCollectLocation() {
@@ -90,7 +90,7 @@ public class AgentConfiguration {
 
 	/**
 	 * Sets {@link #collectLocation}.
-	 * 
+	 *
 	 * @param collectLocation
 	 *            New value for {@link #collectLocation}
 	 */

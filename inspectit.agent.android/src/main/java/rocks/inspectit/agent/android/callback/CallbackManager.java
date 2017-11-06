@@ -106,6 +106,10 @@ public class CallbackManager {
 		strategy.stop();
 	}
 
+	public void beforeReconnect() {
+		sessActive = false;
+	}
+
 	/**
 	 * Flushes all entries in the session queue to the callback strategy.
 	 */

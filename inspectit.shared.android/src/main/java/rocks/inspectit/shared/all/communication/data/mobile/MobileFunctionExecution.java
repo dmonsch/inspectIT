@@ -7,12 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  */
 public class MobileFunctionExecution extends AbstractMobileSpanDetails {
-
-	/**
-	 * Serial UID.
-	 */
-	private static final long serialVersionUID = 795929811165409499L;
-
 	@JsonProperty
 	private String methodSignature;
 
@@ -41,42 +35,6 @@ public class MobileFunctionExecution extends AbstractMobileSpanDetails {
 	 */
 	public void setMethodSignature(String methodSignature) {
 		this.methodSignature = methodSignature;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = (prime * result) + ((this.methodSignature == null) ? 0 : this.methodSignature.hashCode());
-		return result;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		MobileFunctionExecution other = (MobileFunctionExecution) obj;
-		if (this.methodSignature == null) {
-			if (other.methodSignature != null) {
-				return false;
-			}
-		} else if (!this.methodSignature.equals(other.methodSignature)) {
-			return false;
-		}
-		return true;
 	}
 
 	/**

@@ -37,11 +37,15 @@ public class NetworkRequestPointBuilder extends AbstractMobilePointBuilder<HttpN
 	 */
 	@Override
 	protected void completeFields(HttpNetworkRequest data, Builder builder) {
-		builder.addField(Series.MobileHttpNetworkRequest.CONTENT_TYPE, data.getContentType());
+		builder.addField(Series.MobileHttpNetworkRequest.CONTENT_TYPE, data.getContentType() == null ? "null" : data.getContentType());
 		builder.addField(Series.MobileHttpNetworkRequest.DURATION, data.getDuration());
 		builder.addField(Series.MobileHttpNetworkRequest.METHOD, data.getMethod());
 		builder.addField(Series.MobileHttpNetworkRequest.URL, data.getUrl());
 		builder.addField(Series.MobileHttpNetworkRequest.RESPONSE_CODE, data.getResponseCode());
+
+		builder.tag(Series.MobileHttpNetworkRequest.CONTENT_TYPE + "_tag", data.getContentType() == null ? "null" : data.getContentType());
+		builder.tag(Series.MobileHttpNetworkRequest.URL + "_tag", data.getUrl());
+		builder.tag(Series.MobileHttpNetworkRequest.RESPONSE_CODE + "_tag", String.valueOf(data.getResponseCode()));
 	}
 
 }

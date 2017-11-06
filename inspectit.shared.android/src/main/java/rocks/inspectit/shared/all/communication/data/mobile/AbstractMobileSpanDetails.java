@@ -14,12 +14,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 	@JsonSubTypes.Type(value = HttpNetworkRequest.class),
 	@JsonSubTypes.Type(value = MobileFunctionExecution.class)})
 public abstract class AbstractMobileSpanDetails extends MobileDefaultData {
-
-	/**
-	 * Serial UID.
-	 */
-	private static final long serialVersionUID = -2982950096466928703L;
-
 	/**
 	 * @return true, if this call left the mobile phone
 	 */

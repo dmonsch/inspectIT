@@ -3,6 +3,7 @@ package rocks.inspectit.agent.android.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import rocks.inspectit.agent.android.callback.CMRConnectionManager;
 import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
@@ -25,6 +26,8 @@ public final class DependencyManager {
 	 * Reference to the {@link AndroidDataCollector}.
 	 */
 	private static AndroidDataCollector androidDataCollector;
+
+	private static CMRConnectionManager cmrConnectionManager;
 
 	/**
 	 * Reference to the {@link AbstractCallbackStrategy}.
@@ -115,5 +118,24 @@ public final class DependencyManager {
 	 */
 	public static void setTracerImplHandler(TracerImplHandler tracerUtil) {
 		DependencyManager.tracerImplHandler = tracerUtil;
+	}
+
+	/**
+	 * Gets {@link #cmrConnectionManager}.
+	 *   
+	 * @return {@link #cmrConnectionManager}  
+	 */ 
+	public static CMRConnectionManager getCmrConnectionManager() {
+		return cmrConnectionManager;
+	}
+
+	/**  
+	 * Sets {@link #cmrConnectionManager}.  
+	 *   
+	 * @param cmrConnectionManager  
+	 *            New value for {@link #cmrConnectionManager}  
+	 */
+	public static void setCmrConnectionManager(CMRConnectionManager cmrConnectionManager) {
+		DependencyManager.cmrConnectionManager = cmrConnectionManager;
 	}
 }
