@@ -66,6 +66,15 @@ namespace Util {
         Element.prototype.webkitMatchesSelector || function () { return false; };
 
     export function elementMatchesSelector(element: Element, selector: string): boolean {
-        return matchesFunc.call(element, selector);
+        try {
+            return matchesFunc.call(element, selector);
+        } catch (e) {
+            if (console && console.error) {
+                /* tslint:disable */
+                console.error("Error in inspectiT CSS selector!", e);
+                /* tslint:enable */
+            }
+            return false;
+        }
     }
 }
