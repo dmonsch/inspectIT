@@ -15,6 +15,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Pair;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
@@ -206,7 +207,7 @@ public class AndroidDataCollector {
 			return deviceIdCache.value();
 		}
 
-		return deviceIdCache.set(android.os.Build.MODEL + "-" + telephonyManager.getDeviceId());
+		return deviceIdCache.set(android.os.Build.MODEL + "-" + Settings.Secure.ANDROID_ID);
 	}
 
 	public List<Pair<String, String>> collectStaticTags(AgentConfiguration config) {

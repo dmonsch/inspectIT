@@ -6,6 +6,7 @@ targetCompatibility = '1.8'
 buildscript {
     repositories {
         jcenter()
+        maven { url "https://jitpack.io" }
     }
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
@@ -81,7 +82,7 @@ task packageGradlePluginDependencies(type: Zip) {
 		include "inspectit.agent.android-all.jar"
 	}
 	
-	archiveName 'android-package.zip'
+	archiveName 'inspectIT-Android.zip'
     destinationDir = file('build/release')
 }
 

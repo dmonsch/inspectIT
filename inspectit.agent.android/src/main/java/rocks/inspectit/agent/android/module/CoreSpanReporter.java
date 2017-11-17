@@ -63,4 +63,20 @@ public class CoreSpanReporter extends AbstractMonitoringModule implements Report
 	public void shutdownModule() {
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onStartActivity(Object obj) {
+		// nothing to do here
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onStopActivity(Object obj) {
+		// nothing to do here
+	}
+
 }

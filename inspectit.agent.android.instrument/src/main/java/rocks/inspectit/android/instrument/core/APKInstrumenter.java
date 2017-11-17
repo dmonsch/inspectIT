@@ -31,6 +31,7 @@ import net.lingala.zip4j.model.ZipParameters;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.android.instrument.config.InstrumentationConfiguration;
 import rocks.inspectit.android.instrument.dex.DexInstrumenter;
+import rocks.inspectit.android.instrument.util.AndroidManifestParser;
 import rocks.inspectit.shared.all.util.Pair;
 
 /**
@@ -153,22 +154,6 @@ public class APKInstrumenter {
 			cleanUpAll();
 		}
 
-		// ADD MANIFEST ADJUSTMENTS
-		if (adjustManifest) {
-			LOG.info("Decoding application with APKTool.");
-
-			final APKToolProxy apkTool = new APKToolProxy(input);
-			final boolean b1 = apkTool.decodeAPK("intermediate");
-			final boolean b2 = apkTool.adjustManifest(neededRights, MODIFIED_MANIFEST);
-
-			if (!b1 || !b2) {
-				adjustManifest = false;
-			}
-			apkTool.cleanup();
-
-			LOG.info("APKTool finished decoding the application.");
-		}
-
 		// IF OVERRIDE DELETE IT
 		if (output.exists()) {
 			if (!output.delete()) {
@@ -194,9 +179,25 @@ public class APKInstrumenter {
 		final File tempOutputFolder = OUTPUT_TEMPO;
 		tempOutputFolder.mkdir();
 		final ZipFile tempInputZip = new ZipFile(input);
-		tempInputZip.extractAll(tempOutputFolder.getAbsolutePath() + "/");
+		tempInputZip.extractAll(tempOutputFolder.getAbsolutePath() + File.separator);
 
 		LOG.info("Created copy of original APK file.");
+
+		// ADD MANIFEST ADJUSTMENTS
+		if (adjustManifest) {
+			LOG.info("Decoding applications manifest.");
+
+			// get input
+			File maniInput = new File(tempOutputFolder.getAbsolutePath() + File.separator + "AndroidManifest.xml");
+
+			// process output
+			byte[] nManifest = AndroidManifestParser.adjustXml(FileUtils.readFileToByteArray(maniInput), neededRights);
+
+			// write output
+			FileUtils.writeByteArrayToFile(MODIFIED_MANIFEST, nManifest);
+
+			LOG.info("Finished adjustment of the manifest.");
+		}
 
 		// TEMP WRITE DEX
 		List<File> dexsToInstrument = unzipDexs(input, DEX_FILES_PATH);

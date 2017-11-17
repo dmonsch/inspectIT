@@ -6,8 +6,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Contains multiple monitoring records and the session id. This is the
- * data-type which is sent to the monitoring server.
+ * Contains multiple monitoring records and the session id. This is the data-type which is sent to
+ * the CMR via the REST interface.
  *
  * @author David Monschein
  *

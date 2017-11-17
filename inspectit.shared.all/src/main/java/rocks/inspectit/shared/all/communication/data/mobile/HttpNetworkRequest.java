@@ -6,6 +6,8 @@ import io.opentracing.tag.Tags;
 import rocks.inspectit.shared.all.tracing.data.PropagationType;
 
 /**
+ * Monitoring record which represents a network request of the monitored application.
+ *
  * @author David Monschein
  *
  */
@@ -16,14 +18,29 @@ public class HttpNetworkRequest extends AbstractMobileSpanDetails {
 	 */
 	private static final long serialVersionUID = -6955687075035464630L;
 
+	/**
+	 * The requested URL.
+	 */
 	private String url;
 
+	/**
+	 * The method of the request (e.g. GET, POST).
+	 */
 	private String method;
 
+	/**
+	 * The duration of the request in milliseconds.
+	 */
 	private long duration;
 
+	/**
+	 * The response code of the request.
+	 */
 	private int responseCode;
 
+	/**
+	 * The content type of the requested URL.
+	 */
 	private String contentType;
 
 	/**

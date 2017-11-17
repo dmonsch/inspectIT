@@ -1,6 +1,5 @@
 package rocks.inspectit.agent.android.callback;
 
-import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 import android.util.Pair;
@@ -11,6 +10,8 @@ import rocks.inspectit.agent.android.util.DependencyManager;
 import rocks.inspectit.shared.all.communication.data.mobile.SessionCreation;
 
 /**
+ * Manages the connection to the CMR.
+ *
  * @author David Monschein
  *
  */
@@ -25,6 +26,9 @@ public class CMRConnectionManager {
 	 */
 	private static final int RECONNECT_MAX_TRIES = 10;
 
+	/**
+	 * Maximum amount of package drops until we trigger a reconnect.
+	 */
 	private static final int MAX_DROPS_TILL_RECONNECT = 5;
 
 	/**
@@ -32,14 +36,34 @@ public class CMRConnectionManager {
 	 */
 	private static int RECONNECT_TRIES = 0;
 
+	/**
+	 * Link to the {@link CallbackManager}.
+	 */
 	private final CallbackManager callbackManager;
+
+	/**
+	 * Handler which is used to schedule runnables.
+	 */
 	private final Handler mHandler;
+
+	/**
+	 * Tag for logging.
+	 */
 	private final String LOG_TAG;
 
+	/**
+	 * Counts the amount of consecutive package drops.
+	 */
 	private int consecutiveDrops;
 
-	private Context usedContext;
-
+	/**
+	 * Creates a new CMR connection manager.
+	 *
+	 * @param callbackManager
+	 *            reference to {@link CallbackManager} which can be used to transfer data to the CMR
+	 * @param mHandler
+	 *            handler for scheduling runnables
+	 */
 	public CMRConnectionManager(CallbackManager callbackManager, Handler mHandler) {
 		this.callbackManager = callbackManager;
 		this.mHandler = mHandler;
@@ -47,14 +71,12 @@ public class CMRConnectionManager {
 		this.consecutiveDrops = 0;
 	}
 
-	public void establishCommunication(Context ctx) {
-		usedContext = ctx;
+	public void establishCommunication() {
 		AndroidDataCollector androidDataCollector = DependencyManager.getAndroidDataCollector();
 		SessionCreation helloRequest = new SessionCreation();
 		helloRequest.setAppName(androidDataCollector.resolveAppName());
 		helloRequest.setDeviceId(androidDataCollector.getDeviceId());
 
-		// TODO add tags dynamically and more
 		for (Pair<String, String> tag : androidDataCollector.collectStaticTags(AgentConfiguration.current)) {
 			helloRequest.putAdditionalInformation(tag.first, tag.second);
 		}
@@ -70,7 +92,13 @@ public class CMRConnectionManager {
 		if (consecutiveDrops > MAX_DROPS_TILL_RECONNECT) {
 			// schedule reconnection
 			callbackManager.beforeReconnect();
-			establishCommunication(usedContext);
+			establishCommunication();
+		}
+	}
+
+	public void beaconSendSuccess() {
+		if (consecutiveDrops > 0) {
+			consecutiveDrops = 0;
 		}
 	}
 

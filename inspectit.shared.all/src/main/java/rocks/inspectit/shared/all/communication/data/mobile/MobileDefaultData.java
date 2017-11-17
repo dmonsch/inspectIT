@@ -12,6 +12,8 @@ import rocks.inspectit.shared.all.communication.DefaultData;
 import rocks.inspectit.shared.all.util.Pair;
 
 /**
+ * Base monitoring record type which is used by all specific monitoring records.
+ *
  * @author David Monschein
  *
  */
@@ -38,6 +40,9 @@ public class MobileDefaultData extends DefaultData {
 	@JsonIgnore
 	private List<Pair<String, String>> sessionTags;
 
+	/**
+	 * Creates and initializes a basic mobile monitoring record.
+	 */
 	public MobileDefaultData() {
 		this.setTimeStamp(new Timestamp(System.currentTimeMillis()));
 	}

@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import rocks.inspectit.shared.all.tracing.data.PropagationType;
 
 /**
+ * Details which provide additional information about a mobile span.
+ *
  * @author David Monschein
  *
  */
@@ -25,6 +27,9 @@ public abstract class AbstractMobileSpanDetails extends MobileDefaultData {
 	 */
 	private static final long serialVersionUID = -2982950096466928703L;
 
+	/**
+	 * The span the details belong.to.
+	 */
 	@JsonIgnore
 	private transient MobileSpan owner;
 

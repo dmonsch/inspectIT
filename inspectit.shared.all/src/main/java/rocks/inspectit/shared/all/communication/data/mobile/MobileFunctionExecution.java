@@ -8,6 +8,8 @@ import rocks.inspectit.shared.all.tracing.constants.ExtraTags;
 import rocks.inspectit.shared.all.tracing.data.PropagationType;
 
 /**
+ * Holds information about a function execution on a mobile device within a monitored application.
+ *
  * @author David Monschein
  *
  */
@@ -18,6 +20,9 @@ public class MobileFunctionExecution extends AbstractMobileSpanDetails {
 	 */
 	private static final long serialVersionUID = 795929811165409499L;
 
+	/**
+	 * The signature of the function which has been executed.
+	 */
 	@JsonProperty
 	private String methodSignature;
 

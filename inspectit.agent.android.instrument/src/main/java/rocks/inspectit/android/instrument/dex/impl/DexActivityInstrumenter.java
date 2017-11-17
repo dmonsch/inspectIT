@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.jf.dexlib2.AccessFlags;
 import org.jf.dexlib2.Opcode;
 import org.jf.dexlib2.builder.BuilderInstruction;
@@ -96,13 +95,13 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 		}
 
 		if (!foundOnStart) {
-			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTART, createDelegation(DelegationPoint.ON_START));
+			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTART, createDelegation(DelegationPoint.ON_START, 1));
 			List<ImmutableMethodParameter> parameters = Lists.newArrayList();
 			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONSTART, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
 		}
 
 		if (!foundOnStop) {
-			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTOP, createDelegation(DelegationPoint.ON_STOP));
+			MethodImplementation nImpl = generateOnStartStopMethodImpl(METHOD_ONSTOP, createDelegation(DelegationPoint.ON_STOP, 1));
 			List<ImmutableMethodParameter> parameters = Lists.newArrayList();
 			methods.add(new ImmutableMethod(clazz.getType(), METHOD_ONSTOP, parameters, "V", AccessFlags.PUBLIC.getValue(), new HashSet<Annotation>(), nImpl));
 		}
@@ -170,15 +169,18 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 	}
 
 	private MethodImplementation instrumentStartStop(Method method, DelegationPoint point) {
-		Pair<Integer, MutableMethodImplementation> impl = DexInstrumentationUtil.extendMethodRegisters(method, 1);
+		MutableMethodImplementation impl = new MutableMethodImplementation(method.getImplementation());
 
-		impl.getRight().addInstruction(impl.getLeft(), createDelegation(point));
+		int paramRegisters = MethodUtil.getParameterRegisterCount(method);
+		int thisRegister = DexInstrumentationUtil.getThisRegister(impl.getRegisterCount(), paramRegisters);
 
-		return impl.getRight();
+		impl.addInstruction(0, createDelegation(point, thisRegister));
+
+		return impl;
 	}
 
-	private BuilderInstruction createDelegation(DelegationPoint point) {
-		return DexInstrumentationUtil.generateDelegationInvocation(new int[] {}, delegationPointMapping.get(point));
+	private BuilderInstruction createDelegation(DelegationPoint point, int thisRegister) {
+		return DexInstrumentationUtil.generateDelegationInvocation(new int[] { thisRegister }, delegationPointMapping.get(point));
 	}
 
 	private MethodImplementation generateOnStartStopMethodImpl(String superName, BuilderInstruction delegation) {

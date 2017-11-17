@@ -23,4 +23,8 @@ public abstract class AbstractMonitoringModule extends AndroidMonitoringComponen
 	 * Shuts the module down.
 	 */
 	public abstract void shutdownModule();
+
+	public abstract void onStartActivity(Object obj);
+
+	public abstract void onStopActivity(Object obj);
 }

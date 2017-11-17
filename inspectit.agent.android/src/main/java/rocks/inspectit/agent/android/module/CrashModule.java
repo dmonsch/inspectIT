@@ -42,6 +42,22 @@ public class CrashModule extends AbstractMonitoringModule {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onStartActivity(Object obj) {
+		// nothing to do here
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onStopActivity(Object obj) {
+		// nothing to do here
+	}
+
+	/**
 	 * Function which handles an uncaught exception and sends a message to the CMR.
 	 *
 	 * @param thread
@@ -59,5 +75,6 @@ public class CrashModule extends AbstractMonitoringModule {
 			backup.uncaughtException(thread, e);
 		}
 	}
+
 
 }

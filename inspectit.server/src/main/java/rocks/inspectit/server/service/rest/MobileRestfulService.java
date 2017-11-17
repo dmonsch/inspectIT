@@ -41,6 +41,11 @@ import rocks.inspectit.shared.all.util.Pair;
 public class MobileRestfulService {
 
 	/**
+	 * String value which is returned by the beacon service when the session doesn't exist.
+	 */
+	private static final String SESSION_DOESNT_EXIST = "noSession";
+
+	/**
 	 * Used JSON object mapper.
 	 */
 	private ObjectMapper mapper;
@@ -149,6 +154,8 @@ public class MobileRestfulService {
 				}
 
 				defaultDataDao.saveAll(collectedItems);
+			} else {
+				return SESSION_DOESNT_EXIST;
 			}
 		} catch (IOException e) {
 			return "";
@@ -156,6 +163,14 @@ public class MobileRestfulService {
 		return "";
 	}
 
+	/**
+	 * Internal class which is used to resolve the platform id for a span propagated on a mobile
+	 * device. This is necessary because we have no conventional inspectIT agent running on the
+	 * mobile device.
+	 *
+	 * @author David Monschein
+	 *
+	 */
 	private class MobileSpanCorrelationTask implements Runnable {
 
 		/**
@@ -168,9 +183,18 @@ public class MobileRestfulService {
 		 */
 		private int retrialsLeft = 20;
 
+		/**
+		 * The mobile span whose platform id is unknown.
+		 */
 		private MobileSpan span;
 
-		public MobileSpanCorrelationTask(MobileSpan span) {
+		/**
+		 * Creates a new task for a specific mobile span.
+		 *
+		 * @param span
+		 *            the mobile span
+		 */
+		MobileSpanCorrelationTask(MobileSpan span) {
 			this.span = span;
 		}
 
@@ -187,6 +211,14 @@ public class MobileRestfulService {
 			}
 		}
 
+		/**
+		 * Performs the correlation of the mobile span to a span propagated on the server side. This
+		 * includes the process of setting the correct platform id for the mobile span.
+		 *
+		 * @param sp
+		 *            the mobile span to correlate
+		 * @return true if the correlation has been successful, false otherwise
+		 */
 		boolean performCorrelation(MobileSpan sp) {
 			for (AbstractSpan as : spanDao.getSpans(sp.getSpanIdent().getTraceId())) {
 				if (as.getPlatformIdent() != 0) {

@@ -1,13 +1,22 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
 /**
+ * Monitoring record which holds information about the memory consumption of the application.
+ *
  * @author David Monschein
  *
  */
 public class BatteryConsumption extends MobileDefaultData {
 
+	/**
+	 * The percentage of battery which has been consumed by the application (0.0 - 1.0).
+	 */
 	private float consumptionPercent;
 
+	/**
+	 * The amount of milliseconds(ms) which belongs to the
+	 * {@link BatteryConsumption#consumptionPercent}.
+	 */
 	private long timeInterval;
 
 	/**

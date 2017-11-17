@@ -13,9 +13,24 @@ import rocks.inspectit.shared.all.communication.data.mobile.BatteryConsumption;
  */
 public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 
+	/**
+	 * Starting timestamp (from {@link System#currentTimeMillis()}) for the current measurement.
+	 */
 	private long startTimestamp;
+
+	/**
+	 * The battery percentage at the start of the measurement (0.0 - 1.0).
+	 */
 	private float startPct;
+
+	/**
+	 * If the mobile device is in a charging state.
+	 */
 	private boolean charging;
+
+	/**
+	 * If the application is running currently.
+	 */
 	private boolean running;
 
 	public BatteryBroadcastReceiver() {
@@ -71,7 +86,7 @@ public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void onStart() {
+	public void onStart(Object _this) {
 		onReceive(null, this.androidDataCollector.getBatteryIntent());
 		running = true;
 	}
@@ -80,7 +95,7 @@ public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void onStop() {
+	public void onStop(Object _this) {
 		onReceive(null, this.androidDataCollector.getBatteryIntent());
 		running = false;
 	}

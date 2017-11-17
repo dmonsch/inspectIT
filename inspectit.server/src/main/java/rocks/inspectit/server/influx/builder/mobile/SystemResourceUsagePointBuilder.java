@@ -10,6 +10,8 @@ import rocks.inspectit.server.influx.constants.Series;
 import rocks.inspectit.shared.all.communication.data.mobile.SystemResourceUsage;
 
 /**
+ * Class which handles the creation of Influx points for {@link SystemResourceUsage} records.
+ *
  * @author David Monschein
  *
  */

@@ -3,7 +3,9 @@ package rocks.inspectit.agent.android.core;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,6 +28,7 @@ import rocks.inspectit.agent.android.module.AndroidModuleManager;
 import rocks.inspectit.agent.android.sensor.AbstractMethodSensor;
 import rocks.inspectit.agent.android.sensor.NetworkSensor;
 import rocks.inspectit.agent.android.sensor.TraceSensor;
+import rocks.inspectit.agent.android.speedindex.SIListenerManager;
 import rocks.inspectit.agent.android.util.DependencyManager;
 
 /**
@@ -83,6 +86,15 @@ public final class AndroidAgent {
 	 */
 	private static boolean closed = true;
 
+	private static Map<Class<? extends Activity>, Boolean> activitySpeedindexMap;
+
+	private static SIListenerManager speedindexManager;
+
+	static {
+		activitySpeedindexMap = new HashMap<Class<? extends Activity>, Boolean>();
+		speedindexManager = new SIListenerManager();
+	}
+
 	/**
 	 * Full static class, therefore no instance creation allowed.
 	 */
@@ -96,11 +108,16 @@ public final class AndroidAgent {
 	 *            context of the application
 	 */
 	public static synchronized void initAgent(Activity ctx) {
-		if (inited) {
+		if (ctx == null) {
 			return;
 		}
 
-		if (ctx == null) {
+		if (!activitySpeedindexMap.containsKey(ctx.getClass())) {
+			speedindexManager.registerListenerFor(ctx);
+			activitySpeedindexMap.put(ctx.getClass(), true);
+		}
+
+		if (inited) {
 			return;
 		}
 		// INITING VARS
@@ -117,7 +134,7 @@ public final class AndroidAgent {
 		// OPEN COMMUNICATION WITH CMR
 		connectionManager = new CMRConnectionManager(callbackManager, mHandler);
 		DependencyManager.setCmrConnectionManager(connectionManager);
-		connectionManager.establishCommunication(ctx);
+		connectionManager.establishCommunication();
 
 		// INITING MODULES
 		moduleManager = new AndroidModuleManager(ctx, mHandler);

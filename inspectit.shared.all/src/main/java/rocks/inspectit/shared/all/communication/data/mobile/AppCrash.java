@@ -1,6 +1,8 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
 /**
+ * Monitoring record which indicates a crash of the monitored application.
+ *
  * @author David Monschein
  *
  */
@@ -11,13 +13,21 @@ public class AppCrash extends MobileDefaultData {
 	 */
 	private static final long serialVersionUID = 8049333482421879947L;
 
+	/**
+	 * The type of the occurred exception.
+	 */
 	private String exceptionClass;
 
+	/**
+	 * The message of the occurred exception.
+	 */
 	private String exceptionMessage;
 
 	/**
 	 * @param name
+	 *            value for {@link AppCrash#exceptionClass}
 	 * @param message
+	 *            value for {@link AppCrash#exceptionMessage}
 	 */
 	public AppCrash(String name, String message) {
 		this.exceptionClass = name;

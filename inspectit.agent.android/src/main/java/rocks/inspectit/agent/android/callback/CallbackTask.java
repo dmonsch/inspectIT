@@ -26,6 +26,11 @@ import rocks.inspectit.shared.all.communication.data.mobile.SessionCreationRespo
 public class CallbackTask extends AsyncTask<String, Void, String> {
 
 	/**
+	 * String value which is returned by the beacon REST service when the session doesn't exist.
+	 */
+	private static final String SESSION_DOESNT_EXIST = "noSession";
+
+	/**
 	 * Read timeout for the REST calls to the CMR.
 	 */
 	private static final int READ_TIMEOUT = 10000;
@@ -55,6 +60,9 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 	 */
 	private CallbackManager callbackManager = DependencyManager.getCallbackManager();
 
+	/**
+	 * Link to the {@link CMRConnectionManager}.
+	 */
 	private CMRConnectionManager connectionManager = DependencyManager.getCmrConnectionManager();
 
 	/**
@@ -129,6 +137,11 @@ public class CallbackTask extends AsyncTask<String, Void, String> {
 				all = all == null ? output : all + "\n" + output;
 			}
 			conn.disconnect();
+
+			if ((all != null) && all.equals(SESSION_DOESNT_EXIST)) {
+				connectionManager.beaconSendProblem();
+			}
+			connectionManager.beaconSendSuccess();
 
 			return all;
 		} catch (MalformedURLException e) {

@@ -10,6 +10,8 @@ import io.opentracing.References;
 import rocks.inspectit.shared.all.tracing.data.AbstractSpan;
 
 /**
+ * Special span type for all traces collected on a mobile device.
+ *
  * @author David Monschein
  *
  */
@@ -26,6 +28,9 @@ public class MobileSpan extends AbstractSpan {
 	 */
 	private AbstractMobileSpanDetails details;
 
+	/**
+	 * Session ID of the device.
+	 */
 	private long sessionId;
 
 	/**
@@ -74,6 +79,9 @@ public class MobileSpan extends AbstractSpan {
 		this.setPropagationType(mobileDetails.getPropagationType());
 	}
 
+	/**
+	 * Collects the tags for a span instance.
+	 */
 	public void collectChildTags() {
 		Map<String, String> allTags = new HashMap<String, String>();
 		details.collectTags(allTags);

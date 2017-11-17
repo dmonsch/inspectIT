@@ -10,6 +10,8 @@ import rocks.inspectit.server.influx.constants.Series;
 import rocks.inspectit.shared.all.communication.data.mobile.HttpNetworkRequest;
 
 /**
+ * Class which handles the creation of Influx points for {@link HttpNetworkRequest} records.
+ *
  * @author David Monschein
  *
  */

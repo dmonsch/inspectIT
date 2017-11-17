@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Monitoring record which is used by the mobile agent to indicate that he wants to establish a
+ * session.
+ *
  * @author David Monschein
  *
  */
@@ -24,8 +27,14 @@ public class SessionCreation extends MobileDefaultData {
 	 */
 	private String deviceId;
 
+	/**
+	 * A key-value map which holds additonal information.
+	 */
 	private Map<String, String> additionalInformation;
 
+	/**
+	 * Creates a session creation record.
+	 */
 	public SessionCreation() {
 		this.additionalInformation = new HashMap<String, String>();
 	}

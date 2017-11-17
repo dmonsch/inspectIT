@@ -163,7 +163,7 @@ public class DexInstrumentationUtil {
 	}
 
 	public static MethodReference getMethodReference(Class<?> clazz, String name, String returnType) {
-		return getMethodReference(DexInstrumentationUtil.getType(clazz), name, returnType, Lists.newArrayList());
+		return getMethodReference(DexInstrumentationUtil.getType(clazz), name, returnType, new ArrayList<String>());
 	}
 
 	public static MethodReference getMethodReference(Class<?> clazz, String name, String returnType, Class<?>... parameters) {

@@ -10,6 +10,8 @@ import rocks.inspectit.server.influx.constants.Series;
 import rocks.inspectit.shared.all.communication.data.mobile.AppCrash;
 
 /**
+ * Class which handles the creation of Influx points for {@link AppCrash} records.
+ *
  * @author David Monschein
  *
  */

@@ -32,16 +32,16 @@ public class AndroidAgentDelegator {
 
 	// STATIC PROCESSING METHODS -> FASTER
 	@DelegationAnnotation(correspondsTo = DelegationPoint.ON_START)
-	public static void delegateOnStartEvent() {
+	public static void delegateOnStartEvent(Object _this) {
 		if (inited) {
-			instance.processOnStart();
+			instance.processOnStart(_this);
 		}
 	}
 
 	@DelegationAnnotation(correspondsTo = DelegationPoint.ON_STOP)
-	public static void delegateOnStopEvent() {
+	public static void delegateOnStopEvent(Object _this) {
 		if (inited) {
-			instance.processOnStop();
+			instance.processOnStop(_this);
 		}
 	}
 
@@ -90,15 +90,23 @@ public class AndroidAgentDelegator {
 		instance.classSensorMapping.get(sensorId).firstAfterBody(methodId, signature, root);
 	}
 
-	private void processOnStart() {
+	private void processOnStart(Object _this) {
 		for (AbstractBroadcastReceiver brRecv : instance.broadcastReceivers) {
-			brRecv.onStart();
+			brRecv.onStart(_this);
+		}
+
+		for (AbstractMonitoringModule module : monitoringModules) {
+			module.onStartActivity(_this);
 		}
 	}
 
-	private void processOnStop() {
+	private void processOnStop(Object _this) {
 		for (AbstractBroadcastReceiver brRecv : instance.broadcastReceivers) {
-			brRecv.onStop();
+			brRecv.onStop(_this);
+		}
+
+		for (AbstractMonitoringModule module : monitoringModules) {
+			module.onStopActivity(_this);
 		}
 	}
 }

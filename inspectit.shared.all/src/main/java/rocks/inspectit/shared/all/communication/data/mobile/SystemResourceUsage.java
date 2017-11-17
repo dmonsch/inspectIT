@@ -1,6 +1,9 @@
 package rocks.inspectit.shared.all.communication.data.mobile;
 
 /**
+ * Monitoring record holding information about the resource usage of the monitored mobile
+ * application.
+ *
  * @author David Monschein
  *
  */
@@ -11,8 +14,14 @@ public class SystemResourceUsage extends MobileDefaultData {
 	 */
 	private static final long serialVersionUID = -5781998757005571236L;
 
+	/**
+	 * The CPU usage in percent (0.0 - 1.0).
+	 */
 	private float cpuUsage;
 
+	/**
+	 * The memory(RAM) usage in kB.
+	 */
 	private float memoryUsage;
 
 	/**

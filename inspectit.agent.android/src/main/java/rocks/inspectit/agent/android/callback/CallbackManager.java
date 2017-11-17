@@ -40,6 +40,10 @@ public class CallbackManager {
 	 */
 	private List<MobileDefaultData> sessQueue;
 
+	/**
+	 * Contains all mobile spans which could'nt be sent to the CMR because there is no active
+	 * connection.
+	 */
 	private List<MobileSpan> sessQueueSpans;
 
 	/**
@@ -67,6 +71,12 @@ public class CallbackManager {
 		}
 	}
 
+	/**
+	 * Passes a span, which has been propagated on a mobile device, to the callback strategy.
+	 *
+	 * @param data
+	 *            the span which should be transferred to the CMR
+	 */
 	public void pushData(MobileSpan data) {
 		if (!sessActive) {
 			this.sessQueueSpans.add(data);
@@ -94,6 +104,11 @@ public class CallbackManager {
 		strategy.sendImmediately(data, true);
 	}
 
+	/**
+	 * Determines if we have an active session for communicating with the CMR.
+	 *
+	 * @return true if there is an active connection - false otherwise
+	 */
 	public boolean isSessionActive() {
 		return sessActive;
 	}
@@ -106,6 +121,9 @@ public class CallbackManager {
 		strategy.stop();
 	}
 
+	/**
+	 * Invalidates the current session.
+	 */
 	public void beforeReconnect() {
 		sessActive = false;
 	}

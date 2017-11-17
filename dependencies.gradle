@@ -205,7 +205,8 @@ dependencies {
 		'org.smali:util:2.2.1',
 		'org.smali:dexlib2:2.2.1',
 		
-		'com.beust:jcommander:1.72'
+		'com.beust:jcommander:1.72',
+		'com.github.xgouchet:AXML:v1.0.1'
 	)
 	
 	/** inspectit.agent.android.instrument */

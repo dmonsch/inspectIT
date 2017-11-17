@@ -29,9 +29,16 @@ public abstract class AbstractBroadcastReceiver extends BroadcastReceiver {
 	 */
 	public abstract String[] getFilterActions();
 
-	public abstract void onStart();
+	/**
+	 * Function which is called when an activity of the monitored application is started.
+	 */
+	public abstract void onStart(Object _this);
 
-	public abstract void onStop();
+	/**
+	 * Function which is called when the application has been sent to the background or the
+	 * application has been closed.
+	 */
+	public abstract void onStop(Object _this);
 
 	/**
 	 * Sets the {@link AndroidDataCollector}.

@@ -57,6 +57,22 @@ public class SystemResourcesModule extends AbstractMonitoringModule {
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onStartActivity(Object obj) {
+		// nothing to do here
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void onStopActivity(Object obj) {
+		// nothing to do here
+	}
+
+	/**
 	 * Reads the memory usage of the monitored application.
 	 *
 	 * @return memory usage in kB and -1 if we can't resolve it

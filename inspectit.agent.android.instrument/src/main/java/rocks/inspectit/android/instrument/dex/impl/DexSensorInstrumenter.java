@@ -134,7 +134,6 @@ public class DexSensorInstrumenter implements IDexMethodInstrumenter {
 				movingLabels = new HashSet<>(ri.getLocation().getLabels());
 				retLocation = ri.getLocation();
 			} else {
-				System.out.println(retInstr.getClass().getName());
 				continue;
 			}
 
