@@ -117,22 +117,27 @@ public class AndroidManifestParser {
 			byte[] tagSi = revLEW(getStringIndex(org, USES_PERMISSION, utf8));
 
 			byte[] chunkSizeConst = revLEW(56);
+			byte[] chunkSizeEndConst = revLEW(24);
+
 			byte[] mOneConst = revLEW(-1); // namespace and const ref
 			byte[] lineNumber = revLEW(decomp.getSecond().getLineNumber());
 
 			byte[] zeroConst = revLEW(0);
+			byte[] headerSizeConst = revShort((short) 8);
+
+			byte[] zeroShort = revShort((short) 0);
 			byte[] stringDatatypeByte = new byte[] { 3 };
-			byte[] numberAttrs = revLEW(1);
+			byte[] numberAttrs = revShort((short) 1);
 			byte[] attrConst = revShort((short) 20);
 			byte[] attrNameSi = revLEW(getStringIndex(org, "name", utf8));
 			byte[] attrValueSi = revLEW(numbStrings + k);
 			byte[] attrNs = revLEW(decomp.getSecond().getAttrNs());
 
 			// create start tag
-			byte[] stb = concat(tagStart, chunkSizeConst, lineNumber, mOneConst, mOneConst, tagSi, attrConst, attrConst, numberAttrs, zeroConst, attrNs, attrNameSi, attrValueSi, ZERO_ONE_BYTE_CONST,
-					ZERO_ONE_BYTE_CONST, ZERO_ONE_BYTE_CONST, stringDatatypeByte, attrValueSi);
+			byte[] stb = concat(tagStart, chunkSizeConst, lineNumber, mOneConst, mOneConst, tagSi, attrConst, attrConst, numberAttrs, zeroConst, zeroShort, attrNs, attrNameSi, attrValueSi,
+					headerSizeConst, ZERO_ONE_BYTE_CONST, stringDatatypeByte, attrValueSi);
 
-			byte[] ste = concat(tagEnd, chunkSizeConst, lineNumber, mOneConst, mOneConst, tagSi);
+			byte[] ste = concat(tagEnd, chunkSizeEndConst, lineNumber, mOneConst, mOneConst, tagSi);
 
 			for (int z = 0; z < stb.length; z++) {
 				cop.add(xmlTreeInjectionPos + z, stb[z]);
@@ -388,10 +393,10 @@ public class AndroidManifestParser {
 
 			ret[0] |= length & 0xff;
 			ret[1] |= (length & 0xff00) >> 8;
-			if ((LEWS(ret, 0) & 0x8000) != 0) {
-				// TODO ==> but this is not necessary
-			}
-			return ret;
+				if ((LEWS(ret, 0) & 0x8000) != 0) {
+					// TODO ==> but this is not necessary
+				}
+				return ret;
 		}
 	}
 
