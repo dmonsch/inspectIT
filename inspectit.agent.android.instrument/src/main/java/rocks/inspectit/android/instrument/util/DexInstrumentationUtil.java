@@ -29,6 +29,8 @@ import org.jf.dexlib2.iface.MethodImplementation;
 import org.jf.dexlib2.iface.TryBlock;
 import org.jf.dexlib2.iface.debug.DebugItem;
 import org.jf.dexlib2.iface.instruction.Instruction;
+import org.jf.dexlib2.iface.instruction.formats.Instruction35c;
+import org.jf.dexlib2.iface.instruction.formats.Instruction3rc;
 import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.immutable.reference.ImmutableMethodReference;
 import org.jf.dexlib2.immutable.reference.ImmutableStringReference;
@@ -41,6 +43,20 @@ import com.beust.jcommander.internal.Lists;
  *
  */
 public class DexInstrumentationUtil {
+	private static final Opcode[] INVOKE_OPCODES = new Opcode[] { Opcode.INVOKE_DIRECT, Opcode.INVOKE_DIRECT_EMPTY, Opcode.INVOKE_DIRECT_RANGE, Opcode.INVOKE_INTERFACE, Opcode.INVOKE_INTERFACE_RANGE,
+			Opcode.INVOKE_OBJECT_INIT_RANGE, Opcode.INVOKE_POLYMORPHIC, Opcode.INVOKE_POLYMORPHIC_RANGE, Opcode.INVOKE_STATIC, Opcode.INVOKE_STATIC_RANGE, Opcode.INVOKE_SUPER,
+			Opcode.INVOKE_SUPER_QUICK, Opcode.INVOKE_SUPER_QUICK_RANGE, Opcode.INVOKE_SUPER_RANGE, Opcode.INVOKE_VIRTUAL, Opcode.INVOKE_VIRTUAL_QUICK, Opcode.INVOKE_VIRTUAL_QUICK_RANGE,
+			Opcode.INVOKE_VIRTUAL_RANGE };
+
+	public static boolean isInvocationOpcode(Opcode op) {
+		for (Opcode iop : INVOKE_OPCODES) {
+			if (op == iop) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static int getMethodCount(File dexFile) throws IOException {
 		DexBackedDexFile dex = DexFileFactory.loadDexFile(dexFile, Opcodes.forApi(19));
 		return dex.getMethodCount();
@@ -95,6 +111,41 @@ public class DexInstrumentationUtil {
 		} else {
 			throw new RuntimeException("Didn't except this to happen.");
 		}
+	}
+
+	public static int getMethodCallPosition(MethodImplementation meth, String method, String[] paras) {
+		int highest = -1;
+		int pos = 0;
+		for (Instruction instr : meth.getInstructions()) {
+			if (isInvocationOpcode(instr.getOpcode())) {
+				MethodReference ref = null;
+				if (instr instanceof Instruction35c) {
+					ref = (MethodReference) ((Instruction35c) instr).getReference();
+				} else if (instr instanceof Instruction3rc) {
+					ref = (MethodReference) ((Instruction3rc) instr).getReference();
+				}
+
+				if (ref != null) {
+					if (ref.getName().equals(method) && (ref.getParameterTypes().size() == paras.length)) {
+						boolean eq = true;
+						int k = 0;
+						for (CharSequence para : ref.getParameterTypes()) {
+							if (!para.toString().equals(paras[k++])) {
+								eq = false;
+								break;
+							}
+						}
+
+						if (eq) {
+							highest = pos;
+						}
+					}
+				}
+			}
+
+			pos++;
+		}
+		return highest;
 	}
 
 	public static int addInstructions(MutableMethodImplementation impl, List<BuilderInstruction> instrs, int initialPos) {

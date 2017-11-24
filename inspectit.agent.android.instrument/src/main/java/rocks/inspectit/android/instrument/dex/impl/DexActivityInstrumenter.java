@@ -39,6 +39,9 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 	private static final String METHOD_ONSTOP = "onStop";
 	private static final String METHOD_ONSTART = "onStart";
 
+	private static final String REQUEST_FEATURE_METHOD = "requestWindowFeature";
+	private static final String[] REQUEST_FEATURE_PARAS = new String[] { "I" };
+
 	private static final String ACTIVITY_TYPE = "Landroid/app/Activity;";
 	private static final String BUNDLE_TYPE = "Landroid/os/Bundle;";
 
@@ -163,7 +166,14 @@ public class DexActivityInstrumenter implements IDexClassInstrumenter {
 		int paramRegisters = MethodUtil.getParameterRegisterCount(method);
 		int thisRegister = DexInstrumentationUtil.getThisRegister(impl.getRegisterCount(), paramRegisters);
 
-		impl.addInstruction(0, createAgentInitInvocation(thisRegister));
+		// check if we have a request feature call
+		int requestFeaturePosition = DexInstrumentationUtil.getMethodCallPosition(impl, REQUEST_FEATURE_METHOD, REQUEST_FEATURE_PARAS);
+
+		if (requestFeaturePosition >= 0) {
+			impl.addInstruction(requestFeaturePosition + 1, createAgentInitInvocation(thisRegister));
+		} else {
+			impl.addInstruction(0, createAgentInitInvocation(thisRegister));
+		}
 
 		return impl;
 	}

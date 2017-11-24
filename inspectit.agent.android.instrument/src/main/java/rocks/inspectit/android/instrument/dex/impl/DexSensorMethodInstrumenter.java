@@ -27,12 +27,6 @@ import rocks.inspectit.android.instrument.util.MethodSignatureFormatter;
  *
  */
 public class DexSensorMethodInstrumenter implements IDexMethodImplementationInstrumenter {
-
-	private static final Opcode[] INVOKE_OPCODES = new Opcode[] { Opcode.INVOKE_DIRECT, Opcode.INVOKE_DIRECT_EMPTY, Opcode.INVOKE_DIRECT_RANGE, Opcode.INVOKE_INTERFACE, Opcode.INVOKE_INTERFACE_RANGE,
-			Opcode.INVOKE_OBJECT_INIT_RANGE, Opcode.INVOKE_POLYMORPHIC, Opcode.INVOKE_POLYMORPHIC_RANGE, Opcode.INVOKE_STATIC, Opcode.INVOKE_STATIC_RANGE, Opcode.INVOKE_SUPER,
-			Opcode.INVOKE_SUPER_QUICK, Opcode.INVOKE_SUPER_QUICK_RANGE, Opcode.INVOKE_SUPER_RANGE, Opcode.INVOKE_VIRTUAL, Opcode.INVOKE_VIRTUAL_QUICK, Opcode.INVOKE_VIRTUAL_QUICK_RANGE,
-			Opcode.INVOKE_VIRTUAL_RANGE };
-
 	private static final int REGISTER_ADD_COUNT = 7;
 	private static final String CONSTRUCTOR_METHOD_NAME = "<init>";
 
@@ -67,23 +61,21 @@ public class DexSensorMethodInstrumenter implements IDexMethodImplementationInst
 
 		for (Instruction instr : mutedImplementation.getRight().getInstructions()) {
 			Opcode o = instr.getOpcode();
-			for (Opcode l : INVOKE_OPCODES) {
-				if (o == l) {
-					if (instr instanceof Instruction35c) {
-						Instruction35c invoc = (Instruction35c) instr;
-						MethodReference meth = (MethodReference) invoc.getReference();
-						if ((config.isTracedMethod(meth.getDefiningClass(), meth.getName(), meth.getParameterTypes()).size() > 0) && !config.isAlreadyInstrumented(meth)) {
-							tracedInstructions.add(Pair.of(k, meth));
-						}
-					} else if (instr instanceof Instruction3rc) {
-						Instruction3rc invoc = (Instruction3rc) instr;
-						MethodReference meth = (MethodReference) invoc.getReference();
-						if ((config.isTracedMethod(meth.getDefiningClass(), meth.getName(), meth.getParameterTypes()).size() > 0) && !config.isAlreadyInstrumented(meth)) {
-							tracedInstructions.add(Pair.of(k, meth));
-						}
-					} // else shouldn't happen => would be invalid bytecode
-					break;
-				}
+			if (DexInstrumentationUtil.isInvocationOpcode(o)) {
+				if (instr instanceof Instruction35c) {
+					Instruction35c invoc = (Instruction35c) instr;
+					MethodReference meth = (MethodReference) invoc.getReference();
+					if ((config.isTracedMethod(meth.getDefiningClass(), meth.getName(), meth.getParameterTypes()).size() > 0) && !config.isAlreadyInstrumented(meth)) {
+						tracedInstructions.add(Pair.of(k, meth));
+					}
+				} else if (instr instanceof Instruction3rc) {
+					Instruction3rc invoc = (Instruction3rc) instr;
+					MethodReference meth = (MethodReference) invoc.getReference();
+					if ((config.isTracedMethod(meth.getDefiningClass(), meth.getName(), meth.getParameterTypes()).size() > 0) && !config.isAlreadyInstrumented(meth)) {
+						tracedInstructions.add(Pair.of(k, meth));
+					}
+				} // else shouldn't happen => would be invalid bytecode
+				break;
 			}
 
 			// increment
