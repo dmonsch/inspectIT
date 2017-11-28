@@ -61,4 +61,20 @@ namespace Util {
         }
         return undefined;
     }
+
+    const matchesFunc = Element.prototype.matches || Element.prototype.msMatchesSelector ||
+        Element.prototype.webkitMatchesSelector || function () { return false; };
+
+    export function elementMatchesSelector(element: Element, selector: string): boolean {
+        try {
+            return matchesFunc.call(element, selector);
+        } catch (e) {
+            if (console && console.error) {
+                /* tslint:disable */
+                console.error("Error in inspectiT CSS selector!", e);
+                /* tslint:enable */
+            }
+            return false;
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package rocks.inspectit.shared.cs.ci.factory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlTransient;
@@ -8,6 +9,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import rocks.inspectit.shared.all.instrumentation.config.impl.JmxAttributeDescriptor;
 import rocks.inspectit.shared.all.instrumentation.config.impl.RetransformationStrategy;
 import rocks.inspectit.shared.cs.ci.eum.EndUserMonitoringConfig;
+import rocks.inspectit.shared.cs.ci.eum.EumDomEventSelector;
 import rocks.inspectit.shared.cs.ci.sensor.exception.IExceptionSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.exception.impl.ExceptionSensorConfig;
 import rocks.inspectit.shared.cs.ci.sensor.jmx.JmxSensorConfig;
@@ -118,7 +120,14 @@ public final class ConfigurationDefaultsFactory {
 	 * @return Returns default End User Monitoring configuration.
 	 */
 	public static EndUserMonitoringConfig getDefaultEndUserMonitoringConfig() {
-		return new EndUserMonitoringConfig();
+		EndUserMonitoringConfig defaultConf = new EndUserMonitoringConfig();
+		EumDomEventSelector sel = new EumDomEventSelector();
+		sel.setEventsList("*");
+		sel.setSelector("*");
+		sel.setAttributesToExtractList("tagName,id");
+		sel.setAlwaysRelevant(false);
+		defaultConf.setEventSelectors(Arrays.asList(sel));
+		return defaultConf;
 	}
 
 	/**
