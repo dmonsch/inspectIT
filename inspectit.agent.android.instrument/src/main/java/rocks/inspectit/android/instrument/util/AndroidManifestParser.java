@@ -38,9 +38,11 @@ public class AndroidManifestParser {
 	private static final int UTF8_FLAG = 1 << 8;
 	private static final byte[] ZERO_ONE_BYTE_CONST = new byte[] { 0 };
 
+	private static final Charset ENC_UTF8 = Charset.forName("UTF-8");
+	private static final Charset ENC_UTF16 = Charset.forName("UTF-16LE");
+
 	public static byte[] adjustXml(byte[] org, List<String> neededRights) {
 		Pair<String, ManifestPermissionValues> decomp = decompressXML(org);
-		System.out.println(decomp.getFirst());
 		List<String> addRights = getMissingRights(decomp.getFirst(), neededRights);
 
 		// utf8
@@ -58,12 +60,13 @@ public class AndroidManifestParser {
 		injectBytes(cop, nHead, 4 * 4);
 
 		// get highest string table pos
-		int xmlTagOffset = LEW(org, 3 * 4); // = end of string table
+		int xmlTagOffset = LEW(org, 3 * 4); // = string table chunk size
 
 		// create string resources
 		int nStrPos = xmlTagOffset + 4;
 		int stOffNew = sitOff + ((numbStrings + addRights.size()) * 4);
 		int sitIncSize = addRights.size() * 4;
+		int nullTerminatedOffset = utf8 ? 1 : 2;
 
 		int[] a = new int[addRights.size()];
 
@@ -74,7 +77,7 @@ public class AndroidManifestParser {
 			int strSitPos = sitOff + (strInd * 4);
 
 			// -> this is because we add count of bytes of the sit entry to the str pos at the end
-			byte[] nPointer = revLEW((nStrPos + (sitIncSize - (i * 4))) - stOffNew);
+			byte[] nPointer = revLEW((nStrPos + nullTerminatedOffset + (sitIncSize - (i * 4))) - stOffNew);
 			for (int k = 0; k < nPointer.length; k++) {
 				cop.add(strSitPos + k, nPointer[k]);
 			}
@@ -86,31 +89,38 @@ public class AndroidManifestParser {
 
 			// prepare final byte array
 			byte[] fullStrByteArray = concat(encLength, encString);
-			if ((fullStrByteArray.length % 4) != 0) {
-				// add null bytes
-				int toAdd = 4 - (fullStrByteArray.length % 4);
-				byte[] tZeroBytes = new byte[toAdd];
-				for (int k = 0; k < toAdd; k++) {
-					tZeroBytes[k] = 0;
-				}
-
-				fullStrByteArray = concat(fullStrByteArray, tZeroBytes);
-			}
 
 			// inject the byte array
 			for (int k = 0; k < fullStrByteArray.length; k++) {
-				cop.add(nStrPos + k + nPointer.length, fullStrByteArray[k]);
+				cop.add(nStrPos + nullTerminatedOffset + k + nPointer.length, fullStrByteArray[k]);
 			}
 
 			nStrPos += fullStrByteArray.length + nPointer.length;
 		}
 
 		// adjust the xml tag off header
-		injectBytes(cop, revLEW(nStrPos - 4), 3 * 4);
+		int nXmlTagOffset = (nStrPos - 4);
+		// fill up with nulls at the end
+		if (utf8 && ((nXmlTagOffset % 4) != 0)) {
+			int toAdd = 4 - (nXmlTagOffset % 4);
+			byte[] toAddArr = new byte[toAdd];
+			for (int i = 0; i < toAdd; i++) {
+				toAddArr[i] = 0;
+			}
+
+			// add to the position
+			for (int k = 0; k < toAddArr.length; k++) {
+				cop.add(nStrPos + k + 1, toAddArr[k]);
+			}
+			nXmlTagOffset += toAdd;
+		} else {
+			// TODO if utf16 we need this also?
+		}
+		injectBytes(cop, revLEW(nXmlTagOffset), 3 * 4);
 		injectBytes(cop, revLEW(LEW(org, 7 * 4) + sitIncSize), 7 * 4);
 
 		// add the new xml elements
-		int xmlTreeInjectionPos = decomp.getSecond().getInjectionPoint() + (nStrPos - (xmlTagOffset + 4));
+		int xmlTreeInjectionPos = decomp.getSecond().getInjectionPoint() + (nXmlTagOffset - xmlTagOffset);
 		for (int k = 0; k < addRights.size(); k++) {
 			byte[] tagStart = revLEW(startTag);
 			byte[] tagEnd = revLEW(endTag);
@@ -155,7 +165,6 @@ public class AndroidManifestParser {
 
 		// convert to byte array
 		Byte[] bytes = cop.toArray(new Byte[cop.size()]);
-		System.out.println(decompressXML(ArrayUtils.toPrimitive(bytes)).getFirst());
 		return ArrayUtils.toPrimitive(bytes);
 	}
 
@@ -300,6 +309,7 @@ public class AndroidManifestParser {
 			return null;
 		}
 		int strOff = stOff + LEW(xml, sitOff + (strInd * 4));
+		// System.out.println(strInd + "-->" + strOff + " (" + getStrLen(xml, strOff, utf8)[1] + ")");
 		return compXmlStringAt(xml, strOff, utf8);
 	}
 
@@ -313,9 +323,17 @@ public class AndroidManifestParser {
 
 	private static byte[] encodeString(String str, boolean utf8) {
 		if (utf8) {
-			return str.getBytes(Charset.forName("UTF-8"));
+			ByteBuffer buf = ENC_UTF8.encode(str);
+			buf.position(0);
+			byte[] ret = new byte[buf.limit()];
+			buf.get(ret);
+			return concat(ret, ZERO_ONE_BYTE_CONST);
 		} else {
-			return Charset.forName("UTF-16LE").encode(str).array();
+			ByteBuffer buf = ENC_UTF16.encode(str);
+			buf.position(0);
+			byte[] ret = new byte[buf.limit()];
+			buf.get(ret);
+			return concat(ret, ZERO_ONE_BYTE_CONST, ZERO_ONE_BYTE_CONST);
 		}
 	}
 
@@ -389,14 +407,13 @@ public class AndroidManifestParser {
 		if (utf8) {
 			return concat(encodeUtf8(length * 2), encodeUtf8(length));
 		} else {
-			byte[] ret = new byte[2];
+			ByteBuffer rt = ByteBuffer.allocate(2);
+			rt.order(ByteOrder.LITTLE_ENDIAN);
+			rt.putShort((short) length);
 
-			ret[0] |= length & 0xff;
-			ret[1] |= (length & 0xff00) >> 8;
-				if ((LEWS(ret, 0) & 0x8000) != 0) {
-					// TODO ==> but this is not necessary
-				}
-				return ret;
+			// TODO what if we need an int
+
+			return rt.array();
 		}
 	}
 
