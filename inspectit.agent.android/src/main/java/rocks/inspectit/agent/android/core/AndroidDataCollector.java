@@ -20,6 +20,7 @@ import android.telephony.TelephonyManager;
 import android.util.Pair;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.util.CacheValue;
+import rocks.inspectit.shared.all.communication.data.mobile.IAdditionalTagSchema;
 
 /**
  * This class is a proxy for accessing Android device informations, because we
@@ -167,6 +168,12 @@ public class AndroidDataCollector {
 		return networkInfoCache.set(getNetworkInfoInner());
 	}
 
+	/**
+	 * Gets the network connection type which can be either "wifi" or a mobile connection type (e.g.
+	 * LTE).
+	 *
+	 * @return network connection type
+	 */
 	public String getNetworkConnectionType() {
 		NetworkInfo info = this.getNetworkInfoInner();
 		if (info.isConnected()) {
@@ -179,6 +186,11 @@ public class AndroidDataCollector {
 		return null;
 	}
 
+	/**
+	 * Gets an {@link Intent} which contains information about the battery status.
+	 *
+	 * @return information about the battery status
+	 */
 	public Intent getBatteryIntent() {
 		IntentFilter iFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 		return context.registerReceiver(null, iFilter);
@@ -210,20 +222,30 @@ public class AndroidDataCollector {
 		return deviceIdCache.set(android.os.Build.MODEL + "-" + Settings.Secure.ANDROID_ID);
 	}
 
+	/**
+	 * Collects tags (additional information) of the mobile device the agent is running on.
+	 *
+	 * @param config
+	 *            agent configuration that decides which data is collected
+	 * @return list of key-value pairs that contain the additional information
+	 */
 	public List<Pair<String, String>> collectStaticTags(AgentConfiguration config) {
 		List<Pair<String, String>> list = new ArrayList<>();
 
-		list.add(Pair.create("app_version", this.getVersionName()));
-		list.add(Pair.create("android_version", android.os.Build.VERSION.RELEASE));
-		list.add(Pair.create("android_sdk", String.valueOf(android.os.Build.VERSION.SDK_INT)));
-		list.add(Pair.create("device_name", android.os.Build.MODEL));
-		list.add(Pair.create("device_lang", Locale.getDefault().getDisplayLanguage()));
+		list.add(Pair.create(IAdditionalTagSchema.APP_VERSION, this.getVersionName()));
+		list.add(Pair.create(IAdditionalTagSchema.APP_NAME, this.resolveAppName()));
+		list.add(Pair.create(IAdditionalTagSchema.ANDROID_VERSION, android.os.Build.VERSION.RELEASE));
+		list.add(Pair.create(IAdditionalTagSchema.ANDROID_SDK, String.valueOf(android.os.Build.VERSION.SDK_INT)));
+		list.add(Pair.create(IAdditionalTagSchema.DEVICE_NAME, android.os.Build.MODEL));
+		list.add(Pair.create(IAdditionalTagSchema.DEVICE_LANG, Locale.getDefault().getDisplayLanguage()));
 
 		if (config.isCollectLocation()) {
 			Location loc = this.getLastKnownLocation();
-			list.add(Pair.create("device_location_lat", String.valueOf(loc.getLatitude())));
-			list.add(Pair.create("device_location_lon", String.valueOf(loc.getLongitude())));
+			list.add(Pair.create(IAdditionalTagSchema.DEVICE_LAT, String.valueOf(loc.getLatitude())));
+			list.add(Pair.create(IAdditionalTagSchema.DEVICE_LON, String.valueOf(loc.getLongitude())));
 		}
+
+		// TODO maybe connection type
 
 		return list;
 	}

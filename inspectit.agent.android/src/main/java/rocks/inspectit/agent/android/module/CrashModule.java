@@ -69,6 +69,7 @@ public class CrashModule extends AbstractMonitoringModule {
 		// do our part
 		AppCrash resp = new AppCrash(e.getClass().getName(), e.getMessage());
 		this.pushData(resp);
+		// TODO force send
 
 		// call old handler
 		if (backup != null) {

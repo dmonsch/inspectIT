@@ -46,6 +46,12 @@ public abstract class AbstractCallbackStrategy {
 	 */
 	public abstract void addData(MobileDefaultData dat);
 
+	/**
+	 * Adds a span to the data holder.
+	 * 
+	 * @param dat
+	 *            span which should be added
+	 */
 	public abstract void addData(MobileSpan dat);
 
 	/**

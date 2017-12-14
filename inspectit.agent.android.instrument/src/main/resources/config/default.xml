@@ -16,7 +16,14 @@
 		</permissions>
 	</manifestTransformer>
 	
+	<dataCollection>
+		<collectLocation>false</collectLocation>
+		<collectBatteryConsumption>false</collectBatteryConsumption>
+		<shutdownOnDestroy>false</shutdownOnDestroy>
+	</dataCollection>
+	
 	<agentBuild>
+		<force>true</force>
 		<libraryFolders>
 			<folder>rocks</folder>
 			<folder>io</folder>

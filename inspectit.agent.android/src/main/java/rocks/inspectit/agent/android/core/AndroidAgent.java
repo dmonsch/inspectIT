@@ -40,7 +40,7 @@ public final class AndroidAgent {
 	/**
 	 * Resolve consistent log tag for the agent.
 	 */
-	private static String LOG_TAG;
+	private static String logTag;
 
 	/**
 	 * Broadcast receiver classes which will be created when the agent is initialized.
@@ -52,7 +52,14 @@ public final class AndroidAgent {
 	 */
 	private static List<AbstractMethodSensor> sensorList;
 
+	/**
+	 * Reference to the {@link AndroidModuleManager}.
+	 */
 	private static AndroidModuleManager moduleManager;
+
+	/**
+	 * Reference to the {@link CMRConnectionManager}.
+	 */
 	private static CMRConnectionManager connectionManager;
 
 	/**
@@ -86,8 +93,15 @@ public final class AndroidAgent {
 	 */
 	private static boolean closed = true;
 
+	/**
+	 * Contains all activities which are instrumented by the {@link SIListenerManager}.
+	 */
 	private static Map<Class<? extends Activity>, Boolean> activitySpeedindexMap;
 
+	/**
+	 * Responsible for measuring the speed index of activities which indicates how fast a activity
+	 * is drawn.
+	 */
 	private static SIListenerManager speedindexManager;
 
 	static {
@@ -127,9 +141,9 @@ public final class AndroidAgent {
 			return;
 		}
 
-		Log.i(LOG_TAG, "Initing mobile agent for Android.");
+		Log.i(logTag, "Initing mobile agent for Android.");
 		initDataCollector(ctx);
-		initCallbackManager(ctx);
+		initCallbackManager();
 
 		// OPEN COMMUNICATION WITH CMR
 		connectionManager = new CMRConnectionManager(callbackManager, mHandler);
@@ -151,8 +165,10 @@ public final class AndroidAgent {
 		}
 
 		// INIT BROADCASTS
-		Log.i(LOG_TAG, "Initializing broadcast receivers programmatically.");
-		initBroadcastReceivers(ctx);
+		Log.i(logTag, "Initializing broadcast receivers programmatically.");
+		if (AgentConfiguration.current.isCollectBatteryConsumption()) {
+			initBroadcastReceivers(ctx);
+		}
 
 		// INIT DELEGATOR
 		AndroidAgentDelegator delegator = new AndroidAgentDelegator();
@@ -162,17 +178,17 @@ public final class AndroidAgent {
 		inited = true;
 		closed = false;
 
-		Log.i(LOG_TAG, "Finished initializing the Android Agent.");
+		Log.i(logTag, "Finished initializing the Android Agent.");
 	}
 
 	/**
 	 * Shuts down the agent. This methods suspends all modules and broadcast receivers.
 	 */
 	public static synchronized void destroyAgent() {
-		if (closed || !inited) {
+		if (closed || !inited || !AgentConfiguration.current.isShutdownOnDestroy()) {
 			return;
 		}
-		Log.i(LOG_TAG, "Shutting down the Android Agent.");
+		Log.i(logTag, "Shutting down the Android Agent.");
 
 		// SHUTDOWN MODULES
 		mHandler.removeCallbacksAndMessages(null);
@@ -193,16 +209,35 @@ public final class AndroidAgent {
 		closed = true;
 	}
 
+	/**
+	 * Shuts down the Android Agent.
+	 *
+	 * @param message
+	 *            the reason why the agent is shut down
+	 */
 	public static void shutdownAgent(String message) {
 		Log.w(AgentConfiguration.current.getLogTag(), "The Android Agent encountered a problem (\"" + message + "\") and will shut down.");
 		destroyAgent();
 	}
 
+	/**
+	 * Adds all references to necessary components to a {@link AndroidMonitoringComponent}.
+	 *
+	 * @param comp
+	 *            target {@link AndroidMonitoringComponent}
+	 */
 	private static void injectDependencies(AndroidMonitoringComponent comp) {
 		comp.setAndroidDataCollector(DependencyManager.getAndroidDataCollector());
 		comp.setCallbackManager(DependencyManager.getCallbackManager());
 	}
 
+	/**
+	 * Initializes a {@link AndroidDataCollector} instance and adds it to the
+	 * {@link DependencyManager}.
+	 *
+	 * @param ctx
+	 *            the context which can be used to access data by the {@link AndroidDataCollector}
+	 */
 	private static void initDataCollector(Context ctx) {
 		// INIT ANDROID DATA COLLECTOR
 		final AndroidDataCollector androidDataCollector = new AndroidDataCollector();
@@ -210,11 +245,18 @@ public final class AndroidAgent {
 		DependencyManager.setAndroidDataCollector(androidDataCollector);
 	}
 
+	/**
+	 * Initializes a {@link TracerImplHandler} instance and adds it to the
+	 * {@link DependencyManager}.
+	 */
 	private static void initTracerUtil() {
 		DependencyManager.setTracerImplHandler(new TracerImplHandler());
 	}
 
-	private static void initCallbackManager(Context ctx) {
+	/**
+	 * Initializes a {@link CallbackManager} instance and adds it to the {@link DependencyManager}.
+	 */
+	private static void initCallbackManager() {
 		// INITING CALLBACK
 		final AbstractCallbackStrategy callbackStrategy = new IntervalStrategy(5000L);
 		DependencyManager.setCallbackStrategy(callbackStrategy);
@@ -222,6 +264,12 @@ public final class AndroidAgent {
 		DependencyManager.setCallbackManager(callbackManager);
 	}
 
+	/**
+	 * Initializes all broadcast receiver classes contained in {@link AndroidAgent#BROADCAST_RECVS}.
+	 *
+	 * @param ctx
+	 *            application context which can be used to register the broadcast receivers
+	 */
 	private static void initBroadcastReceivers(Context ctx) {
 		for (Class<?> bRecvEntry : BROADCAST_RECVS) {
 			try {
@@ -238,9 +286,9 @@ public final class AndroidAgent {
 				ctx.registerReceiver(bRecv, filter);
 
 			} catch (InstantiationException e) {
-				Log.e(LOG_TAG, "Failed to init broadcast receiver of class '" + bRecvEntry.getClass().getName() + "'");
+				Log.e(logTag, "Failed to init broadcast receiver of class '" + bRecvEntry.getClass().getName() + "'");
 			} catch (IllegalAccessException e) {
-				Log.e(LOG_TAG, "Failed to init broadcast receiver of class '" + bRecvEntry.getClass().getName() + "'");
+				Log.e(logTag, "Failed to init broadcast receiver of class '" + bRecvEntry.getClass().getName() + "'");
 			}
 		}
 	}
@@ -291,7 +339,7 @@ public final class AndroidAgent {
 	 *            configuration for the agent
 	 */
 	private static void applyConfiguration(AgentConfiguration conf) {
-		LOG_TAG = conf.getLogTag();
+		logTag = conf.getLogTag();
 		AgentConfiguration.current = conf;
 	}
 }

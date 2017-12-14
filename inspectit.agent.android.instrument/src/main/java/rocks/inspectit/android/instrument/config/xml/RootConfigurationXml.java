@@ -38,6 +38,9 @@ public class RootConfigurationXml {
 	@XmlElement(name = "traceCollection")
 	private TraceCollectionConfiguration traceCollectionList;
 
+	@XmlElement(name = "dataCollection")
+	private DataCollectionInfoXml dataCollectionInfo;
+
 	/**
 	 * Creates a new instance.
 	 */
@@ -78,6 +81,15 @@ public class RootConfigurationXml {
 	 */
 	public void setTraceCollectionList(final TraceCollectionConfiguration traceCollectionList) {
 		this.traceCollectionList = traceCollectionList;
+	}
+
+	/**
+	 * Gets {@link #dataCollectionInfo}.
+	 *
+	 * @return {@link #dataCollectionInfo}
+	 */
+	public DataCollectionInfoXml getDataCollectionInfo() {
+		return dataCollectionInfo;
 	}
 
 }

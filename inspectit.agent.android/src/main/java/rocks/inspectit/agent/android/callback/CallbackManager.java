@@ -22,7 +22,7 @@ public class CallbackManager {
 	/**
 	 * Consistent log tag for the agent.
 	 */
-	private final String LOG_TAG;
+	private final String logTag;
 
 	/**
 	 * The callback strategy which is used to send data.
@@ -53,7 +53,7 @@ public class CallbackManager {
 		this.sessActive = false;
 		this.sessQueue = new ArrayList<MobileDefaultData>();
 		this.sessQueueSpans = new ArrayList<MobileSpan>();
-		this.LOG_TAG = AgentConfiguration.current.getLogTag();
+		this.logTag = AgentConfiguration.current.getLogTag();
 	}
 
 	/**
@@ -88,7 +88,7 @@ public class CallbackManager {
 	/**
 	 * Pushes a hello message for session creation.
 	 *
-	 * @param response
+	 * @param request
 	 *            hello request which should be sent to the servers
 	 */
 	public void pushHelloMessage(SessionCreation request) {
@@ -149,7 +149,7 @@ public class CallbackManager {
 	 */
 	public void applySessionId(String id) {
 		if (!sessActive) {
-			Log.i(LOG_TAG, "Created session with id '" + id + "' for communicating with the CMR.");
+			Log.i(logTag, "Created session with id '" + id + "' for communicating with the CMR.");
 
 			strategy.setSessId(id);
 			sessActive = true;

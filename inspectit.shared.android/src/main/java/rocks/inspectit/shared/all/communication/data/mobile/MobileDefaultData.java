@@ -23,5 +23,4 @@ public class MobileDefaultData extends DefaultData {
 	public MobileDefaultData() {
 		this.setTimeStamp(new Timestamp(System.currentTimeMillis()));
 	}
-
 }

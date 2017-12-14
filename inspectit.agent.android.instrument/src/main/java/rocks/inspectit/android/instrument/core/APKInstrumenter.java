@@ -84,8 +84,6 @@ public class APKInstrumenter {
 	/** Flags whether to adjust the manifest or not. (recommended) */
 	private boolean adjustManifest = true;
 
-	private boolean buildAgent = true;
-
 	private DxJarProxy dxProxy;
 
 	/**
@@ -130,8 +128,7 @@ public class APKInstrumenter {
 	 * @throws URISyntaxException
 	 *             URI syntax problem
 	 */
-	public boolean instrumentAPK(File input, File output, File agentJar)
-			throws IOException, ZipException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
+	public boolean instrumentAPK(File input, File output, File agentJar) throws IOException, ZipException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
 		// CHECK IF INPUT EXISTS AND OUTPUT DOESNT
 		if (!input.exists() || (output.exists() && !override)) {
 			return false;
@@ -162,18 +159,7 @@ public class APKInstrumenter {
 		}
 
 		// BUILD OUR AGENT AS DEX
-		if (!AGENT_BUILD.exists()) {
-			if (!buildAgent) {
-				return false;
-			} else {
-				buildDexAgent(agentJar, instrConfig);
-			}
-		} else {
-			if (buildAgent) {
-				AGENT_BUILD.delete();
-				buildDexAgent(agentJar, instrConfig);
-			}
-		}
+		buildDexAgent(agentJar, instrConfig);
 
 		// COPY INPUT TO OUTPUT
 		final File tempOutputFolder = OUTPUT_TEMPO;
@@ -323,6 +309,15 @@ public class APKInstrumenter {
 			System.exit(1);
 		}
 
+		if (!instrConfig.getXmlConfiguration().getAgentBuildConfiguration().isForce() && AGENT_BUILD.exists()) {
+			LOG.info("Agent already exists and a rebuild is not forced.");
+			return;
+		}
+
+		if (AGENT_BUILD.exists()) {
+			AGENT_BUILD.delete();
+		}
+
 		File temporaryFolder = new File("agent-build/");
 		temporaryFolder.mkdir();
 
@@ -414,7 +409,6 @@ public class APKInstrumenter {
 			FileUtils.deleteDirectory(OUTPUT_TEMP);
 			FileUtils.deleteDirectory(OUTPUT_TEMPO);
 			FileUtils.deleteDirectory(DEX_FILES_PATH);
-			FileUtils.deleteDirectory(new File("dxbuild")); // agent build
 			FileUtils.forceDelete(new File("AndroidManifest.xml"));
 		} catch (IOException e) {
 			LOG.warning("Couldn't remove the temporary folders.");

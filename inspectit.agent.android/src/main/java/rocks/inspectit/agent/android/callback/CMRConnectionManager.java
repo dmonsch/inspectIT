@@ -32,11 +32,6 @@ public class CMRConnectionManager {
 	private static final int MAX_DROPS_TILL_RECONNECT = 5;
 
 	/**
-	 * Current number of tries to connect to the CMR.
-	 */
-	private static int RECONNECT_TRIES = 0;
-
-	/**
 	 * Link to the {@link CallbackManager}.
 	 */
 	private final CallbackManager callbackManager;
@@ -49,12 +44,17 @@ public class CMRConnectionManager {
 	/**
 	 * Tag for logging.
 	 */
-	private final String LOG_TAG;
+	private final String logTag;
 
 	/**
 	 * Counts the amount of consecutive package drops.
 	 */
 	private int consecutiveDrops;
+
+	/**
+	 * Current number of tries to connect to the CMR.
+	 */
+	private int reconnectTries = 0;
 
 	/**
 	 * Creates a new CMR connection manager.
@@ -67,10 +67,13 @@ public class CMRConnectionManager {
 	public CMRConnectionManager(CallbackManager callbackManager, Handler mHandler) {
 		this.callbackManager = callbackManager;
 		this.mHandler = mHandler;
-		this.LOG_TAG = AgentConfiguration.current.getLogTag();
+		this.logTag = AgentConfiguration.current.getLogTag();
 		this.consecutiveDrops = 0;
 	}
 
+	/**
+	 * Creates the connection the CMR.
+	 */
 	public void establishCommunication() {
 		AndroidDataCollector androidDataCollector = DependencyManager.getAndroidDataCollector();
 		SessionCreation helloRequest = new SessionCreation();
@@ -81,13 +84,17 @@ public class CMRConnectionManager {
 			helloRequest.putAdditionalInformation(tag.first, tag.second);
 		}
 
-		RECONNECT_TRIES = 0;
+		reconnectTries = 0;
 		scheduleSessionCreationRequest(helloRequest);
 
 		callbackManager.pushHelloMessage(helloRequest);
 	}
 
-	public void beaconSendProblem() {
+	/**
+	 * Report a send problem of the beacon. If the count of failed sends exceeds
+	 * {@link CMRConnectionManager#MAX_DROPS_TILL_RECONNECT} a reconnect is triggered.
+	 */
+	protected void beaconSendProblem() {
 		consecutiveDrops++;
 		if (consecutiveDrops > MAX_DROPS_TILL_RECONNECT) {
 			// schedule reconnection
@@ -96,24 +103,33 @@ public class CMRConnectionManager {
 		}
 	}
 
-	public void beaconSendSuccess() {
+	/**
+	 * Reports that a beacon has been sent successfully.
+	 */
+	protected void beaconSendSuccess() {
 		if (consecutiveDrops > 0) {
 			consecutiveDrops = 0;
 		}
 	}
 
+	/**
+	 * Schedules a session creation request.
+	 *
+	 * @param req
+	 *            the session creation object
+	 */
 	private void scheduleSessionCreationRequest(final SessionCreation req) {
 		final Runnable scheduleRunnable = new Runnable() {
 			@Override
 			public void run() {
 				if (callbackManager.isSessionActive()) {
-					RECONNECT_TRIES = 0;
+					reconnectTries = 0;
 					return;
 				} else {
-					Log.w(LOG_TAG, "Couldn't create session. Retrying now.");
-					if (RECONNECT_TRIES < RECONNECT_MAX_TRIES) {
-						Log.i(LOG_TAG, "Trying to connect to the CMR.");
-						RECONNECT_TRIES++;
+					Log.w(logTag, "Couldn't create session. Retrying now.");
+					if (reconnectTries < RECONNECT_MAX_TRIES) {
+						Log.i(logTag, "Trying to connect to the CMR.");
+						reconnectTries++;
 
 						callbackManager.pushHelloMessage(req); // real work
 

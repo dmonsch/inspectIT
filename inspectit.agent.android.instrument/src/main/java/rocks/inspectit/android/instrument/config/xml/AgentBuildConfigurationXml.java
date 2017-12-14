@@ -23,6 +23,9 @@ public class AgentBuildConfigurationXml {
 	@XmlElementWrapper(name = "libraryFolders")
 	private List<String> libraryFolders;
 
+	@XmlElement(name = "force")
+	private boolean force;
+
 	/**
 	 * Creates a new instance.
 	 */
@@ -36,6 +39,10 @@ public class AgentBuildConfigurationXml {
 	 */
 	public List<String> getLibraryFolders() {
 		return libraryFolders;
+	}
+
+	public boolean isForce() {
+		return force;
 	}
 
 }

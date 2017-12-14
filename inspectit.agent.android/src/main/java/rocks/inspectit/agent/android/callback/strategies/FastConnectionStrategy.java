@@ -55,6 +55,9 @@ public class FastConnectionStrategy extends AbstractCallbackStrategy {
 	public void stop() {
 	}
 
+	/**
+	 * Checks whether the data should be sent or not (and sends it if necessary).
+	 */
 	private void sendEvaluation() {
 		NetworkInfo info = dataCollector.getNetworkInfo();
 		if (info != null) {

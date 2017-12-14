@@ -31,14 +31,20 @@ public abstract class AbstractBroadcastReceiver extends BroadcastReceiver {
 
 	/**
 	 * Function which is called when an activity of the monitored application is started.
+	 *
+	 * @param thisObject
+	 *            link to the activity object
 	 */
-	public abstract void onStart(Object _this);
+	public abstract void onStart(Object thisObject);
 
 	/**
 	 * Function which is called when the application has been sent to the background or the
 	 * application has been closed.
+	 *
+	 * @param thisObject
+	 *            link to the activity object
 	 */
-	public abstract void onStop(Object _this);
+	public abstract void onStop(Object thisObject);
 
 	/**
 	 * Sets the {@link AndroidDataCollector}.
@@ -61,8 +67,7 @@ public abstract class AbstractBroadcastReceiver extends BroadcastReceiver {
 	}
 
 	/**
-	 * Pushes data to the callback manager which is responsible for further
-	 * tasks.
+	 * Pushes data to the callback manager which is responsible for further tasks.
 	 *
 	 * @param data
 	 *            the data which should be passed to the callback manager.

@@ -3,24 +3,46 @@ package rocks.inspectit.agent.android.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
+ * Holds the configuration of the agent and is JSON compatible so it can be stored in files easily.
+ *
  * @author David Monschein
  *
  */
 public class AgentConfiguration {
-
+	/**
+	 * Current configuration instance.
+	 */
 	public static AgentConfiguration current = null;
 
+	/**
+	 * The REST URL which is used to establish a session.
+	 */
 	@JsonProperty
 	private String sessionUrl;
 
+	/**
+	 * The REST URL which is used to send data.
+	 */
 	@JsonProperty
 	private String beaconUrl;
 
+	/**
+	 * The log tag which is used by the Android Agent.
+	 */
 	@JsonProperty
 	private String logTag;
 
+	/**
+	 * Whether the location should be collected or not.
+	 */
 	@JsonProperty
 	private boolean collectLocation;
+
+	@JsonProperty
+	private boolean collectBatteryConsumption;
+
+	@JsonProperty
+	private boolean shutdownOnDestroy;
 
 	/**
 	 * Gets {@link #sessionUrl}.
@@ -96,5 +118,43 @@ public class AgentConfiguration {
 	 */
 	public void setCollectLocation(boolean collectLocation) {
 		this.collectLocation = collectLocation;
+	}
+
+	/**
+	 * Gets {@link #collectBatteryConsumption}.
+	 *
+	 * @return {@link #collectBatteryConsumption}
+	 */
+	public boolean isCollectBatteryConsumption() {
+		return collectBatteryConsumption;
+	}
+
+	/**
+	 * Sets {@link #collectBatteryConsumption}.
+	 *
+	 * @param collectBatteryConsumption
+	 *            New value for {@link #collectBatteryConsumption}
+	 */
+	public void setCollectBatteryConsumption(boolean collectBatteryConsumption) {
+		this.collectBatteryConsumption = collectBatteryConsumption;
+	}
+
+	/**
+	 * Gets {@link #shutdownOnDestroy}.
+	 *
+	 * @return {@link #shutdownOnDestroy}
+	 */
+	public boolean isShutdownOnDestroy() {
+		return shutdownOnDestroy;
+	}
+
+	/**
+	 * Sets {@link #shutdownOnDestroy}.
+	 *
+	 * @param shutdownOnDestroy
+	 *            New value for {@link #shutdownOnDestroy}
+	 */
+	public void setShutdownOnDestroy(boolean shutdownOnDestroy) {
+		this.shutdownOnDestroy = shutdownOnDestroy;
 	}
 }

@@ -144,11 +144,13 @@ public class MobileRestfulService {
 
 				for (MobileDefaultData defData : data.getChildData()) {
 					defData.setSessionTags(belongingTags);
+					defData.setSessionId(data.getSessionId()); // apply session id
 					collectedItems.add(defData);
 				}
 
 				for (MobileSpan span : data.getChildSpans()) {
 					span.collectChildTags();
+					span.getDetails().setSessionId(data.getSessionId()); // apply session id
 					MobileSpanCorrelationTask task = new MobileSpanCorrelationTask(span);
 					task.schedule(true);
 				}

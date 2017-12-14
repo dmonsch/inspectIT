@@ -28,6 +28,7 @@ public class ActivityModule extends AbstractMonitoringModule {
 	 */
 	@Override
 	public void onStartActivity(Object obj) {
+		System.out.println(obj.getClass().getName());
 		ActivityStart startEv = new ActivityStart();
 		startEv.setActivityClass(obj.getClass().getName());
 		startEv.setActivityName(obj.getClass().getSimpleName());

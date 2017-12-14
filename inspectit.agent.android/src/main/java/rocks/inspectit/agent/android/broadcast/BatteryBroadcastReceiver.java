@@ -33,6 +33,9 @@ public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 	 */
 	private boolean running;
 
+	/**
+	 * Creates a new broadcast receiver for battery events.
+	 */
 	public BatteryBroadcastReceiver() {
 		charging = false;
 		running = true;
@@ -86,7 +89,7 @@ public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void onStart(Object _this) {
+	public void onStart(Object thisObject) {
 		onReceive(null, this.androidDataCollector.getBatteryIntent());
 		running = true;
 	}
@@ -95,7 +98,7 @@ public class BatteryBroadcastReceiver extends AbstractBroadcastReceiver {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void onStop(Object _this) {
+	public void onStop(Object thisObject) {
 		onReceive(null, this.androidDataCollector.getBatteryIntent());
 		running = false;
 	}

@@ -102,6 +102,9 @@ public class IntervalStrategy extends AbstractCallbackStrategy {
 		super.sendBeacon();
 	}
 
+	/**
+	 * Checks whether the interval task is already running and starts it if its not the case.
+	 */
 	private void evaluateSend() {
 		if (!alreadyRunning) {
 			mHandler.postDelayed(mHandlerTask, 10000);

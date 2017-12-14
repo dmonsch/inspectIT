@@ -41,7 +41,7 @@ public class AndroidMonitoringComponent {
 	}
 
 	/**
-	 * Pushes data to the {@link CallbackManager}.
+	 * Pushes data to the {@link AndroidMonitoringComponent#callbackManager}.
 	 *
 	 * @param data
 	 *            data which should be passed to the callback manager
@@ -50,6 +50,12 @@ public class AndroidMonitoringComponent {
 		callbackManager.pushData(data);
 	}
 
+	/**
+	 * Pushed a mobile span to the {@link AndroidMonitoringComponent#callbackManager}.
+	 *
+	 * @param data
+	 *            span which should be passed to the callback manager.
+	 */
 	protected void pushData(MobileSpan data) {
 		callbackManager.pushData(data);
 	}

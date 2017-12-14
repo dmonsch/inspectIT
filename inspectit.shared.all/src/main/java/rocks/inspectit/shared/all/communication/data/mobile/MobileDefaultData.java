@@ -40,6 +40,9 @@ public class MobileDefaultData extends DefaultData {
 	@JsonIgnore
 	private List<Pair<String, String>> sessionTags;
 
+	@JsonIgnore
+	private String sessionId;
+
 	/**
 	 * Creates and initializes a basic mobile monitoring record.
 	 */
@@ -66,6 +69,25 @@ public class MobileDefaultData extends DefaultData {
 	@JsonIgnore
 	public void setSessionTags(List<Pair<String, String>> sessionTags) {
 		this.sessionTags = sessionTags;
+	}
+
+	/**
+	 * Gets {@link #sessionId}.
+	 * 
+	 * @return {@link #sessionId}
+	 */
+	public String getSessionId() {
+		return sessionId;
+	}
+
+	/**
+	 * Sets {@link #sessionId}.
+	 * 
+	 * @param sessionId
+	 *            New value for {@link #sessionId}
+	 */
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
 	}
 
 }
