@@ -6,6 +6,62 @@ package rocks.inspectit.server.cassandra;
  */
 public interface CassandraSchema {
 
+	public interface MobileTable {
+		String SESSION_ID = "session_id";
+
+		String TIME = "time";
+		String DAY = "day";
+
+		String DEVICE_LANG = "device_lang";
+		String DEVICE_NAME = "device_name";
+		String APP_VERSION = "app_version";
+		String ANDROID_VERSION = "android_version";
+		String APP_NAME = "app_name";
+
+		String POS_LON = "device_lon";
+		String POS_LAT = "device_lat";
+	}
+
+	public interface AppCrash extends MobileTable {
+		String TABLE_NAME = "app_crashes";
+
+		String EXCEPTION_CLASS = "exception_class";
+		String EXCEPTION_MESSAGE = "exception_message";
+	}
+
+	public interface BatteryConsumption extends MobileTable {
+		String TABLE_NAME = "battery_consumption";
+
+		String CONSUMPTION_VALUE = "consumption_value";
+		String CONSUMPTION_INTERVAL = "consumption_interval";
+	}
+
+	public interface ActivityStart extends MobileTable {
+		String TABLE_NAME = "activity_start";
+
+		String ACTIVITY_NAME = "activity_name";
+		String ACTIVITY_TIMESTAMP = "activity_timestamp";
+		String ACTIVITY_CLASS = "activity_class";
+	}
+
+	public interface HttpNetworkRequest extends MobileTable {
+		String TABLE_NAME = "httprequests";
+
+		String URL = "url";
+		String METHOD = "method";
+
+		String RESPONSE_CODE = "response_code";
+		String DURATION = "duration";
+		String CONTENT_TYPE = "content_type";
+	}
+
+	public interface ResourceUsage extends MobileTable {
+		String TABLE_NAME = "resource_usage";
+
+		String CPU_USAGE = "cpu_usage";
+		String MEMROY_USAGE = "memory_usage";
+	}
+
 	public interface EumTable {
 
 		String DAY = "day";
