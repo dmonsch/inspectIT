@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -23,6 +25,7 @@ import rocks.inspectit.server.dao.DefaultDataDao;
 import rocks.inspectit.server.dao.impl.BufferSpanDaoImpl;
 import rocks.inspectit.server.dao.impl.DefaultDataDaoImpl;
 import rocks.inspectit.shared.all.communication.DefaultData;
+import rocks.inspectit.shared.all.communication.data.mobile.IAdditionalTagSchema;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileCallbackData;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileCmrSessionStorage;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
@@ -39,6 +42,11 @@ import rocks.inspectit.shared.all.util.Pair;
 @Controller
 @RequestMapping(value = "/mobile")
 public class MobileRestfulService {
+
+	/**
+	 * Logger.
+	 */
+	private static final Logger LOG = LoggerFactory.getLogger(MobileRestfulService.class);
 
 	/**
 	 * String value which is returned by the beacon service when the session doesn't exist.
@@ -103,7 +111,7 @@ public class MobileRestfulService {
 					String sessionId = sessionStorage.createEntry();
 
 					// infer session info
-					sessionStorage.putTag(sessionId, "appName", request.getAppName());
+					sessionStorage.putTag(sessionId, IAdditionalTagSchema.APP_NAME, request.getAppName());
 					for (String additionalInformationKey : request.getAdditionalInformation().keySet()) {
 						sessionStorage.putTag(sessionId, additionalInformationKey, request.getAdditionalInformation().get(additionalInformationKey));
 					}
@@ -114,6 +122,9 @@ public class MobileRestfulService {
 
 					SessionCreationResponse resp = new SessionCreationResponse();
 					resp.setSessionId(sessionId);
+
+					LOG.info("Mobile device connected - assigned session id is: '" + sessionId + "'.");
+
 					return mapper.writeValueAsString(resp);
 				}
 			}

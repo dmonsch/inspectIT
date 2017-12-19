@@ -233,7 +233,6 @@ public class AndroidDataCollector {
 		List<Pair<String, String>> list = new ArrayList<>();
 
 		list.add(Pair.create(IAdditionalTagSchema.APP_VERSION, this.getVersionName()));
-		list.add(Pair.create(IAdditionalTagSchema.APP_NAME, this.resolveAppName()));
 		list.add(Pair.create(IAdditionalTagSchema.ANDROID_VERSION, android.os.Build.VERSION.RELEASE));
 		list.add(Pair.create(IAdditionalTagSchema.ANDROID_SDK, String.valueOf(android.os.Build.VERSION.SDK_INT)));
 		list.add(Pair.create(IAdditionalTagSchema.DEVICE_NAME, android.os.Build.MODEL));

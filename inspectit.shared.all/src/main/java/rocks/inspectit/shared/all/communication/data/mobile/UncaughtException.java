@@ -6,7 +6,7 @@ package rocks.inspectit.shared.all.communication.data.mobile;
  * @author David Monschein
  *
  */
-public class AppCrash extends MobileDefaultData {
+public class UncaughtException extends MobileDefaultData {
 
 	/**
 	 * Serial UID.
@@ -25,11 +25,11 @@ public class AppCrash extends MobileDefaultData {
 
 	/**
 	 * @param name
-	 *            value for {@link AppCrash#exceptionClass}
+	 *            value for {@link UncaughtException#exceptionClass}
 	 * @param message
-	 *            value for {@link AppCrash#exceptionMessage}
+	 *            value for {@link UncaughtException#exceptionMessage}
 	 */
-	public AppCrash(String name, String message) {
+	public UncaughtException(String name, String message) {
 		this.exceptionClass = name;
 		this.exceptionMessage = message;
 	}

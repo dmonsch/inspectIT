@@ -4,7 +4,7 @@ package rocks.inspectit.shared.all.communication.data.mobile;
  * @author David Monschein
  *
  */
-public class AppCrash extends MobileDefaultData {
+public class UncaughtException extends MobileDefaultData {
 	private String exceptionClass;
 
 	private String exceptionMessage;
@@ -13,7 +13,7 @@ public class AppCrash extends MobileDefaultData {
 	 * @param name
 	 * @param message
 	 */
-	public AppCrash(String name, String message) {
+	public UncaughtException(String name, String message) {
 		this.exceptionClass = name;
 		this.exceptionMessage = message;
 	}

@@ -7,23 +7,23 @@ import org.influxdb.dto.Point.Builder;
 import org.springframework.stereotype.Component;
 
 import rocks.inspectit.server.influx.constants.Series;
-import rocks.inspectit.shared.all.communication.data.mobile.AppCrash;
+import rocks.inspectit.shared.all.communication.data.mobile.UncaughtException;
 
 /**
- * Class which handles the creation of Influx points for {@link AppCrash} records.
+ * Class which handles the creation of Influx points for {@link UncaughtException} records.
  *
  * @author David Monschein
  *
  */
 @Component
-public class AppCrashPointBuilder extends AbstractMobilePointBuilder<AppCrash> {
+public class AppCrashPointBuilder extends AbstractMobilePointBuilder<UncaughtException> {
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Collection<? extends Class<? extends AppCrash>> getDataClasses() {
-		return Collections.singleton(AppCrash.class);
+	public Collection<? extends Class<? extends UncaughtException>> getDataClasses() {
+		return Collections.singleton(UncaughtException.class);
 	}
 
 	/**
@@ -38,7 +38,7 @@ public class AppCrashPointBuilder extends AbstractMobilePointBuilder<AppCrash> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected void completeFields(AppCrash data, Builder builder) {
+	protected void completeFields(UncaughtException data, Builder builder) {
 		builder.addField(Series.MobileAppCrash.EXCEPTION_CLASS, data.getExceptionClass());
 		builder.addField(Series.MobileAppCrash.EXCEPTION_MESSAGE, data.getExceptionMessage());
 	}

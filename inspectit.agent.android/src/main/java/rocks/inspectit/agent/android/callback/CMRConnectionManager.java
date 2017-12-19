@@ -1,11 +1,11 @@
 package rocks.inspectit.agent.android.callback;
 
-import android.os.Handler;
 import android.util.Log;
 import android.util.Pair;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.core.AndroidAgent;
 import rocks.inspectit.agent.android.core.AndroidDataCollector;
+import rocks.inspectit.agent.android.interfaces.IScheduledExecutorService;
 import rocks.inspectit.agent.android.util.DependencyManager;
 import rocks.inspectit.shared.all.communication.data.mobile.SessionCreation;
 
@@ -39,7 +39,7 @@ public class CMRConnectionManager {
 	/**
 	 * Handler which is used to schedule runnables.
 	 */
-	private final Handler mHandler;
+	private final IScheduledExecutorService mHandler;
 
 	/**
 	 * Tag for logging.
@@ -64,7 +64,7 @@ public class CMRConnectionManager {
 	 * @param mHandler
 	 *            handler for scheduling runnables
 	 */
-	public CMRConnectionManager(CallbackManager callbackManager, Handler mHandler) {
+	public CMRConnectionManager(CallbackManager callbackManager, IScheduledExecutorService mHandler) {
 		this.callbackManager = callbackManager;
 		this.mHandler = mHandler;
 		this.logTag = AgentConfiguration.current.getLogTag();

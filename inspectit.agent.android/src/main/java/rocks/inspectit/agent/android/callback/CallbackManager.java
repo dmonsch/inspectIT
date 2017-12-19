@@ -57,6 +57,13 @@ public class CallbackManager {
 	}
 
 	/**
+	 * Forces the send of all collected monitoring data.
+	 */
+	public void forceSend() {
+		this.strategy.sendBeacon();
+	}
+
+	/**
 	 * Pass data to the callback manager and the manager manages the
 	 * transmission to the server.
 	 *

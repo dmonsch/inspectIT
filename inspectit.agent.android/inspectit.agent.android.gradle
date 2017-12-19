@@ -39,6 +39,11 @@ dependencies {
 	compile 'io.opentracing:opentracing-noop:0.20.9'
 	
     compile 'junit:junit:4.12'
+    
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '1.10.19'
+    testCompile group: 'org.powermock', name: 'powermock-core', version: '1.7.3'
+    testCompile group: 'org.powermock', name: 'powermock-api-mockito', version: '1.7.3'
+    testCompile group: 'org.powermock', name: 'powermock-module-junit4', version: '1.7.3'
 }
 
 shadowJar {

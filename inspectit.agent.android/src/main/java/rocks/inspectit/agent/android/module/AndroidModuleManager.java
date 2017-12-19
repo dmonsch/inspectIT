@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
-import android.os.Handler;
 import android.util.Log;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
+import rocks.inspectit.agent.android.interfaces.IScheduledExecutorService;
 import rocks.inspectit.agent.android.module.util.ExecutionProperty;
 import rocks.inspectit.agent.android.util.DependencyManager;
 
@@ -21,7 +21,7 @@ public class AndroidModuleManager {
 	/**
 	 * Modules which will be created when the agent is initialized.
 	 */
-	private static final Class<?>[] MODULES = new Class<?>[] { CrashModule.class, SystemResourcesModule.class, CoreSpanReporter.class, ActivityModule.class };
+	private static final Class<?>[] MODULES = new Class<?>[] { UncaughtExceptionModule.class, SystemResourcesModule.class, CoreSpanReporter.class, ActivityModule.class };
 
 	/**
 	 * Maps a certain module class to an instantiated module object.
@@ -30,9 +30,9 @@ public class AndroidModuleManager {
 
 	private final String LOG_TAG;
 	private final Context applicationContext;
-	private final Handler mHandler;
+	private final IScheduledExecutorService mHandler;
 
-	public AndroidModuleManager(Context ctx, Handler mHandler) {
+	public AndroidModuleManager(Context ctx, IScheduledExecutorService mHandler) {
 		LOG_TAG = AgentConfiguration.current.getLogTag();
 		this.applicationContext = ctx;
 		this.mHandler = mHandler;

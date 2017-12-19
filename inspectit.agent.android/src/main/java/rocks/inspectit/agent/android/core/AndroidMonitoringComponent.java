@@ -60,4 +60,12 @@ public class AndroidMonitoringComponent {
 		callbackManager.pushData(data);
 	}
 
+	/**
+	 * Forces the transmission of all monitoring records. Should only be used if the application is
+	 * shut down.
+	 */
+	protected void forceSend() {
+		callbackManager.forceSend();
+	}
+
 }

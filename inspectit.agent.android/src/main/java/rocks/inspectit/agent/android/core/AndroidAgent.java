@@ -24,6 +24,8 @@ import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrateg
 import rocks.inspectit.agent.android.callback.strategies.IntervalStrategy;
 import rocks.inspectit.agent.android.config.AgentConfiguration;
 import rocks.inspectit.agent.android.delegation.AndroidAgentDelegator;
+import rocks.inspectit.agent.android.interfaces.IScheduledExecutorService;
+import rocks.inspectit.agent.android.interfaces.impl.ScheduledExecutorServiceImpl;
 import rocks.inspectit.agent.android.module.AndroidModuleManager;
 import rocks.inspectit.agent.android.sensor.AbstractMethodSensor;
 import rocks.inspectit.agent.android.sensor.NetworkSensor;
@@ -145,13 +147,15 @@ public final class AndroidAgent {
 		initDataCollector(ctx);
 		initCallbackManager();
 
+		IScheduledExecutorService schedExService = new ScheduledExecutorServiceImpl(mHandler);
+
 		// OPEN COMMUNICATION WITH CMR
-		connectionManager = new CMRConnectionManager(callbackManager, mHandler);
+		connectionManager = new CMRConnectionManager(callbackManager, schedExService);
 		DependencyManager.setCmrConnectionManager(connectionManager);
 		connectionManager.establishCommunication();
 
 		// INITING MODULES
-		moduleManager = new AndroidModuleManager(ctx, mHandler);
+		moduleManager = new AndroidModuleManager(ctx, schedExService);
 		moduleManager.initModules();
 		initTracerUtil(); // needs module
 

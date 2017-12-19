@@ -3,7 +3,8 @@ package rocks.inspectit.agent.android.module;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 import android.content.Context;
-import rocks.inspectit.shared.all.communication.data.mobile.AppCrash;
+import rocks.inspectit.agent.android.module.util.ExecutionProperty;
+import rocks.inspectit.shared.all.communication.data.mobile.UncaughtException;
 
 /**
  * Module which captures crashes of the application and sends them back to the CMR.
@@ -11,26 +12,26 @@ import rocks.inspectit.shared.all.communication.data.mobile.AppCrash;
  * @author David Monschein
  *
  */
-public class CrashModule extends AbstractMonitoringModule {
+public class UncaughtExceptionModule extends AbstractMonitoringModule {
 
 	/**
 	 * Link to the default uncaught exception handler to be able to call it.
 	 */
 	private UncaughtExceptionHandler backup;
 
+	private UncaughtExceptionHandler intern = new Thread.UncaughtExceptionHandler() {
+		@Override
+		public void uncaughtException(Thread thread, Throwable e) {
+			handleUncaughtException(thread, e);
+		}
+	};
+
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public void initModule(Context ctx) {
-		backup = Thread.getDefaultUncaughtExceptionHandler();
-		// this needs to run on main thread
-		Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-			@Override
-			public void uncaughtException(Thread thread, Throwable e) {
-				handleUncaughtException(thread, e);
-			}
-		});
+		updateCrashHandler();
 	}
 
 	/**
@@ -57,6 +58,20 @@ public class CrashModule extends AbstractMonitoringModule {
 		// nothing to do here
 	}
 
+	@ExecutionProperty(interval = 60000L)
+	public void manageProperties() {
+		updateCrashHandler();
+	}
+
+	private void updateCrashHandler() {
+		if (Thread.getDefaultUncaughtExceptionHandler() != intern) {
+			// someone did overwrite or we did not set yet
+			backup = Thread.getDefaultUncaughtExceptionHandler();
+			// this needs to run on main thread
+			Thread.setDefaultUncaughtExceptionHandler(intern);
+		}
+	}
+
 	/**
 	 * Function which handles an uncaught exception and sends a message to the CMR.
 	 *
@@ -67,9 +82,9 @@ public class CrashModule extends AbstractMonitoringModule {
 	 */
 	private void handleUncaughtException(Thread thread, Throwable e) {
 		// do our part
-		AppCrash resp = new AppCrash(e.getClass().getName(), e.getMessage());
+		UncaughtException resp = new UncaughtException(e.getClass().getName(), e.getMessage());
 		this.pushData(resp);
-		// TODO force send
+		this.forceSend();
 
 		// call old handler
 		if (backup != null) {
