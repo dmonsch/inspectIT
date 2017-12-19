@@ -8,6 +8,7 @@
 	<bean id="eumCorrelationCmrProcessor" class="rocks.inspectit.server.processor.impl.EUMCorrelationCmrProcessor" />
 	<bean id="cassandraWriterProcessor" class="rocks.inspectit.server.processor.impl.CassandraWriterProcessor" />
 	<bean id="mobileCassandraWriterProcessor" class="rocks.inspectit.server.processor.impl.MobileCassandraWriterProcessor" />
+	<bean id="elasticSearchWriterProcessor" class="rocks.inspectit.server.processor.impl.ElasticSearchWriterProcessor" />
 	<bean id="bufferInserterCmrProcessor" class="rocks.inspectit.server.processor.impl.BufferInserterCmrProcessor" />
 	<bean id="exceptionMessageCmrProcessor" class="rocks.inspectit.server.processor.impl.ExceptionMessageCmrProcessor" />
 	<bean id="indexerCmrProcessor" class="rocks.inspectit.server.processor.impl.IndexerCmrProcessor" />
@@ -58,6 +59,7 @@
 		<ref bean="influxProcessor" />
 		<ref bean="cassandraWriterProcessor" />
 		<ref bean="mobileCassandraWriterProcessor" />
+		<ref bean="elasticSearchWriterProcessor" />
 		<ref bean="recorderCmrProcessor" /> <!-- Must be last when all are processed -->
 	</util:list>
 	

@@ -20,7 +20,12 @@ public enum ExternalServiceType {
 	/**
 	 * Apache Cassandra Database.
 	 */
-	CASSANDRA("Cassandra");
+	CASSANDRA("Cassandra"),
+
+	/**
+	 * ElasticSearch database.
+	 */
+	ELASTICSEARCH("ElasticSearch");
 
 	/**
 	 * The service name.
