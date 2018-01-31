@@ -201,7 +201,7 @@ public class ElasticSearchDao implements IExternalService {
 								Throwable failure) {
 						}
 					})
-					.setBulkActions(200)
+					.setBulkActions(2000)
 					.setBulkSize(new ByteSizeValue(5, ByteSizeUnit.MB))
 					.setFlushInterval(TimeValue.timeValueSeconds(4))
 					.setConcurrentRequests(1)

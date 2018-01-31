@@ -205,19 +205,6 @@ dependencies {
 		'org.smali:util:2.2.1',
 		'org.smali:dexlib2:2.2.1',
 		
-		'com.beust:jcommander:1.72',
-		'com.github.xgouchet:AXML:v1.0.1'
-	)
-	
-	/** inspectit.agent.android.instrument */
-	androidInstrumentProd (
-		'net.lingala.zip4j:zip4j:1.3.2',
-		'org.apache.commons:commons-lang3:3.0',
-		'commons-io:commons-io:2.5',
-		
-		'org.smali:util:2.2.1',
-		'org.smali:dexlib2:2.2.1',
-		
 		'com.beust:jcommander:1.72'
 	)
 
@@ -239,7 +226,7 @@ dependencies {
 		'org.aspectj:aspectjweaver:1.7.4',
 		'org.aspectj:aspectjrt:1.7.4',
 
-		'commons-codec:commons-codec:1.3',
+		'commons-codec:commons-codec:1.6',
 
 		'org.mortbay.jetty:jetty:6.1.26',
 		'org.mortbay.jetty:jetty-util:6.1.26',
@@ -274,7 +261,10 @@ dependencies {
 		'javax.activation:activation:1.1.1',
 		'javax.mail:mail:1.4',
 		
-		'com.datastax.cassandra:cassandra-driver-core:3.1.4'
+		'com.datastax.cassandra:cassandra-driver-core:3.1.4',
+		
+		'org.elasticsearch.client:elasticsearch-rest-client:6.1.0',
+		'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.1.0'
 	)
 	
 	/** inspectit.server.diagnosis */

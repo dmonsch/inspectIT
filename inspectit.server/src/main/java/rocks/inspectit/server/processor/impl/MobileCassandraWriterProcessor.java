@@ -10,7 +10,7 @@ import rocks.inspectit.server.cassandra.SchemaAwareCassandraDao;
 import rocks.inspectit.server.processor.AbstractCmrDataProcessor;
 import rocks.inspectit.shared.all.communication.DefaultData;
 import rocks.inspectit.shared.all.communication.data.mobile.ActivityStart;
-import rocks.inspectit.shared.all.communication.data.mobile.AppCrash;
+import rocks.inspectit.shared.all.communication.data.mobile.UncaughtException;
 import rocks.inspectit.shared.all.communication.data.mobile.BatteryConsumption;
 import rocks.inspectit.shared.all.communication.data.mobile.HttpNetworkRequest;
 import rocks.inspectit.shared.all.communication.data.mobile.MobileDefaultData;
@@ -42,8 +42,8 @@ public class MobileCassandraWriterProcessor extends AbstractCmrDataProcessor {
 				cassandra.insertBatteryConsumption((BatteryConsumption) data);
 			} else if (data instanceof ActivityStart) {
 				cassandra.insertActivityStart((ActivityStart) data);
-			} else if (data instanceof AppCrash) {
-				cassandra.insertAppCrash((AppCrash) data);
+			} else if (data instanceof UncaughtException) {
+				cassandra.insertAppCrash((UncaughtException) data);
 			}
 		}
 	}

@@ -1,7 +1,9 @@
 package rocks.inspectit.server.elasticsearch;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.PostConstruct;
@@ -40,6 +42,8 @@ public class SchemaAwareElasticSearchDao {
 	ElasticSearchDao elasticSearch;
 
 	private AtomicBoolean isConnectedAndSchemaSetUp = new AtomicBoolean(false);
+
+	private Map<String, String> sessionActivityStorage;
 
 	private ElasticSearchConnectionStateListener connectionListener = new ElasticSearchConnectionStateListener() {
 		@Override
@@ -90,6 +94,34 @@ public class SchemaAwareElasticSearchDao {
 			} catch (IOException e) {
 				LOG.warn("Could not index a HttpNetworkRequest object.", e);
 			}
+
+			// transition help index
+			if (sessionActivityStorage.containsKey(start.getSessionId())) {
+				// transition
+				IndexRequest irTrans = new IndexRequest(ElasticSearchSchema.ActivityTransition.INDEX_NAME, ElasticSearchSchema.ActivityTransition.INDEX_NAME);
+				try {
+					XContentBuilder builder = XContentFactory.jsonBuilder();
+					builder.startObject();
+
+					builder.field(ElasticSearchSchema.ActivityTransition.ACTIVITY_FROM_NAME, sessionActivityStorage.get(start.getSessionId()));
+					builder.field(ElasticSearchSchema.ActivityTransition.ACTIVITY_TO_NAME, start.getActivityName());
+					builder.field(ElasticSearchSchema.ActivityTransition.TIMESTAMP, start.getTimeStamp().getTime());
+					builder.field(ElasticSearchSchema.ActivityTransition.SESSION_ID, start.getSessionId());
+
+					enrichWithSessionData(start.getSessionTags(), builder);
+
+					builder.endObject();
+
+					irTrans.source(builder);
+
+					elasticSearch.executeIndexRequest(irTrans, indexResponseListener);
+					System.out.println("Inserted one");
+				} catch (IOException e) {
+					LOG.warn("Could not index a activity transition.");
+				}
+			}
+			// afterwards
+			sessionActivityStorage.put(start.getSessionId(), start.getActivityName());
 		}
 	}
 
@@ -202,6 +234,7 @@ public class SchemaAwareElasticSearchDao {
 
 	@PostConstruct
 	protected void init() {
+		this.sessionActivityStorage = new HashMap<>();
 		synchronized (elasticSearch) {
 			elasticSearch.addConnectionStateListener(connectionListener);
 			if (isConnected()) {
@@ -219,12 +252,15 @@ public class SchemaAwareElasticSearchDao {
 		elasticSearch.deleteIndex(ElasticSearchSchema.BatteryConsumption.INDEX_NAME);
 		elasticSearch.deleteIndex(ElasticSearchSchema.ActivityStart.INDEX_NAME);
 		elasticSearch.deleteIndex(ElasticSearchSchema.UncaughtException.INDEX_NAME);
+		elasticSearch.deleteIndex(ElasticSearchSchema.ActivityTransition.INDEX_NAME);
 
 		elasticSearch.createMapping(ElasticSearchSchema.HttpNetworkRequest.INDEX_NAME, GEOPOINT_FIELD, "geo_point", ElasticSearchSchema.MobileIndex.TIMESTAMP, "date");
 		elasticSearch.createMapping(ElasticSearchSchema.ResourceUsage.INDEX_NAME, GEOPOINT_FIELD, "geo_point", ElasticSearchSchema.MobileIndex.TIMESTAMP, "date");
 		elasticSearch.createMapping(ElasticSearchSchema.BatteryConsumption.INDEX_NAME, GEOPOINT_FIELD, "geo_point", ElasticSearchSchema.MobileIndex.TIMESTAMP, "date");
 		elasticSearch.createMapping(ElasticSearchSchema.ActivityStart.INDEX_NAME, GEOPOINT_FIELD, "geo_point", ElasticSearchSchema.MobileIndex.TIMESTAMP, "date");
 		elasticSearch.createMapping(ElasticSearchSchema.UncaughtException.INDEX_NAME, GEOPOINT_FIELD, "geo_point", ElasticSearchSchema.MobileIndex.TIMESTAMP, "date");
+		elasticSearch.createMapping(ElasticSearchSchema.ActivityTransition.INDEX_NAME, GEOPOINT_FIELD, "geo_point", ElasticSearchSchema.MobileIndex.TIMESTAMP, "date",
+				ElasticSearchSchema.ActivityTransition.ACTIVITY_FROM_NAME, "keyword", ElasticSearchSchema.ActivityTransition.ACTIVITY_TO_NAME, "keyword");
 	}
 
 	private void enrichWithSessionData(List<Pair<String, String>> tags, XContentBuilder insert) throws IOException {

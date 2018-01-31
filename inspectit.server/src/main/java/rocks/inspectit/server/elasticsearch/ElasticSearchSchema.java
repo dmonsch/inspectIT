@@ -43,6 +43,13 @@ public interface ElasticSearchSchema {
 		String ACTIVITY_CLASS = "activity_class";
 	}
 
+	public interface ActivityTransition extends MobileIndex {
+		String INDEX_NAME = "mobile-activity-transition";
+
+		String ACTIVITY_FROM_NAME = "activity_name_from";
+		String ACTIVITY_TO_NAME = "activity_name_to";
+	}
+
 	public interface HttpNetworkRequest extends MobileIndex {
 		String INDEX_NAME = "mobile-httprequests";
 

@@ -34,7 +34,7 @@ import rocks.inspectit.shared.all.communication.data.eum.PageLoadRequest.Navigat
 import rocks.inspectit.shared.all.communication.data.eum.ResourceLoadRequest;
 import rocks.inspectit.shared.all.communication.data.eum.UserSessionInfo;
 import rocks.inspectit.shared.all.communication.data.mobile.ActivityStart;
-import rocks.inspectit.shared.all.communication.data.mobile.AppCrash;
+import rocks.inspectit.shared.all.communication.data.mobile.UncaughtException;
 import rocks.inspectit.shared.all.communication.data.mobile.BatteryConsumption;
 import rocks.inspectit.shared.all.communication.data.mobile.HttpNetworkRequest;
 import rocks.inspectit.shared.all.communication.data.mobile.IAdditionalTagSchema;
@@ -198,7 +198,7 @@ public class SchemaAwareCassandraDao {
 		}
 	}
 
-	public void insertAppCrash(AppCrash crash) {
+	public void insertAppCrash(UncaughtException crash) {
 		if (isConnectedAndSchemaSetUp.get()) {
 			BoundStatement insert = insertAppCrash.bind()
 					.setDate(CassandraSchema.AppCrash.DAY, LocalDate.fromMillisSinceEpoch(crash.getTimeStamp().getTime()))

@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.util.Log;
 import rocks.inspectit.agent.android.broadcast.AbstractBroadcastReceiver;
 import rocks.inspectit.agent.android.broadcast.BatteryBroadcastReceiver;
+import rocks.inspectit.agent.android.business.BusinessLogicManager;
 import rocks.inspectit.agent.android.callback.CMRConnectionManager;
 import rocks.inspectit.agent.android.callback.CallbackManager;
 import rocks.inspectit.agent.android.callback.strategies.AbstractCallbackStrategy;
@@ -30,7 +31,6 @@ import rocks.inspectit.agent.android.module.AndroidModuleManager;
 import rocks.inspectit.agent.android.sensor.AbstractMethodSensor;
 import rocks.inspectit.agent.android.sensor.NetworkSensor;
 import rocks.inspectit.agent.android.sensor.TraceSensor;
-import rocks.inspectit.agent.android.speedindex.SIListenerManager;
 import rocks.inspectit.agent.android.util.DependencyManager;
 
 /**
@@ -96,7 +96,7 @@ public final class AndroidAgent {
 	private static boolean closed = true;
 
 	/**
-	 * Contains all activities which are instrumented by the {@link SIListenerManager}.
+	 * Contains all activities which are instrumented by the {@link BusinessLogicManager}.
 	 */
 	private static Map<Class<? extends Activity>, Boolean> activitySpeedindexMap;
 
@@ -104,11 +104,11 @@ public final class AndroidAgent {
 	 * Responsible for measuring the speed index of activities which indicates how fast a activity
 	 * is drawn.
 	 */
-	private static SIListenerManager speedindexManager;
+	private static BusinessLogicManager speedindexManager;
 
 	static {
 		activitySpeedindexMap = new HashMap<Class<? extends Activity>, Boolean>();
-		speedindexManager = new SIListenerManager();
+		speedindexManager = new BusinessLogicManager();
 	}
 
 	/**
